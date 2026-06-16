@@ -127,14 +127,19 @@ export default function PatientDashboard() {
   const grantAccess = async () => {
     if (!user || !searchResult) return;
     if (permissions.some(p => p.granteeId === searchResult.uid)) { setSearchError(t("dashboard.already_authorized")); return; }
-    const perm: Omit<AccessPermission, "id"> = {
-      patientId: user.uid, granteeId: searchResult.uid,
-      granteeRole: searchResult.role as "doctor" | "hospital",
-      granteeName: searchResult.name, grantedAt: new Date().toISOString(), isActive: true,
-    };
-    const ref = await addDoc(collection(db, "access_permissions"), perm);
-    setPermissions(prev => [...prev, { id: ref.id, ...perm }]);
-    setSearchResult(null); setSpitarIdSearch("");
+    try {
+      const perm: Omit<AccessPermission, "id"> = {
+        patientId: user.uid, granteeId: searchResult.uid,
+        granteeRole: searchResult.role as "doctor" | "hospital",
+        granteeName: searchResult.name, grantedAt: new Date().toISOString(), isActive: true,
+      };
+      const ref = await addDoc(collection(db, "access_permissions"), perm);
+      setPermissions(prev => [...prev, { id: ref.id, ...perm }]);
+      setSearchResult(null); setSpitarIdSearch("");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setSearchError(msg);
+    }
   };
 
   const revokeAccess = async (permId: string) => {
