@@ -141,14 +141,14 @@ export default function DoctorDashboard() {
         const snap = await getDocs(query(usersRef, where("spitarId", "==", q.toUpperCase()), where("role", "==", "patient")));
         snaps = snap.docs;
       } else {
-        // Search by firstName prefix and lastName prefix in parallel
-        const cap = q.charAt(0).toUpperCase() + q.slice(1).toLowerCase();
-        const [fnSnap, lnSnap] = await Promise.all([
-          getDocs(query(usersRef, where("firstName", ">=", cap), where("firstName", "<=", cap + ""), limit(10))),
-          getDocs(query(usersRef, where("lastName", ">=", cap), where("lastName", "<=", cap + ""), limit(10))),
-        ]);
+        // Search with multiple casings to handle stored data regardless of case
+        const variants = Array.from(new Set([q, q.toUpperCase(), q.toLowerCase(), q.charAt(0).toUpperCase() + q.slice(1).toLowerCase()]));
+        const searchSnaps = await Promise.all(variants.flatMap(v => [
+          getDocs(query(usersRef, where("firstName", ">=", v), where("firstName", "<=", v + ""), limit(10))),
+          getDocs(query(usersRef, where("lastName", ">=", v), where("lastName", "<=", v + ""), limit(10))),
+        ]));
         const seen = new Set<string>();
-        snaps = [...fnSnap.docs, ...lnSnap.docs].filter(d => { if (seen.has(d.id)) return false; seen.add(d.id); return d.data().role === "patient"; });
+        snaps = searchSnaps.flatMap(s => s.docs).filter(d => { if (seen.has(d.id)) return false; seen.add(d.id); return d.data().role === "patient"; });
       }
 
       if (snaps.length === 0) { setSearchError(t("dashboard.patient_not_found")); return; }
