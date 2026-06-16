@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
   collection, query, where, getDocs, doc, addDoc,
@@ -144,11 +144,11 @@ export default function DoctorDashboard() {
         // Search by firstName prefix and lastName prefix in parallel
         const cap = q.charAt(0).toUpperCase() + q.slice(1).toLowerCase();
         const [fnSnap, lnSnap] = await Promise.all([
-          getDocs(query(usersRef, where("role", "==", "patient"), where("firstName", ">=", cap), where("firstName", "<=", cap + ""), limit(10))),
-          getDocs(query(usersRef, where("role", "==", "patient"), where("lastName", ">=", cap), where("lastName", "<=", cap + ""), limit(10))),
+          getDocs(query(usersRef, where("firstName", ">=", cap), where("firstName", "<=", cap + ""), limit(10))),
+          getDocs(query(usersRef, where("lastName", ">=", cap), where("lastName", "<=", cap + ""), limit(10))),
         ]);
         const seen = new Set<string>();
-        snaps = [...fnSnap.docs, ...lnSnap.docs].filter(d => { if (seen.has(d.id)) return false; seen.add(d.id); return true; });
+        snaps = [...fnSnap.docs, ...lnSnap.docs].filter(d => { if (seen.has(d.id)) return false; seen.add(d.id); return d.data().role === "patient"; });
       }
 
       if (snaps.length === 0) { setSearchError(t("dashboard.patient_not_found")); return; }
