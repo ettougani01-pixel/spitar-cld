@@ -280,7 +280,7 @@
     "patient_not_found": "لم يتم العثور على مريض بهذا المعرف.",
     "no_permission": "ليس لديك صلاحية الوصول إلى ملف هذا المريض.",
     "pending_appointments": "المواعيد المعلقة",
-    "patient_search_placeholder": "أدخل معرف سبيتار للمريض (مثال: SP-ABC12345)",
+    "patient_search_placeholder": "ابحث بمعرف سبيتار (SP-...) أو اسم المريض",
     "add_record_title": "إضافة سجل طبي",
     "patient_id_prefix": "معرف سبيتار للمريض",
     "pending_requests": "الطلبات المعلقة",

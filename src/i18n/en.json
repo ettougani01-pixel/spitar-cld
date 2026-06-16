@@ -280,7 +280,7 @@
     "patient_not_found": "No patient found with this SPITAR ID.",
     "no_permission": "You don't have permission to access this patient's file.",
     "pending_appointments": "Pending Appointments",
-    "patient_search_placeholder": "Enter patient SPITAR ID (e.g. SP-ABC12345)",
+    "patient_search_placeholder": "Search by SPITAR ID (SP-...) or patient name",
     "add_record_title": "Add Medical Record",
     "patient_id_prefix": "Patient SPITAR ID",
     "pending_requests": "Pending Requests",

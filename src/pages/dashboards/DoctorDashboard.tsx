@@ -65,8 +65,9 @@ export default function DoctorDashboard() {
   const [myRecords, setMyRecords] = useState<MedicalRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [patientSpitarId, setPatientSpitarId] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [foundPatient, setFoundPatient] = useState<PatientProfile | null>(null);
+  const [searchResults, setSearchResults] = useState<PatientProfile[]>([]);
   const [patientRecords, setPatientRecords] = useState<MedicalRecord[]>([]);
   const [patientLabs, setPatientLabs] = useState<LabResult[]>([]);
   const [patientExpanded, setPatientExpanded] = useState(false);
@@ -97,45 +98,75 @@ export default function DoctorDashboard() {
     load();
   }, [user]);
 
+  const checkPermission = async (patientId: string, universalDoctorAccess: boolean) => {
+    if (universalDoctorAccess) return true;
+    const permSnap = await getDocs(query(
+      collection(db, "access_permissions"),
+      where("patientId", "==", patientId),
+      where("granteeId", "==", user!.uid),
+      where("isActive", "==", true),
+    ));
+    return !permSnap.empty;
+  };
+
+  const loadPatientData = async (patient: PatientProfile) => {
+    setFoundPatient(patient);
+    setSearchResults([]);
+    setPatientExpanded(true);
+    setPatientRecords([]);
+    setPatientLabs([]);
+    const [recSnap, labSnap] = await Promise.allSettled([
+      getDocs(query(collection(db, "medical_records"), where("patientId", "==", patient.uid), orderBy("createdAt", "desc"), limit(20))),
+      getDocs(query(collection(db, "lab_results"), where("patientId", "==", patient.uid), orderBy("createdAt", "desc"), limit(20))),
+    ]);
+    if (recSnap.status === "fulfilled") setPatientRecords(recSnap.value.docs.map(d => ({ id: d.id, ...d.data() } as MedicalRecord)));
+    if (labSnap.status === "fulfilled") setPatientLabs(labSnap.value.docs.map(d => ({ id: d.id, ...d.data() } as LabResult)));
+  };
+
   const searchPatient = async () => {
-    if (!patientSpitarId.trim()) return;
+    const q = searchQuery.trim();
+    if (!q) return;
     setSearchLoading(true);
     setSearchError("");
     setFoundPatient(null);
+    setSearchResults([]);
     setPatientRecords([]);
     setPatientLabs([]);
     try {
-      const snap = await getDocs(query(
-        collection(db, "users"),
-        where("spitarId", "==", patientSpitarId.trim().toUpperCase()),
-        where("role", "==", "patient"),
-      ));
-      if (snap.empty) { setSearchError(t("dashboard.patient_not_found")); return; }
+      const isSpitarId = /^SP-/i.test(q);
+      const usersRef = collection(db, "users");
 
-      const patientData = snap.docs[0].data() as PatientProfile;
-      const patientId = snap.docs[0].id;
-      patientData.uid = patientId;
-
-      const hasUniversal = patientData.universalDoctorAccess;
-      if (!hasUniversal) {
-        const permSnap = await getDocs(query(
-          collection(db, "access_permissions"),
-          where("patientId", "==", patientId),
-          where("granteeId", "==", user!.uid),
-          where("isActive", "==", true),
-        ));
-        if (permSnap.empty) { setSearchError(t("dashboard.no_permission")); return; }
+      let snaps;
+      if (isSpitarId) {
+        const snap = await getDocs(query(usersRef, where("spitarId", "==", q.toUpperCase()), where("role", "==", "patient")));
+        snaps = snap.docs;
+      } else {
+        // Search by firstName prefix and lastName prefix in parallel
+        const cap = q.charAt(0).toUpperCase() + q.slice(1).toLowerCase();
+        const [fnSnap, lnSnap] = await Promise.all([
+          getDocs(query(usersRef, where("role", "==", "patient"), where("firstName", ">=", cap), where("firstName", "<=", cap + ""), limit(10))),
+          getDocs(query(usersRef, where("role", "==", "patient"), where("lastName", ">=", cap), where("lastName", "<=", cap + ""), limit(10))),
+        ]);
+        const seen = new Set<string>();
+        snaps = [...fnSnap.docs, ...lnSnap.docs].filter(d => { if (seen.has(d.id)) return false; seen.add(d.id); return true; });
       }
 
-      setFoundPatient(patientData);
-      setPatientExpanded(true);
+      if (snaps.length === 0) { setSearchError(t("dashboard.patient_not_found")); return; }
 
-      const [recSnap, labSnap] = await Promise.all([
-        getDocs(query(collection(db, "medical_records"), where("patientId", "==", patientId), orderBy("createdAt", "desc"), limit(20))),
-        getDocs(query(collection(db, "lab_results"), where("patientId", "==", patientId), orderBy("createdAt", "desc"), limit(20))),
-      ]);
-      setPatientRecords(recSnap.docs.map(d => ({ id: d.id, ...d.data() } as MedicalRecord)));
-      setPatientLabs(labSnap.docs.map(d => ({ id: d.id, ...d.data() } as LabResult)));
+      // Check permissions for each result
+      const withPerm: PatientProfile[] = [];
+      for (const d of snaps) {
+        const data = { uid: d.id, ...d.data() } as PatientProfile;
+        const allowed = await checkPermission(d.id, !!data.universalDoctorAccess);
+        if (allowed) withPerm.push(data);
+      }
+
+      if (withPerm.length === 0) { setSearchError(t("dashboard.no_permission")); return; }
+      if (withPerm.length === 1) {
+        await loadPatientData(withPerm[0]);
+      } else {
+        setSearchResults(withPerm);
+      }
     } catch {
       setSearchError(t("common.error"));
     } finally {
@@ -276,14 +307,30 @@ export default function DoctorDashboard() {
             <CardHead title={t("dashboard.search_patient")} />
             <div style={{ padding: 20 }}>
               <div style={{ display: "flex", gap: 10 }}>
-                <input style={inp} placeholder={t("dashboard.patient_search_placeholder")} value={patientSpitarId}
-                  onChange={e => setPatientSpitarId(e.target.value)} onKeyDown={e => e.key === "Enter" && searchPatient()}
+                <input style={inp} placeholder={t("dashboard.patient_search_placeholder")} value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)} onKeyDown={e => e.key === "Enter" && searchPatient()}
                   onFocus={e => (e.target.style.borderColor = "#7c3aed")} onBlur={e => (e.target.style.borderColor = "#e2e8f0")} />
                 <button onClick={searchPatient} disabled={searchLoading} style={{ padding: "0 20px", height: 44, borderRadius: 12, background: "linear-gradient(135deg, #7c3aed, #2563eb)", color: "#fff", border: "none", fontSize: 14, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6 }}>
                   <Search size={15} /> {t("common.search")}
                 </button>
               </div>
               {searchError && <p style={{ fontSize: 13, color: "#dc2626", marginTop: 10 }}>{searchError}</p>}
+              {searchResults.length > 1 && (
+                <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+                  {searchResults.map(p => (
+                    <button key={p.uid} onClick={() => loadPatientData(p)}
+                      style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 10, border: "1.5px solid #e2e8f0", background: "#f8fafc", cursor: "pointer", textAlign: "left", width: "100%" }}>
+                      <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg, #7c3aed22, #2563eb22)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 700, color: "#7c3aed" }}>
+                        {p.firstName?.[0]?.toUpperCase()}
+                      </div>
+                      <div>
+                        <p style={{ fontSize: 14, fontWeight: 600, color: "#0f172a", margin: 0 }}>{p.firstName} {p.lastName}</p>
+                        <p style={{ fontSize: 12, color: "#64748b", margin: 0 }}>{p.spitarId} · {p.city}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </Card>
 
