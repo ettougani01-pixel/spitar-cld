@@ -105,7 +105,7 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
     async function load() {
       setLoading(true);
       try {
-      const [aSnap, mSnap, fSnap, seSnap, vSnap, dSnap] = await Promise.all([
+      const [aRes, mRes, fRes, seRes, vRes, dRes] = await Promise.allSettled([
         getDocs(query(collection(db, "patient_allergies"), where("patientId", "==", uid))),
         getDocs(query(collection(db, "patient_medications"), where("patientId", "==", uid))),
         getDocs(query(collection(db, "patient_family_history"), where("patientId", "==", uid))),
@@ -113,12 +113,12 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
         getDocs(query(collection(db, "patient_vitals"), where("patientId", "==", uid))),
         getDocs(query(collection(db, "patient_documents"), where("patientId", "==", uid))),
       ]);
-      setAllergies(aSnap.docs.map(d => ({ id: d.id, ...d.data() } as Allergy)));
-      setMedications(mSnap.docs.map(d => ({ id: d.id, ...d.data() } as Medication)));
-      setFamilyHistory(fSnap.docs.map(d => ({ id: d.id, ...d.data() } as FamilyHistory)));
-      setSideEffects(seSnap.docs.map(d => ({ id: d.id, ...d.data() } as SideEffect)));
-      setVitals(vSnap.docs.map(d => ({ id: d.id, ...d.data() } as Vital)).sort((a, b) => b.recordedAt.localeCompare(a.recordedAt)));
-      setDocuments(dSnap.docs.map(d => ({ id: d.id, ...d.data() } as PatientDocument)).sort((a, b) => b.docDate.localeCompare(a.docDate)));
+      if (aRes.status === "fulfilled") setAllergies(aRes.value.docs.map(d => ({ id: d.id, ...d.data() } as Allergy)));
+      if (mRes.status === "fulfilled") setMedications(mRes.value.docs.map(d => ({ id: d.id, ...d.data() } as Medication)));
+      if (fRes.status === "fulfilled") setFamilyHistory(fRes.value.docs.map(d => ({ id: d.id, ...d.data() } as FamilyHistory)));
+      if (seRes.status === "fulfilled") setSideEffects(seRes.value.docs.map(d => ({ id: d.id, ...d.data() } as SideEffect)));
+      if (vRes.status === "fulfilled") setVitals(vRes.value.docs.map(d => ({ id: d.id, ...d.data() } as Vital)).sort((a, b) => b.recordedAt.localeCompare(a.recordedAt)));
+      if (dRes.status === "fulfilled") setDocuments(dRes.value.docs.map(d => ({ id: d.id, ...d.data() } as PatientDocument)).sort((a, b) => b.docDate.localeCompare(a.docDate)));
       } catch (err) {
         console.error("HealthProfile load error:", err);
       } finally {
