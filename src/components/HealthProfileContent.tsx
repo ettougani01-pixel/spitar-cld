@@ -53,12 +53,14 @@ function SectionCard({ title, icon: Icon, iconColor, iconBg, children, addLabel,
           <span style={{ fontSize: 14, fontWeight: 700, color: "#0f172a" }}>{title}</span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {addLabel && (
           <button
             onClick={e => { e.stopPropagation(); onAdd(); }}
             style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, fontWeight: 600, color: "#2563eb", background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 6, padding: "4px 10px", cursor: "pointer" }}
           >
             <Plus size={12} /> {addLabel}
           </button>
+          )}
           {open ? <ChevronUp size={16} style={{ color: "#9ca3af" }} /> : <ChevronDown size={16} style={{ color: "#9ca3af" }} />}
         </div>
       </div>
@@ -67,7 +69,7 @@ function SectionCard({ title, icon: Icon, iconColor, iconBg, children, addLabel,
   );
 }
 
-export function HealthProfileContent() {
+export function HealthProfileContent({ patientId: patientIdProp, readOnly = false }: { patientId?: string; readOnly?: boolean } = {}) {
   const { t } = useTranslation();
   const { user } = useAuth();
 
@@ -98,8 +100,8 @@ export function HealthProfileContent() {
   const [docForm, setDocForm] = useState({ docType: "lab_result", docDate: new Date().toISOString().split("T")[0], notes: "" });
 
   useEffect(() => {
-    if (!user) return;
-    const uid = user.uid;
+    const uid = patientIdProp ?? user?.uid;
+    if (!uid) return;
     async function load() {
       setLoading(true);
       try {
@@ -124,7 +126,7 @@ export function HealthProfileContent() {
       }
     }
     load();
-  }, [user]);
+  }, [user, patientIdProp]);
 
   const deleteItem = async (col: string, id: string, setter: React.Dispatch<React.SetStateAction<any[]>>) => {
     await deleteDoc(doc(db, col, id));
@@ -267,7 +269,7 @@ export function HealthProfileContent() {
       </div>
 
       {/* Allergies */}
-      <SectionCard title={t("hp.allergies")} icon={AlertTriangle} iconColor="#dc2626" iconBg="#fef2f2" addLabel={t("hp.add_allergy")} onAdd={() => setShowAllergyDialog(true)}>
+      <SectionCard title={t("hp.allergies")} icon={AlertTriangle} iconColor="#dc2626" iconBg="#fef2f2" addLabel={readOnly ? "" : t("hp.add_allergy")} onAdd={() => !readOnly && setShowAllergyDialog(true)}>
         {allergies.length === 0 ? (
           <p style={{ fontSize: 13, color: "#9ca3af", textAlign: "center", padding: "16px 0" }}>{t("hp.no_allergies")}</p>
         ) : (
@@ -282,9 +284,7 @@ export function HealthProfileContent() {
                   <span style={{ fontSize: 13, fontWeight: 600 }}>{a.allergenName}</span>
                   {a.reaction && <span style={{ fontSize: 12, color: "#6b7280" }}>· {a.reaction}</span>}
                 </div>
-                <button onClick={() => deleteItem("patient_allergies", a.id, setAllergies)} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", padding: 4 }}>
-                  <Trash2 size={14} />
-                </button>
+                {!readOnly && <button onClick={() => deleteItem("patient_allergies", a.id, setAllergies)} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", padding: 4 }}><Trash2 size={14} /></button>}
               </div>
             );
           })
@@ -292,7 +292,7 @@ export function HealthProfileContent() {
       </SectionCard>
 
       {/* Medications */}
-      <SectionCard title={t("hp.medications")} icon={Pill} iconColor="#7c3aed" iconBg="#f5f3ff" addLabel={t("hp.add_medication")} onAdd={() => setShowMedDialog(true)}>
+      <SectionCard title={t("hp.medications")} icon={Pill} iconColor="#7c3aed" iconBg="#f5f3ff" addLabel={readOnly ? "" : t("hp.add_medication")} onAdd={() => !readOnly && setShowMedDialog(true)}>
         {medications.length === 0 ? (
           <p style={{ fontSize: 13, color: "#9ca3af", textAlign: "center", padding: "16px 0" }}>{t("hp.no_medications")}</p>
         ) : (
@@ -305,16 +305,14 @@ export function HealthProfileContent() {
                 </div>
                 <p style={{ fontSize: 11, color: "#9ca3af", margin: "2px 0 0" }}>{m.dosage} · {m.frequency}</p>
               </div>
-              <button onClick={() => deleteItem("patient_medications", m.id, setMedications)} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", padding: 4 }}>
-                <Trash2 size={14} />
-              </button>
+              {!readOnly && <button onClick={() => deleteItem("patient_medications", m.id, setMedications)} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", padding: 4 }}><Trash2 size={14} /></button>}
             </div>
           ))
         )}
       </SectionCard>
 
       {/* Family History */}
-      <SectionCard title={t("hp.family_history")} icon={Users} iconColor="#0891b2" iconBg="#ecfeff" addLabel={t("hp.add_family_entry")} onAdd={() => setShowFamilyDialog(true)}>
+      <SectionCard title={t("hp.family_history")} icon={Users} iconColor="#0891b2" iconBg="#ecfeff" addLabel={readOnly ? "" : t("hp.add_family_entry")} onAdd={() => !readOnly && setShowFamilyDialog(true)}>
         {familyHistory.length === 0 ? (
           <p style={{ fontSize: 13, color: "#9ca3af", textAlign: "center", padding: "16px 0" }}>{t("hp.no_family_history")}</p>
         ) : (
@@ -325,16 +323,14 @@ export function HealthProfileContent() {
                 <span style={{ fontSize: 13, fontWeight: 600, textTransform: "capitalize" }}>{t(`hp.${f.condition}`) || f.condition}</span>
                 {f.detail && <span style={{ fontSize: 12, color: "#6b7280" }}>· {f.detail}</span>}
               </div>
-              <button onClick={() => deleteItem("patient_family_history", f.id, setFamilyHistory)} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", padding: 4 }}>
-                <Trash2 size={14} />
-              </button>
+              {!readOnly && <button onClick={() => deleteItem("patient_family_history", f.id, setFamilyHistory)} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", padding: 4 }}><Trash2 size={14} /></button>}
             </div>
           ))
         )}
       </SectionCard>
 
       {/* Side Effects */}
-      <SectionCard title={t("hp.side_effects_journal")} icon={Zap} iconColor="#d97706" iconBg="#fffbeb" addLabel={t("hp.log_side_effect")} onAdd={() => setShowSideEffectDialog(true)}>
+      <SectionCard title={t("hp.side_effects_journal")} icon={Zap} iconColor="#d97706" iconBg="#fffbeb" addLabel={readOnly ? "" : t("hp.log_side_effect")} onAdd={() => !readOnly && setShowSideEffectDialog(true)}>
         {sideEffects.length === 0 ? (
           <p style={{ fontSize: 13, color: "#9ca3af", textAlign: "center", padding: "16px 0" }}>{t("hp.no_side_effects")}</p>
         ) : (
@@ -344,16 +340,14 @@ export function HealthProfileContent() {
                 <p style={{ fontSize: 13, fontWeight: 600, margin: 0 }}>{s.treatmentName}</p>
                 <p style={{ fontSize: 12, color: "#6b7280", margin: "2px 0 0" }}>{s.symptom} · {s.occurredAt}</p>
               </div>
-              <button onClick={() => deleteItem("patient_side_effects", s.id, setSideEffects)} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", padding: 4 }}>
-                <Trash2 size={14} />
-              </button>
+              {!readOnly && <button onClick={() => deleteItem("patient_side_effects", s.id, setSideEffects)} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", padding: 4 }}><Trash2 size={14} /></button>}
             </div>
           ))
         )}
       </SectionCard>
 
       {/* Vitals */}
-      <SectionCard title={t("hp.vitals_biometrics")} icon={Activity} iconColor="#16a34a" iconBg="#dcfce7" addLabel={`Log ${VITAL_TABS.find(v => v.key === activeVitalTab)?.label ?? "Vital"}`} onAdd={() => { setVitalForm(f => ({ ...f, type: activeVitalTab, unit: VITAL_TABS.find(v => v.key === activeVitalTab)?.unit ?? "" })); setShowVitalDialog(true); }}>
+      <SectionCard title={t("hp.vitals_biometrics")} icon={Activity} iconColor="#16a34a" iconBg="#dcfce7" addLabel={readOnly ? "" : `Log ${VITAL_TABS.find(v => v.key === activeVitalTab)?.label ?? "Vital"}`} onAdd={() => { if (readOnly) return; setVitalForm(f => ({ ...f, type: activeVitalTab, unit: VITAL_TABS.find(v => v.key === activeVitalTab)?.unit ?? "" })); setShowVitalDialog(true); }}>
         {/* Vital type tabs */}
         <div style={{ display: "flex", gap: 6, marginBottom: 12, overflowX: "auto", flexWrap: "wrap" }}>
           {VITAL_TABS.map(vt => (
@@ -380,9 +374,7 @@ export function HealthProfileContent() {
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ fontSize: 11, color: "#9ca3af" }}>{v.recordedAt}</span>
-                <button onClick={() => deleteItem("patient_vitals", v.id, setVitals)} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", padding: 4 }}>
-                  <Trash2 size={13} />
-                </button>
+                {!readOnly && <button onClick={() => deleteItem("patient_vitals", v.id, setVitals)} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", padding: 4 }}><Trash2 size={13} /></button>}
               </div>
             </div>
           ))
@@ -390,58 +382,39 @@ export function HealthProfileContent() {
       </SectionCard>
 
       {/* Documents Vault */}
-      <SectionCard title={t("hp.documents_vault")} icon={FileText} iconColor="#2563eb" iconBg="#eff6ff" addLabel={t("hp.document_uploaded")} onAdd={() => fileInputRef.current?.click()}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
-          <div>
-            <label style={{ fontSize: 12, fontWeight: 500, color: "#374151", display: "block", marginBottom: 4 }}>{t("hp.doc_type")}</label>
-            <select
-              value={docForm.docType}
-              onChange={e => setDocForm(f => ({ ...f, docType: e.target.value }))}
-              style={{ width: "100%", height: 36, padding: "0 10px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13, background: "#fff" }}
-            >
-              <option value="lab_result">{t("hp.lab_result")}</option>
-              <option value="radiology">{t("hp.radiology")}</option>
-              <option value="discharge_summary">{t("hp.discharge_summary")}</option>
-              <option value="surgery_report">{t("hp.surgery_report")}</option>
-            </select>
+      <SectionCard title={t("hp.documents_vault")} icon={FileText} iconColor="#2563eb" iconBg="#eff6ff" addLabel={readOnly ? "" : t("hp.document_uploaded")} onAdd={() => !readOnly && fileInputRef.current?.click()}>
+        {!readOnly && (
+          <>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 500, color: "#374151", display: "block", marginBottom: 4 }}>{t("hp.doc_type")}</label>
+              <select value={docForm.docType} onChange={e => setDocForm(f => ({ ...f, docType: e.target.value }))} style={{ width: "100%", height: 36, padding: "0 10px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13, background: "#fff" }}>
+                <option value="lab_result">{t("hp.lab_result")}</option>
+                <option value="radiology">{t("hp.radiology")}</option>
+                <option value="discharge_summary">{t("hp.discharge_summary")}</option>
+                <option value="surgery_report">{t("hp.surgery_report")}</option>
+              </select>
+            </div>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 500, color: "#374151", display: "block", marginBottom: 4 }}>{t("hp.document_date")}</label>
+              <input type="date" value={docForm.docDate} onChange={e => setDocForm(f => ({ ...f, docDate: e.target.value }))} style={{ width: "100%", height: 36, padding: "0 10px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} />
+            </div>
           </div>
-          <div>
-            <label style={{ fontSize: 12, fontWeight: 500, color: "#374151", display: "block", marginBottom: 4 }}>{t("hp.document_date")}</label>
-            <input type="date" value={docForm.docDate} onChange={e => setDocForm(f => ({ ...f, docDate: e.target.value }))} style={{ width: "100%", height: 36, padding: "0 10px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} />
+          <div style={{ marginBottom: 12 }}>
+            <label style={{ fontSize: 12, fontWeight: 500, color: "#374151", display: "block", marginBottom: 4 }}>{t("records.notes")}</label>
+            <input value={docForm.notes} onChange={e => setDocForm(f => ({ ...f, notes: e.target.value }))} placeholder={t("hp.doc_notes_placeholder")} style={{ width: "100%", height: 36, padding: "0 10px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} />
           </div>
-        </div>
-        <div style={{ marginBottom: 12 }}>
-          <label style={{ fontSize: 12, fontWeight: 500, color: "#374151", display: "block", marginBottom: 4 }}>{t("records.notes")}</label>
-          <input value={docForm.notes} onChange={e => setDocForm(f => ({ ...f, notes: e.target.value }))} placeholder={t("hp.doc_notes_placeholder")} style={{ width: "100%", height: 36, padding: "0 10px", border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13, boxSizing: "border-box" }} />
-        </div>
-
-        {/* Drop zone */}
-        <div
-          onClick={() => !saving2 && fileInputRef.current?.click()}
-          style={{ border: "2px dashed #d1d5db", borderRadius: 8, padding: "20px 16px", textAlign: "center", cursor: saving2 ? "wait" : "pointer", background: "#f9fafb", marginBottom: 8 }}
-        >
-          <Upload size={22} style={{ color: "#9ca3af", margin: "0 auto 6px", display: "block" }} />
-          <p style={{ fontSize: 13, color: "#374151", margin: "0 0 2px", fontWeight: 500 }}>
-            {saving2 ? t("hp.uploading") : t("hp.drop_or_click")}
-          </p>
-          <p style={{ fontSize: 11, color: "#9ca3af", margin: 0 }}>{t("hp.supported_formats")} — {t("hp.max_size")}</p>
-        </div>
-        <button
-          onClick={() => saveDocument()}
-          disabled={saving2}
-          style={{ width: "100%", padding: "8px", background: "#f8fafc", color: "#374151", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: saving2 ? "not-allowed" : "pointer", opacity: saving2 ? 0.7 : 1, marginBottom: 8 }}
-        >
-          {saving2 ? "..." : t("hp.save_document")}
-        </button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".pdf,.jpg,.jpeg,.png"
-          style={{ display: "none" }}
-          onChange={e => { const f = e.target.files?.[0]; if (f) saveDocument(f); }}
-        />
-        {uploadError && (
-          <p style={{ fontSize: 12, color: "#dc2626", padding: "6px 10px", background: "#fef2f2", borderRadius: 6, margin: "4px 0" }}>{uploadError}</p>
+          <div onClick={() => !saving2 && fileInputRef.current?.click()} style={{ border: "2px dashed #d1d5db", borderRadius: 8, padding: "20px 16px", textAlign: "center", cursor: saving2 ? "wait" : "pointer", background: "#f9fafb", marginBottom: 8 }}>
+            <Upload size={22} style={{ color: "#9ca3af", margin: "0 auto 6px", display: "block" }} />
+            <p style={{ fontSize: 13, color: "#374151", margin: "0 0 2px", fontWeight: 500 }}>{saving2 ? t("hp.uploading") : t("hp.drop_or_click")}</p>
+            <p style={{ fontSize: 11, color: "#9ca3af", margin: 0 }}>{t("hp.supported_formats")} — {t("hp.max_size")}</p>
+          </div>
+          <button onClick={() => saveDocument()} disabled={saving2} style={{ width: "100%", padding: "8px", background: "#f8fafc", color: "#374151", border: "1px solid #e2e8f0", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: saving2 ? "not-allowed" : "pointer", opacity: saving2 ? 0.7 : 1, marginBottom: 8 }}>
+            {saving2 ? "..." : t("hp.save_document")}
+          </button>
+          <input ref={fileInputRef} type="file" accept=".pdf,.jpg,.jpeg,.png" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) saveDocument(f); }} />
+          {uploadError && <p style={{ fontSize: 12, color: "#dc2626", padding: "6px 10px", background: "#fef2f2", borderRadius: 6, margin: "4px 0" }}>{uploadError}</p>}
+          </>
         )}
 
         {documents.length === 0 ? (
@@ -493,9 +466,7 @@ export function HealthProfileContent() {
                       </a>
                     </>
                   )}
-                  <button onClick={() => deleteItem("patient_documents", d.id, setDocuments)} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", padding: 4 }}>
-                    <Trash2 size={13} />
-                  </button>
+                  {!readOnly && <button onClick={() => deleteItem("patient_documents", d.id, setDocuments)} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", padding: 4 }}><Trash2 size={13} /></button>}
                 </div>
               </div>
             ))}

@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { FileText, FlaskConical, Users, CalendarDays, Activity, Search, Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { HealthProfileContent } from "@/components/HealthProfileContent";
 import type { MedicalRecord, LabResult, Appointment, PatientProfile } from "@/lib/types";
 
 type RecordType = "consultation" | "prescription" | "surgery" | "diagnosis" | "imaging" | "other";
@@ -304,54 +305,39 @@ export default function DoctorDashboard() {
               </div>
 
               {patientExpanded && (
-                <div style={{ padding: 20, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-                  <div>
-                    <p style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12 }}>{t("records.medical_records")}</p>
-                    {patientRecords.length === 0 ? (
-                      <p style={{ fontSize: 13, color: "#94a3b8" }}>{t("common.no_data")}</p>
-                    ) : (
-                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                        {patientRecords.map(r => (
-                          <div key={r.id} style={{ padding: 12, borderRadius: 12, background: "#f8fafc", border: "1px solid #e2e8f0" }}>
-                            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
-                              <div style={{ flex: 1 }}>
-                                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                                  <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "#ede9fe", color: "#7c3aed", textTransform: "capitalize" }}>{r.type}</span>
-                                  <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>{r.title}</span>
-                                </div>
-                                <p style={{ fontSize: 11, color: "#94a3b8" }}>{r.date}</p>
-                                <p style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>{r.description}</p>
+                <div style={{ padding: 20 }}>
+                  {/* Medical Records */}
+                  <p style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12 }}>{t("records.medical_records")}</p>
+                  {patientRecords.length === 0 ? (
+                    <p style={{ fontSize: 13, color: "#94a3b8", marginBottom: 20 }}>{t("common.no_data")}</p>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
+                      {patientRecords.map(r => (
+                        <div key={r.id} style={{ padding: 12, borderRadius: 12, background: "#f8fafc", border: "1px solid #e2e8f0" }}>
+                          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                                <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "#ede9fe", color: "#7c3aed", textTransform: "capitalize" }}>{r.type}</span>
+                                <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>{r.title}</span>
                               </div>
-                              {r.doctorId === user?.uid && (
-                                <button onClick={() => deleteRecord(r.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", padding: 4 }}>
-                                  <Trash2 size={13} />
-                                </button>
-                              )}
+                              <p style={{ fontSize: 11, color: "#94a3b8" }}>{r.date}</p>
+                              <p style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>{r.description}</p>
                             </div>
+                            {r.doctorId === user?.uid && (
+                              <button onClick={() => deleteRecord(r.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", padding: 4 }}>
+                                <Trash2 size={13} />
+                              </button>
+                            )}
                           </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
-                  <div>
-                    <p style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12 }}>{t("records.lab_results")}</p>
-                    {patientLabs.length === 0 ? (
-                      <p style={{ fontSize: 13, color: "#94a3b8" }}>{t("records.lab_no_results")}</p>
-                    ) : (
-                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                        {patientLabs.map(l => (
-                          <div key={l.id} style={{ padding: 12, borderRadius: 12, background: "#f8fafc", border: "1px solid #e2e8f0" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                              <StatusBadge status={l.status} label={t(`records.${l.status}`)} />
-                              <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>{l.testName}</span>
-                            </div>
-                            <p style={{ fontSize: 11, color: "#94a3b8" }}>{l.labName} · {l.date}</p>
-                            <p style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>{l.result}</p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                  {/* Full Health Profile (read-only) */}
+                  <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: 16, marginTop: 4 }}>
+                    <p style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12 }}>Health Profile</p>
+                    <HealthProfileContent patientId={foundPatient.uid} readOnly />
                   </div>
                 </div>
               )}
