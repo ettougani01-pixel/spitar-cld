@@ -473,15 +473,25 @@ export function HealthProfileContent() {
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
                   {(d.url || d.fileBase64) && (
-                    <a
-                      href={d.url ?? `data:${d.fileType ?? "application/octet-stream"};base64,${d.fileBase64}`}
-                      download={d.fileName ?? "document"}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ fontSize: 12, color: "#2563eb", textDecoration: "none", fontWeight: 500 }}
-                    >
-                      {t("common.download")}
-                    </a>
+                    <>
+                      <a
+                        href={d.url ?? `data:${d.fileType ?? "application/octet-stream"};base64,${d.fileBase64}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ fontSize: 12, color: "#7c3aed", textDecoration: "none", fontWeight: 600, padding: "3px 8px", borderRadius: 6, border: "1px solid #ede9fe", background: "#f5f3ff" }}
+                      >
+                        {t("common.view") || "View"}
+                      </a>
+                      <a
+                        href={d.url ?? `data:${d.fileType ?? "application/octet-stream"};base64,${d.fileBase64}`}
+                        download={d.fileName ?? "document"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ fontSize: 12, color: "#2563eb", textDecoration: "none", fontWeight: 600, padding: "3px 8px", borderRadius: 6, border: "1px solid #dbeafe", background: "#eff6ff" }}
+                      >
+                        {t("common.download")}
+                      </a>
+                    </>
                   )}
                   <button onClick={() => deleteItem("patient_documents", d.id, setDocuments)} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", padding: 4 }}>
                     <Trash2 size={13} />
