@@ -63,6 +63,7 @@ export default function DoctorDashboard() {
 
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [myRecords, setMyRecords] = useState<MedicalRecord[]>([]);
+  const [authorizedPatientsCount, setAuthorizedPatientsCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -87,12 +88,14 @@ export default function DoctorDashboard() {
     if (!user) return;
     async function load() {
       setLoading(true);
-      const [apptSnap, recSnap] = await Promise.all([
+      const [apptSnap, recSnap, permSnap] = await Promise.allSettled([
         getDocs(query(collection(db, "appointments"), where("doctorId", "==", user!.uid), orderBy("date", "desc"), limit(30))),
         getDocs(query(collection(db, "medical_records"), where("doctorId", "==", user!.uid), orderBy("createdAt", "desc"), limit(30))),
+        getDocs(query(collection(db, "access_permissions"), where("granteeId", "==", user!.uid), where("isActive", "==", true))),
       ]);
-      setAppointments(apptSnap.docs.map(d => ({ id: d.id, ...d.data() } as Appointment)));
-      setMyRecords(recSnap.docs.map(d => ({ id: d.id, ...d.data() } as MedicalRecord)));
+      if (apptSnap.status === "fulfilled") setAppointments(apptSnap.value.docs.map(d => ({ id: d.id, ...d.data() } as Appointment)));
+      if (recSnap.status === "fulfilled") setMyRecords(recSnap.value.docs.map(d => ({ id: d.id, ...d.data() } as MedicalRecord)));
+      if (permSnap.status === "fulfilled") setAuthorizedPatientsCount(permSnap.value.size);
       setLoading(false);
     }
     load();
@@ -260,7 +263,7 @@ export default function DoctorDashboard() {
               { label: t("dashboard.records_created"), value: myRecords.length, icon: FileText, grad: "linear-gradient(135deg, #7c3aed, #2563eb)" },
               { label: t("appointments.title"), value: appointments.length, icon: CalendarDays, grad: "linear-gradient(135deg, #0891b2, #06b6d4)" },
               { label: t("dashboard.pending"), value: pendingAppts.length, icon: Activity, grad: "linear-gradient(135deg, #d97706, #f59e0b)" },
-              { label: t("appointments.status_confirmed"), value: confirmedAppts.length, icon: Users, grad: "linear-gradient(135deg, #16a34a, #15803d)" },
+              { label: t("dashboard.authorized_patients"), value: authorizedPatientsCount, icon: Users, grad: "linear-gradient(135deg, #16a34a, #15803d)" },
             ].map(({ label, value, icon: Icon, grad }) => (
               <div key={label} style={{ background: "#fff", borderRadius: 16, border: "1px solid #e2e8f0", padding: "18px 20px", display: "flex", alignItems: "center", gap: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
                 <div style={{ width: 44, height: 44, borderRadius: 12, background: grad, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
