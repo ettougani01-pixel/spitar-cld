@@ -108,16 +108,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const roleData: Record<string, unknown> = {};
     if (data.role === "doctor") {
-      roleData.specialty = data.specialty;
-      roleData.hospitalAffiliation = data.hospitalAffiliation;
-      roleData.licenseNumber = data.licenseNumber;
+      roleData.specialty = data.specialty ?? "";
+      roleData.hospitalAffiliation = data.hospitalAffiliation ?? "";
+      roleData.licenseNumber = data.licenseNumber ?? "";
     } else if (data.role === "patient") {
       roleData.universalDoctorAccess = false;
       roleData.hospitalOpenAccess = false;
     } else if (data.role === "lab") {
       roleData.name = data.labName || `${data.firstName} Lab`;
       roleData.address = data.labAddress || "";
-      roleData.licenseNumber = data.licenseNumber;
+      roleData.licenseNumber = data.licenseNumber ?? "";
     }
 
     const profile = { ...baseProfile, ...roleData };
