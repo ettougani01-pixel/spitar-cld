@@ -1,7 +1,7 @@
 ﻿import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  collection, query, where, getDocs, doc, addDoc,
+  collection, query, where, getDocs, getDoc, doc, addDoc,
   updateDoc, deleteDoc, orderBy, limit,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -64,6 +64,7 @@ export default function DoctorDashboard() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [myRecords, setMyRecords] = useState<MedicalRecord[]>([]);
   const [authorizedPatientsCount, setAuthorizedPatientsCount] = useState(0);
+  const [authorizedPatients, setAuthorizedPatients] = useState<PatientProfile[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -95,7 +96,20 @@ export default function DoctorDashboard() {
       ]);
       if (apptSnap.status === "fulfilled") setAppointments(apptSnap.value.docs.map(d => ({ id: d.id, ...d.data() } as Appointment)));
       if (recSnap.status === "fulfilled") setMyRecords(recSnap.value.docs.map(d => ({ id: d.id, ...d.data() } as MedicalRecord)));
-      if (permSnap.status === "fulfilled") setAuthorizedPatientsCount(permSnap.value.size);
+      if (permSnap.status === "fulfilled") {
+        setAuthorizedPatientsCount(permSnap.value.size);
+        // Load patient profiles for authorized patients
+        const patientProfiles = await Promise.allSettled(
+          permSnap.value.docs.map(d => getDoc(doc(db, "users", d.data().patientId)))
+        );
+        const profiles: PatientProfile[] = [];
+        patientProfiles.forEach(r => {
+          if (r.status === "fulfilled" && r.value.exists()) {
+            profiles.push({ uid: r.value.id, ...r.value.data() } as PatientProfile);
+          }
+        });
+        setAuthorizedPatients(profiles);
+      }
       setLoading(false);
     }
     load();
@@ -263,9 +277,9 @@ export default function DoctorDashboard() {
               { label: t("dashboard.records_created"), value: myRecords.length, icon: FileText, grad: "linear-gradient(135deg, #7c3aed, #2563eb)" },
               { label: t("appointments.title"), value: appointments.length, icon: CalendarDays, grad: "linear-gradient(135deg, #0891b2, #06b6d4)" },
               { label: t("dashboard.pending"), value: pendingAppts.length, icon: Activity, grad: "linear-gradient(135deg, #d97706, #f59e0b)" },
-              { label: t("dashboard.authorized_patients"), value: authorizedPatientsCount, icon: Users, grad: "linear-gradient(135deg, #16a34a, #15803d)" },
-            ].map(({ label, value, icon: Icon, grad }) => (
-              <div key={label} style={{ background: "#fff", borderRadius: 16, border: "1px solid #e2e8f0", padding: "18px 20px", display: "flex", alignItems: "center", gap: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+              { label: t("dashboard.authorized_patients"), value: authorizedPatientsCount, icon: Users, grad: "linear-gradient(135deg, #16a34a, #15803d)", onClick: () => setActiveTab("patients") },
+            ].map(({ label, value, icon: Icon, grad, onClick }) => (
+              <div key={label} onClick={onClick} style={{ background: "#fff", borderRadius: 16, border: "1px solid #e2e8f0", padding: "18px 20px", display: "flex", alignItems: "center", gap: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", cursor: onClick ? "pointer" : "default" }}>
                 <div style={{ width: 44, height: 44, borderRadius: 12, background: grad, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   <Icon size={20} style={{ color: "#fff" }} />
                 </div>
@@ -306,6 +320,29 @@ export default function DoctorDashboard() {
       {/* Patient search */}
       {activeTab === "patients" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+          {/* Authorized patients list */}
+          {authorizedPatients.length > 0 && !foundPatient && (
+            <Card>
+              <CardHead title={t("dashboard.authorized_patients")} />
+              <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 8 }}>
+                {authorizedPatients.map(p => (
+                  <button key={p.uid} onClick={() => loadPatientData(p)}
+                    style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 10, border: "1.5px solid #e2e8f0", background: "#f8fafc", cursor: "pointer", textAlign: "left", width: "100%" }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg, #16a34a22, #15803d22)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 700, color: "#16a34a" }}>
+                      {p.firstName?.[0]?.toUpperCase()}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ fontSize: 14, fontWeight: 600, color: "#0f172a", margin: 0 }}>{p.firstName} {p.lastName}</p>
+                      <p style={{ fontSize: 12, color: "#64748b", margin: 0 }}>{p.spitarId} · {p.city}</p>
+                    </div>
+                    <ChevronDown size={16} style={{ color: "#94a3b8", transform: "rotate(-90deg)" }} />
+                  </button>
+                ))}
+              </div>
+            </Card>
+          )}
+
           <Card>
             <CardHead title={t("dashboard.search_patient")} />
             <div style={{ padding: 20 }}>
