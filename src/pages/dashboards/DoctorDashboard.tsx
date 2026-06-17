@@ -106,7 +106,7 @@ export default function DoctorDashboard() {
     description: "",
     date: new Date().toISOString().split("T")[0],
   });
-  const [prescriptionMeds, setPrescriptionMeds] = useState<{ value: string; custom: string }[]>([{ value: "", custom: "" }]);
+  const [prescriptionMeds, setPrescriptionMeds] = useState<{ value: string; custom: string; duration: string; frequency: string; timing: string }[]>([{ value: "", custom: "", duration: "", frequency: "", timing: "" }]);
   const [savingRecord, setSavingRecord] = useState(false);
 
   useEffect(() => {
@@ -219,11 +219,16 @@ export default function DoctorDashboard() {
     if (!user || !foundPatient) return;
     let title = recordForm.title;
     if (recordForm.type === "prescription") {
-      const names = prescriptionMeds
-        .map(m => m.value === "__other__" ? m.custom.trim() : m.value)
+      const parts = prescriptionMeds
+        .map(m => {
+          const name = m.value === "__other__" ? m.custom.trim() : m.value;
+          if (!name) return null;
+          const extras = [m.duration, m.frequency, m.timing].filter(Boolean).join(" - ");
+          return extras ? `${name} (${extras})` : name;
+        })
         .filter(Boolean);
-      if (names.length === 0) return;
-      title = names.join(", ");
+      if (parts.length === 0) return;
+      title = parts.join(" | ");
     }
     if (!title || !recordForm.description) return;
     setSavingRecord(true);
@@ -243,7 +248,7 @@ export default function DoctorDashboard() {
       setMyRecords(prev => [{ id: ref.id, ...record }, ...prev]);
       setShowAddRecord(false);
       setRecordForm({ type: "consultation", title: "", description: "", date: new Date().toISOString().split("T")[0] });
-      setPrescriptionMeds([{ value: "", custom: "" }]);
+      setPrescriptionMeds([{ value: "", custom: "", duration: "", frequency: "", timing: "" }]);
     } finally {
       setSavingRecord(false);
     }
@@ -538,7 +543,7 @@ export default function DoctorDashboard() {
               <Label>{t("records.record_type")}</Label>
               <Select value={recordForm.type} onValueChange={v => {
                 setRecordForm(f => ({ ...f, type: v as RecordType, title: "" }));
-                setPrescriptionMeds([{ value: "", custom: "" }]);
+                setPrescriptionMeds([{ value: "", custom: "", duration: "", frequency: "", timing: "" }]);
               }}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -552,39 +557,95 @@ export default function DoctorDashboard() {
             {recordForm.type === "prescription" ? (
               <div className="space-y-2">
                 <Label>{t("records.med_name_label")}</Label>
-                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {prescriptionMeds.map((med, idx) => (
-                    <div key={idx} style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                      <div style={{ flex: 1 }}>
-                        <Select value={med.value} onValueChange={v => setPrescriptionMeds(prev => prev.map((m, i) => i === idx ? { ...m, value: v, custom: "" } : m))}>
-                          <SelectTrigger style={{ height: 40 }}>
-                            <SelectValue placeholder={t("records.select_med_placeholder")} />
-                          </SelectTrigger>
-                          <SelectContent style={{ maxHeight: 240, overflowY: "auto" }}>
-                            {COMMON_MEDICATIONS.map(name => (
-                              <SelectItem key={name} value={name}>{name}</SelectItem>
-                            ))}
-                            <SelectItem value="__other__">{t("common.other")}</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        {med.value === "__other__" && (
-                          <input
-                            style={{ marginTop: 6, height: 38, padding: "0 12px", border: "1.5px solid #e2e8f0", borderRadius: 8, fontSize: 14, width: "100%", boxSizing: "border-box", outline: "none" }}
-                            placeholder={t("records.custom_med_placeholder")}
-                            value={med.custom}
-                            onChange={e => setPrescriptionMeds(prev => prev.map((m, i) => i === idx ? { ...m, custom: e.target.value } : m))}
-                          />
+                    <div key={idx} style={{ background: "#f8f7ff", border: "1px solid #ede9fe", borderRadius: 12, padding: "10px 12px", display: "flex", flexDirection: "column", gap: 8 }}>
+                      {/* Row 1: medication name + delete */}
+                      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                        <div style={{ flex: 1 }}>
+                          <Select value={med.value} onValueChange={v => setPrescriptionMeds(prev => prev.map((m, i) => i === idx ? { ...m, value: v, custom: "" } : m))}>
+                            <SelectTrigger style={{ height: 38, background: "#fff" }}>
+                              <SelectValue placeholder={t("records.select_med_placeholder")} />
+                            </SelectTrigger>
+                            <SelectContent style={{ maxHeight: 240, overflowY: "auto" }}>
+                              {COMMON_MEDICATIONS.map(name => (
+                                <SelectItem key={name} value={name}>{name}</SelectItem>
+                              ))}
+                              <SelectItem value="__other__">{t("common.other")}</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          {med.value === "__other__" && (
+                            <input
+                              style={{ marginTop: 6, height: 36, padding: "0 12px", border: "1.5px solid #e2e8f0", borderRadius: 8, fontSize: 14, width: "100%", boxSizing: "border-box", outline: "none", background: "#fff" }}
+                              placeholder={t("records.custom_med_placeholder")}
+                              value={med.custom}
+                              onChange={e => setPrescriptionMeds(prev => prev.map((m, i) => i === idx ? { ...m, custom: e.target.value } : m))}
+                            />
+                          )}
+                        </div>
+                        {prescriptionMeds.length > 1 && (
+                          <button onClick={() => setPrescriptionMeds(prev => prev.filter((_, i) => i !== idx))} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", padding: 4, flexShrink: 0 }}>
+                            <Trash2 size={15} />
+                          </button>
                         )}
                       </div>
-                      {prescriptionMeds.length > 1 && (
-                        <button onClick={() => setPrescriptionMeds(prev => prev.filter((_, i) => i !== idx))} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", padding: 4, flexShrink: 0 }}>
-                          <Trash2 size={15} />
-                        </button>
+                      {/* Row 2: duration + frequency + timing */}
+                      {med.value && (
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
+                          {/* Duration */}
+                          <Select value={med.duration} onValueChange={v => setPrescriptionMeds(prev => prev.map((m, i) => i === idx ? { ...m, duration: v } : m))}>
+                            <SelectTrigger style={{ height: 34, fontSize: 12, background: "#fff" }}>
+                              <SelectValue placeholder={t("records.duration_placeholder")} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {[
+                                { v: "1j", l: t("records.dur_1d") },
+                                { v: "2j", l: t("records.dur_2d") },
+                                { v: "3j", l: t("records.dur_3d") },
+                                { v: "4j", l: t("records.dur_4d") },
+                                { v: "5j", l: t("records.dur_5d") },
+                                { v: "6j", l: t("records.dur_6d") },
+                                { v: "1sem", l: t("records.dur_1w") },
+                                { v: "2sem", l: t("records.dur_2w") },
+                                { v: "1mois", l: t("records.dur_1m") },
+                                { v: "2mois", l: t("records.dur_2m") },
+                                { v: "toujours", l: t("records.dur_always") },
+                              ].map(o => <SelectItem key={o.v} value={o.l}>{o.l}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                          {/* Frequency */}
+                          <Select value={med.frequency} onValueChange={v => setPrescriptionMeds(prev => prev.map((m, i) => i === idx ? { ...m, frequency: v } : m))}>
+                            <SelectTrigger style={{ height: 34, fontSize: 12, background: "#fff" }}>
+                              <SelectValue placeholder={t("records.frequency_placeholder")} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {[
+                                t("records.freq_1"),
+                                t("records.freq_2"),
+                                t("records.freq_3"),
+                                t("records.freq_4"),
+                              ].map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                          {/* Timing */}
+                          <Select value={med.timing} onValueChange={v => setPrescriptionMeds(prev => prev.map((m, i) => i === idx ? { ...m, timing: v } : m))}>
+                            <SelectTrigger style={{ height: 34, fontSize: 12, background: "#fff" }}>
+                              <SelectValue placeholder={t("records.timing_placeholder")} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {[
+                                t("records.timing_before"),
+                                t("records.timing_during"),
+                                t("records.timing_after"),
+                              ].map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       )}
                     </div>
                   ))}
                   <button
-                    onClick={() => setPrescriptionMeds(prev => [...prev, { value: "", custom: "" }])}
+                    onClick={() => setPrescriptionMeds(prev => [...prev, { value: "", custom: "", duration: "", frequency: "", timing: "" }])}
                     style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, border: "1.5px dashed #c4b5fd", background: "#f5f3ff", color: "#7c3aed", fontSize: 13, fontWeight: 600, cursor: "pointer", alignSelf: "flex-start" }}
                   >
                     <Plus size={14} /> {t("records.add_med_btn")}
