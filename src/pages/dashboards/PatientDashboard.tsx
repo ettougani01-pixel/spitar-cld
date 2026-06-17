@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
   collection, query, where, getDocs, doc,
-  addDoc, updateDoc, orderBy, limit,
+  addDoc, updateDoc, orderBy, limit, deleteDoc, setDoc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
@@ -65,6 +65,7 @@ export default function PatientDashboard() {
   const [labResults, setLabResults] = useState<LabResult[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [permissions, setPermissions] = useState<AccessPermission[]>([]);
+  const [accessRequests, setAccessRequests] = useState<{ id: string; doctorId: string; doctorName: string; status: string; createdAt: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [universalAccess, setUniversalAccess] = useState(false);
@@ -84,20 +85,42 @@ export default function PatientDashboard() {
     async function load() {
       setLoading(true);
       const uid = user!.uid;
-      const [recSnap, labSnap, apptSnap, permSnap] = await Promise.allSettled([
+      const [recSnap, labSnap, apptSnap, permSnap, reqSnap] = await Promise.allSettled([
         getDocs(query(collection(db, "medical_records"), where("patientId", "==", uid), orderBy("createdAt", "desc"), limit(20))),
         getDocs(query(collection(db, "lab_results"), where("patientId", "==", uid), orderBy("createdAt", "desc"), limit(20))),
         getDocs(query(collection(db, "appointments"), where("patientId", "==", uid), orderBy("date", "desc"), limit(20))),
         getDocs(query(collection(db, "access_permissions"), where("patientId", "==", uid), where("isActive", "==", true))),
+        getDocs(query(collection(db, "access_requests"), where("patientId", "==", uid), where("status", "==", "pending"))),
       ]);
       if (recSnap.status === "fulfilled") setRecords(recSnap.value.docs.map(d => ({ id: d.id, ...d.data() } as MedicalRecord)));
       if (labSnap.status === "fulfilled") setLabResults(labSnap.value.docs.map(d => ({ id: d.id, ...d.data() } as LabResult)));
       if (apptSnap.status === "fulfilled") setAppointments(apptSnap.value.docs.map(d => ({ id: d.id, ...d.data() } as Appointment)));
       if (permSnap.status === "fulfilled") setPermissions(permSnap.value.docs.map(d => ({ id: d.id, ...d.data() } as AccessPermission)));
+      if (reqSnap.status === "fulfilled") setAccessRequests(reqSnap.value.docs.map(d => ({ id: d.id, ...d.data() } as { id: string; doctorId: string; doctorName: string; status: string; createdAt: string })));
       setLoading(false);
     }
     load();
   }, [user]);
+
+  const approveRequest = async (req: { id: string; doctorId: string; doctorName: string }) => {
+    if (!user) return;
+    // Grant access permission
+    const perm: Omit<AccessPermission, "id"> = {
+      patientId: user.uid, granteeId: req.doctorId,
+      granteeRole: "doctor",
+      granteeName: req.doctorName, grantedAt: new Date().toISOString(), isActive: true,
+    };
+    const ref = await addDoc(collection(db, "access_permissions"), perm);
+    setPermissions(prev => [...prev, { id: ref.id, ...perm }]);
+    // Mark request as approved
+    await updateDoc(doc(db, "access_requests", req.id), { status: "approved" });
+    setAccessRequests(prev => prev.filter(r => r.id !== req.id));
+  };
+
+  const rejectRequest = async (reqId: string) => {
+    await updateDoc(doc(db, "access_requests", reqId), { status: "rejected" });
+    setAccessRequests(prev => prev.filter(r => r.id !== reqId));
+  };
 
   const toggleUniversalAccess = async (value: boolean) => {
     if (!user) return;
@@ -168,7 +191,7 @@ export default function PatientDashboard() {
     { label: t("records.medical_records"), value: records.length, icon: FileText, grad: "linear-gradient(135deg, #2563eb, #06b6d4)" },
     { label: t("records.lab_results"), value: labResults.length, icon: FlaskConical, grad: "linear-gradient(135deg, #0891b2, #16a34a)" },
     { label: t("dashboard.authorized_providers"), value: permissions.length, icon: Users, grad: "linear-gradient(135deg, #7c3aed, #2563eb)" },
-    { label: t("dashboard.pending_requests"), value: 0, icon: Clock, grad: "linear-gradient(135deg, #d97706, #f59e0b)" },
+    { label: t("dashboard.pending_requests"), value: accessRequests.length, icon: Clock, grad: "linear-gradient(135deg, #d97706, #f59e0b)" },
     { label: t("appointments.title"), value: appointments.length, icon: CalendarDays, grad: "linear-gradient(135deg, #0d9488, #16a34a)" },
   ];
 
@@ -374,6 +397,34 @@ export default function PatientDashboard() {
               </button>
             ))}
           </div>
+
+          {/* Pending Access Requests Banner */}
+          {accessRequests.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
+              <p style={{ fontSize: 13, fontWeight: 700, color: "#d97706", textTransform: "uppercase", letterSpacing: "0.05em", margin: 0 }}>{t("dashboard.pending_requests")}</p>
+              {accessRequests.map(req => (
+                <div key={req.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", borderRadius: 14, border: "1.5px solid #fde68a", background: "#fffbeb" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 12, background: "linear-gradient(135deg, #fbbf2422, #f59e0b22)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <Clock size={18} style={{ color: "#d97706" }} />
+                    </div>
+                    <div>
+                      <p style={{ fontSize: 14, fontWeight: 700, color: "#0f172a", margin: 0 }}>{req.doctorName}</p>
+                      <p style={{ fontSize: 12, color: "#64748b", margin: 0 }}>{t("dashboard.access_request_desc")}</p>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button onClick={() => rejectRequest(req.id)} style={{ padding: "7px 14px", borderRadius: 10, background: "#fee2e2", color: "#dc2626", border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                      {t("common.reject")}
+                    </button>
+                    <button onClick={() => approveRequest(req)} style={{ padding: "7px 14px", borderRadius: 10, background: "linear-gradient(135deg, #16a34a, #0d9488)", color: "#fff", border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                      {t("common.approve")}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Tab content */}
           <div>
