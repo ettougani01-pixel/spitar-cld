@@ -84,16 +84,16 @@ export default function PatientDashboard() {
     async function load() {
       setLoading(true);
       const uid = user!.uid;
-      const [recSnap, labSnap, apptSnap, permSnap] = await Promise.all([
+      const [recSnap, labSnap, apptSnap, permSnap] = await Promise.allSettled([
         getDocs(query(collection(db, "medical_records"), where("patientId", "==", uid), orderBy("createdAt", "desc"), limit(20))),
         getDocs(query(collection(db, "lab_results"), where("patientId", "==", uid), orderBy("createdAt", "desc"), limit(20))),
         getDocs(query(collection(db, "appointments"), where("patientId", "==", uid), orderBy("date", "desc"), limit(20))),
         getDocs(query(collection(db, "access_permissions"), where("patientId", "==", uid), where("isActive", "==", true))),
       ]);
-      setRecords(recSnap.docs.map(d => ({ id: d.id, ...d.data() } as MedicalRecord)));
-      setLabResults(labSnap.docs.map(d => ({ id: d.id, ...d.data() } as LabResult)));
-      setAppointments(apptSnap.docs.map(d => ({ id: d.id, ...d.data() } as Appointment)));
-      setPermissions(permSnap.docs.map(d => ({ id: d.id, ...d.data() } as AccessPermission)));
+      if (recSnap.status === "fulfilled") setRecords(recSnap.value.docs.map(d => ({ id: d.id, ...d.data() } as MedicalRecord)));
+      if (labSnap.status === "fulfilled") setLabResults(labSnap.value.docs.map(d => ({ id: d.id, ...d.data() } as LabResult)));
+      if (apptSnap.status === "fulfilled") setAppointments(apptSnap.value.docs.map(d => ({ id: d.id, ...d.data() } as Appointment)));
+      if (permSnap.status === "fulfilled") setPermissions(permSnap.value.docs.map(d => ({ id: d.id, ...d.data() } as AccessPermission)));
       setLoading(false);
     }
     load();
