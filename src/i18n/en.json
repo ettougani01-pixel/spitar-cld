@@ -279,6 +279,8 @@
     "qr_access": "Emergency QR Access",
     "patient_not_found": "No patient found with this SPITAR ID.",
     "no_permission": "You don't have permission to access this patient's file.",
+    "request_access": "Request Access",
+    "request_sent": "Request Sent",
     "pending_appointments": "Pending Appointments",
     "patient_search_placeholder": "Search by SPITAR ID (SP-...) or patient name",
     "add_record_title": "Add Medical Record",

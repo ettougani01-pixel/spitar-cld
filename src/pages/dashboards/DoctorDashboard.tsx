@@ -98,6 +98,8 @@ export default function DoctorDashboard() {
   const [patientExpanded, setPatientExpanded] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState("");
+  const [noPermPatients, setNoPermPatients] = useState<PatientProfile[]>([]);
+  const [requestingSent, setRequestingSent] = useState<Record<string, boolean>>({});
 
   const [showAddRecord, setShowAddRecord] = useState(false);
   const [recordForm, setRecordForm] = useState({
@@ -181,6 +183,7 @@ export default function DoctorDashboard() {
     setSearchResults([]);
     setPatientRecords([]);
     setPatientLabs([]);
+    setNoPermPatients([]);
     try {
       const isSpitarId = /^SP-/i.test(q);
       const usersRef = collection(db, "users");
@@ -210,7 +213,12 @@ export default function DoctorDashboard() {
         if (allowed) withPerm.push(data);
       }
 
-      if (withPerm.length === 0) { setSearchError(t("dashboard.no_permission")); return; }
+      if (withPerm.length === 0) {
+        // Show patients without permission so doctor can request access
+        const noPerm = snaps.map(d => ({ uid: d.id, ...d.data() } as PatientProfile));
+        setNoPermPatients(noPerm);
+        return;
+      }
       if (withPerm.length === 1) {
         await loadPatientData(withPerm[0]);
       } else {
@@ -221,6 +229,19 @@ export default function DoctorDashboard() {
     } finally {
       setSearchLoading(false);
     }
+  };
+
+  const requestAccess = async (patient: PatientProfile) => {
+    if (!user) return;
+    const docId = `${patient.uid}_${user.uid}_req`;
+    await setDoc(doc(db, "access_requests", docId), {
+      patientId: patient.uid,
+      doctorId: user.uid,
+      doctorName: `${user.firstName} ${user.lastName}`,
+      status: "pending",
+      createdAt: new Date().toISOString(),
+    });
+    setRequestingSent(prev => ({ ...prev, [patient.uid]: true }));
   };
 
   const saveRecord = async () => {
@@ -419,6 +440,29 @@ export default function DoctorDashboard() {
                 </button>
               </div>
               {searchError && <p style={{ fontSize: 13, color: "#dc2626", marginTop: 10 }}>{searchError}</p>}
+              {noPermPatients.length > 0 && (
+                <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+                  {noPermPatients.map(p => (
+                    <div key={p.uid} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px", borderRadius: 12, border: "1.5px solid #ede9fe", background: "#faf9ff" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <div style={{ width: 40, height: 40, borderRadius: 12, background: "linear-gradient(135deg, #7c3aed22, #2563eb22)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 700, color: "#7c3aed" }}>
+                          {p.firstName?.[0]?.toUpperCase()}
+                        </div>
+                        <div>
+                          <p style={{ fontSize: 14, fontWeight: 700, color: "#0f172a", margin: 0 }}>{p.firstName} {p.lastName}</p>
+                          <p style={{ fontSize: 12, color: "#64748b", margin: 0 }}>{p.spitarId}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => requestAccess(p)}
+                        disabled={!!requestingSent[p.uid]}
+                        style={{ padding: "8px 16px", borderRadius: 10, background: requestingSent[p.uid] ? "#e2e8f0" : "linear-gradient(135deg, #7c3aed, #2563eb)", color: requestingSent[p.uid] ? "#64748b" : "#fff", border: "none", fontSize: 13, fontWeight: 600, cursor: requestingSent[p.uid] ? "default" : "pointer" }}>
+                        {requestingSent[p.uid] ? t("dashboard.request_sent") : t("dashboard.request_access")}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
               {searchResults.length > 1 && (
                 <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
                   {searchResults.map(p => (

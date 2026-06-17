@@ -125,6 +125,20 @@ service cloud.firestore {
       allow delete: if request.auth != null && resource.data.patientId == request.auth.uid;
     }
 
+    // ── Access Requests ────────────────────────────────────────────────────
+    match /access_requests/{reqId} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if request.auth != null && (
+        resource.data.doctorId == request.auth.uid ||
+        resource.data.patientId == request.auth.uid
+      );
+    }
+
+    // ── Doctor Medication Lists ────────────────────────────────────────────
+    match /doctor_med_lists/{doctorId} {
+      allow read, write: if request.auth != null && request.auth.uid == doctorId;
+    }
+
     // ── Helper function ────────────────────────────────────────────────────
     function isAuthorizedForPatient(patientId) {
       let patient = get(/databases/$(database)/documents/users/$(patientId));

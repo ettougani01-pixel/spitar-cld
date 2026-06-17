@@ -279,6 +279,8 @@
     "qr_access": "Accès QR d'urgence",
     "patient_not_found": "Aucun patient trouvé avec cet ID SPITAR.",
     "no_permission": "Vous n'avez pas la permission d'accéder au dossier de ce patient.",
+    "request_access": "Demander l'accès",
+    "request_sent": "Demande envoyée",
     "pending_appointments": "Rendez-vous en attente",
     "patient_search_placeholder": "Rechercher par ID SPITAR (SP-...) ou nom du patient",
     "add_record_title": "Ajouter un dossier médical",

@@ -279,6 +279,8 @@
     "qr_access": "رمز QR للطوارئ",
     "patient_not_found": "لم يتم العثور على مريض بهذا المعرف.",
     "no_permission": "ليس لديك صلاحية الوصول إلى ملف هذا المريض.",
+    "request_access": "طلب الوصول",
+    "request_sent": "تم إرسال الطلب",
     "pending_appointments": "المواعيد المعلقة",
     "patient_search_placeholder": "ابحث بمعرف سبيتار (SP-...) أو اسم المريض",
     "add_record_title": "إضافة سجل طبي",
