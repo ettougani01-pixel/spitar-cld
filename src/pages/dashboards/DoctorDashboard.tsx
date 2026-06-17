@@ -404,7 +404,7 @@ export default function DoctorDashboard() {
                           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
                             <div style={{ flex: 1 }}>
                               <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                                <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "#ede9fe", color: "#7c3aed", textTransform: "capitalize" }}>{r.type}</span>
+                                <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "#ede9fe", color: "#7c3aed" }}>{t(`records.type_${r.type}`)}</span>
                                 <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>{r.title}</span>
                               </div>
                               <p style={{ fontSize: 11, color: "#94a3b8" }}>{r.date}</p>
@@ -423,7 +423,7 @@ export default function DoctorDashboard() {
 
                   {/* Full Health Profile (read-only) */}
                   <div style={{ borderTop: "1px solid #e5e7eb", paddingTop: 16, marginTop: 4 }}>
-                    <p style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12 }}>Health Profile</p>
+                    <p style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12 }}>{t("hp.health_profile")}</p>
                     <HealthProfileContent patientId={foundPatient.uid} readOnly />
                   </div>
                 </div>
@@ -444,7 +444,7 @@ export default function DoctorDashboard() {
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                      <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 10px", borderRadius: 20, background: "#ede9fe", color: "#7c3aed", textTransform: "capitalize" }}>{r.type}</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 10px", borderRadius: 20, background: "#ede9fe", color: "#7c3aed" }}>{t(`records.type_${r.type}`)}</span>
                       <span style={{ fontSize: 14, fontWeight: 700, color: "#0f172a" }}>{r.title}</span>
                     </div>
                     <p style={{ fontSize: 12, color: "#94a3b8" }}>{t("dashboard.patient_id_prefix")}: {r.patientId} · {r.date}</p>
@@ -507,7 +507,7 @@ export default function DoctorDashboard() {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {(["consultation", "prescription", "surgery", "diagnosis", "imaging", "other"] as RecordType[]).map(rt => (
-                    <SelectItem key={rt} value={rt} className="capitalize">{rt}</SelectItem>
+                    <SelectItem key={rt} value={rt}>{t(`records.type_${rt}`)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

@@ -315,7 +315,13 @@
     "record_title": "Title",
     "record_description": "Description",
     "record_date": "Date",
-    "add_record_btn": "Add Record"
+    "add_record_btn": "Add Record",
+    "type_consultation": "Consultation",
+    "type_prescription": "Prescription",
+    "type_surgery": "Surgery",
+    "type_diagnosis": "Diagnosis",
+    "type_imaging": "Imaging",
+    "type_other": "Other"
   },
   "booking": {
     "title": "Book an Appointment",

@@ -387,7 +387,7 @@ export default function PatientDashboard() {
                 ) : records.map(r => (
                   <div key={r.id} style={{ background: "#fff", borderRadius: 16, border: "1px solid #e2e8f0", padding: "16px 20px", boxShadow: "0 1px 4px rgba(0,0,0,0.03)" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                      <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20, background: "#ede9fe", color: "#7c3aed", textTransform: "capitalize" }}>{r.type}</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20, background: "#ede9fe", color: "#7c3aed" }}>{t(`records.type_${r.type}`)}</span>
                       <span style={{ fontSize: 14, fontWeight: 700, color: "#0f172a" }}>{r.title}</span>
                     </div>
                     <p style={{ fontSize: 12, color: "#94a3b8", margin: "0 0 6px" }}>Dr. {r.doctorName} · {r.date}</p>

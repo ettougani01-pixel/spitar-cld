@@ -315,7 +315,13 @@
     "record_title": "Titre",
     "record_description": "Description",
     "record_date": "Date",
-    "add_record_btn": "Ajouter le dossier"
+    "add_record_btn": "Ajouter le dossier",
+    "type_consultation": "Consultation",
+    "type_prescription": "Ordonnance",
+    "type_surgery": "Chirurgie",
+    "type_diagnosis": "Diagnostic",
+    "type_imaging": "Imagerie",
+    "type_other": "Autre"
   },
   "booking": {
     "title": "Prendre un Rendez-vous",

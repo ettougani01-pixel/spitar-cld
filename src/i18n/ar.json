@@ -315,7 +315,13 @@
     "record_title": "العنوان",
     "record_description": "الوصف",
     "record_date": "التاريخ",
-    "add_record_btn": "إضافة السجل"
+    "add_record_btn": "إضافة السجل",
+    "type_consultation": "استشارة",
+    "type_prescription": "وصفة طبية",
+    "type_surgery": "جراحة",
+    "type_diagnosis": "تشخيص",
+    "type_imaging": "تصوير",
+    "type_other": "أخرى"
   },
   "booking": {
     "title": "حجز موعد",
