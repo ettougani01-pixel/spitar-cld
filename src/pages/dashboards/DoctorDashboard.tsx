@@ -238,7 +238,8 @@ export default function DoctorDashboard() {
       if (parts.length === 0) return;
       title = parts.join(" | ");
     }
-    if (!title || !recordForm.description) return;
+    if (!title) return;
+    if (recordForm.type !== "prescription" && !recordForm.description) return;
     setSavingRecord(true);
     try {
       const record: Omit<MedicalRecord, "id"> = {
