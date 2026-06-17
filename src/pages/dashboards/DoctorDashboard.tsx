@@ -640,17 +640,11 @@ export default function DoctorDashboard() {
                               <SelectValue placeholder={t("records.select_med_placeholder")} />
                             </SelectTrigger>
                             <SelectContent style={{ maxHeight: 240, overflowY: "auto" }}>
-                              {customMedList.length > 0 && (
-                                <>
-                                  <div style={{ padding: "4px 8px 2px", fontSize: 10, fontWeight: 700, color: "#7c3aed", textTransform: "uppercase", letterSpacing: "0.05em" }}>{t("records.my_meds_group")}</div>
-                                  {customMedList.map(name => (
-                                    <SelectItem key={`custom-${name}`} value={name}>{name}</SelectItem>
-                                  ))}
-                                  <div style={{ height: 1, background: "#e2e8f0", margin: "4px 8px" }} />
-                                </>
+                              {customMedList.length === 0 && (
+                                <div style={{ padding: "8px 12px", fontSize: 13, color: "#94a3b8" }}>{t("records.no_custom_meds")}</div>
                               )}
-                              {COMMON_MEDICATIONS.map(name => (
-                                <SelectItem key={name} value={name}>{name}</SelectItem>
+                              {customMedList.map(name => (
+                                <SelectItem key={`custom-${name}`} value={name}>{name}</SelectItem>
                               ))}
                               <SelectItem value="__other__">{t("common.other")}</SelectItem>
                             </SelectContent>
