@@ -2,7 +2,7 @@
 import { useTranslation } from "react-i18next";
 import {
   collection, query, where, getDocs, getDoc, doc, addDoc,
-  updateDoc, deleteDoc, orderBy, limit,
+  updateDoc, deleteDoc, orderBy, limit, setDoc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
@@ -109,6 +109,11 @@ export default function DoctorDashboard() {
   const [prescriptionMeds, setPrescriptionMeds] = useState<{ value: string; custom: string; duration: string; frequency: string; timing: string }[]>([{ value: "", custom: "", duration: "", frequency: "", timing: "" }]);
   const [savingRecord, setSavingRecord] = useState(false);
 
+  // Doctor's custom medication list
+  const [customMedList, setCustomMedList] = useState<string[]>([]);
+  const [newMedInput, setNewMedInput] = useState("");
+  const [savingMedList, setSavingMedList] = useState(false);
+
   useEffect(() => {
     if (!user) return;
     async function load() {
@@ -135,6 +140,9 @@ export default function DoctorDashboard() {
         setAuthorizedPatients(profiles);
       }
       setLoading(false);
+      // Load custom medication list
+      const medDoc = await getDoc(doc(db, "doctor_med_lists", user!.uid));
+      if (medDoc.exists()) setCustomMedList(medDoc.data().medications ?? []);
     }
     load();
   }, [user]);
@@ -260,6 +268,23 @@ export default function DoctorDashboard() {
     setMyRecords(prev => prev.filter(r => r.id !== recordId));
   };
 
+  const addCustomMed = async () => {
+    const name = newMedInput.trim();
+    if (!name || customMedList.includes(name)) return;
+    setSavingMedList(true);
+    const updated = [...customMedList, name];
+    await setDoc(doc(db, "doctor_med_lists", user!.uid), { medications: updated });
+    setCustomMedList(updated);
+    setNewMedInput("");
+    setSavingMedList(false);
+  };
+
+  const removeCustomMed = async (name: string) => {
+    const updated = customMedList.filter(m => m !== name);
+    await setDoc(doc(db, "doctor_med_lists", user!.uid), { medications: updated });
+    setCustomMedList(updated);
+  };
+
   const updateAppointmentStatus = async (apptId: string, status: string) => {
     await updateDoc(doc(db, "appointments", apptId), { status });
     setAppointments(prev => prev.map(a => a.id === apptId ? { ...a, status: status as Appointment["status"] } : a));
@@ -271,14 +296,14 @@ export default function DoctorDashboard() {
   const navItems = [
     { label: t("nav.dashboard"), href: "/dashboard", icon: Activity, onClick: () => setActiveTab("overview"), active: activeTab === "overview" },
     { label: t("dashboard.search_patient"), href: "/dashboard", icon: Search, onClick: () => setActiveTab("patients"), active: activeTab === "patients" },
-    { label: t("records.medical_records"), href: "/dashboard", icon: FileText, onClick: () => setActiveTab("records"), active: activeTab === "records" },
+    { label: t("records.prescriptions"), href: "/dashboard", icon: FileText, onClick: () => setActiveTab("records"), active: activeTab === "records" },
     { label: t("appointments.title"), href: "/dashboard", icon: CalendarDays, onClick: () => setActiveTab("appointments"), active: activeTab === "appointments" },
   ];
 
   const tabs: { key: Tab; label: string }[] = [
     { key: "overview", label: t("nav.dashboard") },
     { key: "patients", label: t("dashboard.search_patient") },
-    { key: "records", label: t("records.medical_records") },
+    { key: "records", label: t("records.prescriptions") },
     { key: "appointments", label: t("appointments.title") },
   ];
 
@@ -471,30 +496,77 @@ export default function DoctorDashboard() {
         </div>
       )}
 
-      {/* My Records */}
+      {/* Prescriptions tab */}
       {activeTab === "records" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {myRecords.length === 0 ? (
-            <div style={{ padding: "48px 24px", textAlign: "center", color: "#94a3b8", fontSize: 14, background: "#fff", borderRadius: 16, border: "1px solid #e2e8f0" }}>{t("common.no_data")}</div>
-          ) : (
-            myRecords.map(r => (
-              <div key={r.id} style={{ background: "#fff", borderRadius: 16, border: "1px solid #e2e8f0", padding: "16px 20px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
-                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                      <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 10px", borderRadius: 20, background: "#ede9fe", color: "#7c3aed" }}>{t(`records.type_${r.type}`)}</span>
-                      <span style={{ fontSize: 14, fontWeight: 700, color: "#0f172a" }}>{r.title}</span>
-                    </div>
-                    <p style={{ fontSize: 12, color: "#94a3b8" }}>{t("dashboard.patient_id_prefix")}: {r.patientId} · {r.date}</p>
-                    <p style={{ fontSize: 13, color: "#64748b", marginTop: 6 }}>{r.description}</p>
-                  </div>
-                  <button onClick={() => deleteRecord(r.id)} style={{ background: "#fee2e2", border: "none", borderRadius: 10, cursor: "pointer", color: "#dc2626", padding: "6px 8px", marginLeft: 12 }}>
-                    <Trash2 size={14} />
-                  </button>
-                </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+
+          {/* Custom medication list manager */}
+          <Card>
+            <CardHead title={t("records.my_med_list")} />
+            <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+              {/* Add new medication */}
+              <div style={{ display: "flex", gap: 8 }}>
+                <input
+                  value={newMedInput}
+                  onChange={e => setNewMedInput(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && addCustomMed()}
+                  placeholder={t("records.new_med_placeholder")}
+                  style={{ flex: 1, height: 40, padding: "0 14px", border: "1.5px solid #e2e8f0", borderRadius: 10, fontSize: 14, outline: "none", background: "#f8fafc" }}
+                />
+                <button
+                  onClick={addCustomMed}
+                  disabled={savingMedList || !newMedInput.trim()}
+                  style={{ padding: "0 18px", height: 40, borderRadius: 10, background: "linear-gradient(135deg, #7c3aed, #2563eb)", color: "#fff", border: "none", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, opacity: (!newMedInput.trim() || savingMedList) ? 0.5 : 1 }}
+                >
+                  <Plus size={15} /> {t("common.submit")}
+                </button>
               </div>
-            ))
-          )}
+              {/* List */}
+              {customMedList.length === 0 ? (
+                <p style={{ fontSize: 13, color: "#94a3b8", textAlign: "center", padding: "16px 0" }}>{t("records.no_custom_meds")}</p>
+              ) : (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {customMedList.map(name => (
+                    <div key={name} style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 12px", borderRadius: 20, background: "#ede9fe", border: "1px solid #c4b5fd" }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "#5b21b6" }}>{name}</span>
+                      <button onClick={() => removeCustomMed(name)} style={{ background: "none", border: "none", cursor: "pointer", color: "#7c3aed", padding: 0, display: "flex", alignItems: "center", lineHeight: 1 }}>
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </Card>
+
+          {/* Prescription records */}
+          <Card>
+            <CardHead title={t("records.prescriptions")} />
+            <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 10 }}>
+              {myRecords.filter(r => r.type === "prescription").length === 0 ? (
+                <div style={{ padding: "32px 24px", textAlign: "center", color: "#94a3b8", fontSize: 14 }}>{t("common.no_data")}</div>
+              ) : (
+                myRecords.filter(r => r.type === "prescription").map(r => (
+                  <div key={r.id} style={{ background: "#f8fafc", borderRadius: 12, border: "1px solid #e2e8f0", padding: "14px 16px" }}>
+                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                          <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 10px", borderRadius: 20, background: "#ede9fe", color: "#7c3aed" }}>{t("records.type_prescription")}</span>
+                          <span style={{ fontSize: 14, fontWeight: 700, color: "#0f172a" }}>{r.title}</span>
+                        </div>
+                        <p style={{ fontSize: 12, color: "#94a3b8", margin: "2px 0 4px" }}>{r.date}</p>
+                        <p style={{ fontSize: 13, color: "#64748b" }}>{r.description}</p>
+                      </div>
+                      <button onClick={() => deleteRecord(r.id)} style={{ background: "#fee2e2", border: "none", borderRadius: 10, cursor: "pointer", color: "#dc2626", padding: "6px 8px", marginLeft: 12 }}>
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </Card>
+
         </div>
       )}
 
@@ -568,6 +640,15 @@ export default function DoctorDashboard() {
                               <SelectValue placeholder={t("records.select_med_placeholder")} />
                             </SelectTrigger>
                             <SelectContent style={{ maxHeight: 240, overflowY: "auto" }}>
+                              {customMedList.length > 0 && (
+                                <>
+                                  <div style={{ padding: "4px 8px 2px", fontSize: 10, fontWeight: 700, color: "#7c3aed", textTransform: "uppercase", letterSpacing: "0.05em" }}>{t("records.my_meds_group")}</div>
+                                  {customMedList.map(name => (
+                                    <SelectItem key={`custom-${name}`} value={name}>{name}</SelectItem>
+                                  ))}
+                                  <div style={{ height: 1, background: "#e2e8f0", margin: "4px 8px" }} />
+                                </>
+                              )}
                               {COMMON_MEDICATIONS.map(name => (
                                 <SelectItem key={name} value={name}>{name}</SelectItem>
                               ))}
