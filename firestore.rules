@@ -75,6 +75,56 @@ service cloud.firestore {
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'hospital';
     }
 
+    // ── Patient Health Profile Collections ────────────────────────────────
+    match /patient_allergies/{docId} {
+      allow read: if request.auth != null && (
+        resource.data.patientId == request.auth.uid ||
+        isAuthorizedForPatient(resource.data.patientId)
+      );
+      allow create: if request.auth != null && request.resource.data.patientId == request.auth.uid;
+      allow delete: if request.auth != null && resource.data.patientId == request.auth.uid;
+    }
+    match /patient_medications/{docId} {
+      allow read: if request.auth != null && (
+        resource.data.patientId == request.auth.uid ||
+        isAuthorizedForPatient(resource.data.patientId)
+      );
+      allow create: if request.auth != null && request.resource.data.patientId == request.auth.uid;
+      allow delete: if request.auth != null && resource.data.patientId == request.auth.uid;
+    }
+    match /patient_family_history/{docId} {
+      allow read: if request.auth != null && (
+        resource.data.patientId == request.auth.uid ||
+        isAuthorizedForPatient(resource.data.patientId)
+      );
+      allow create: if request.auth != null && request.resource.data.patientId == request.auth.uid;
+      allow delete: if request.auth != null && resource.data.patientId == request.auth.uid;
+    }
+    match /patient_side_effects/{docId} {
+      allow read: if request.auth != null && (
+        resource.data.patientId == request.auth.uid ||
+        isAuthorizedForPatient(resource.data.patientId)
+      );
+      allow create: if request.auth != null && request.resource.data.patientId == request.auth.uid;
+      allow delete: if request.auth != null && resource.data.patientId == request.auth.uid;
+    }
+    match /patient_vitals/{docId} {
+      allow read: if request.auth != null && (
+        resource.data.patientId == request.auth.uid ||
+        isAuthorizedForPatient(resource.data.patientId)
+      );
+      allow create: if request.auth != null && request.resource.data.patientId == request.auth.uid;
+      allow delete: if request.auth != null && resource.data.patientId == request.auth.uid;
+    }
+    match /patient_documents/{docId} {
+      allow read: if request.auth != null && (
+        resource.data.patientId == request.auth.uid ||
+        isAuthorizedForPatient(resource.data.patientId)
+      );
+      allow create: if request.auth != null && request.resource.data.patientId == request.auth.uid;
+      allow delete: if request.auth != null && resource.data.patientId == request.auth.uid;
+    }
+
     // ── Helper function ────────────────────────────────────────────────────
     function isAuthorizedForPatient(patientId) {
       let patient = get(/databases/$(database)/documents/users/$(patientId));

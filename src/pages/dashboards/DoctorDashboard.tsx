@@ -18,6 +18,29 @@ import { HealthProfileContent } from "@/components/HealthProfileContent";
 import type { MedicalRecord, LabResult, Appointment, PatientProfile } from "@/lib/types";
 
 type RecordType = "consultation" | "prescription" | "surgery" | "diagnosis" | "imaging" | "other";
+
+const COMMON_MEDICATIONS = [
+  "Amoxicillin", "Augmentin", "Azithromycin", "Ciprofloxacin", "Doxycycline",
+  "Metronidazole", "Ceftriaxone", "Trimethoprim", "Clarithromycin", "Erythromycin",
+  "Ibuprofen", "Paracetamol", "Aspirin", "Naproxen", "Diclofenac", "Ketoprofen",
+  "Tramadol", "Codeine", "Morphine", "Celecoxib",
+  "Omeprazole", "Pantoprazole", "Ranitidine", "Metoclopramide", "Domperidone",
+  "Loperamide", "Bisacodyl", "Lactulose",
+  "Metformin", "Glibenclamide", "Insulin", "Sitagliptin", "Empagliflozin",
+  "Atorvastatin", "Simvastatin", "Rosuvastatin",
+  "Amlodipine", "Ramipril", "Lisinopril", "Losartan", "Bisoprolol",
+  "Atenolol", "Furosemide", "Hydrochlorothiazide", "Spironolactone", "Carvedilol",
+  "Salbutamol", "Budesonide", "Montelukast", "Theophylline", "Ipratropium",
+  "Cetirizine", "Loratadine", "Fexofenadine", "Chlorphenamine",
+  "Levothyroxine", "Prednisolone", "Dexamethasone", "Hydrocortisone",
+  "Sertraline", "Fluoxetine", "Amitriptyline", "Diazepam", "Alprazolam",
+  "Haloperidol", "Risperidone", "Quetiapine",
+  "Methotrexate", "Hydroxychloroquine", "Colchicine", "Allopurinol",
+  "Calcium + Vitamin D", "Vitamin B12", "Ferrous sulfate", "Folic acid",
+  "Zinc", "Magnesium", "Multivitamins",
+  "Heparin", "Warfarin", "Rivaroxaban", "Clopidogrel",
+  "Ondansetron", "Acyclovir", "Fluconazole", "Nystatin",
+];
 type Tab = "overview" | "patients" | "records" | "appointments";
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
@@ -83,6 +106,7 @@ export default function DoctorDashboard() {
     description: "",
     date: new Date().toISOString().split("T")[0],
   });
+  const [prescriptionMeds, setPrescriptionMeds] = useState<{ value: string; custom: string }[]>([{ value: "", custom: "" }]);
   const [savingRecord, setSavingRecord] = useState(false);
 
   useEffect(() => {
@@ -193,7 +217,15 @@ export default function DoctorDashboard() {
 
   const saveRecord = async () => {
     if (!user || !foundPatient) return;
-    if (!recordForm.title || !recordForm.description) return;
+    let title = recordForm.title;
+    if (recordForm.type === "prescription") {
+      const names = prescriptionMeds
+        .map(m => m.value === "__other__" ? m.custom.trim() : m.value)
+        .filter(Boolean);
+      if (names.length === 0) return;
+      title = names.join(", ");
+    }
+    if (!title || !recordForm.description) return;
     setSavingRecord(true);
     try {
       const record: Omit<MedicalRecord, "id"> = {
@@ -201,7 +233,7 @@ export default function DoctorDashboard() {
         doctorId: user.uid,
         doctorName: `${user.firstName} ${user.lastName}`,
         type: recordForm.type,
-        title: recordForm.title,
+        title,
         description: recordForm.description,
         date: recordForm.date,
         createdAt: new Date().toISOString(),
@@ -211,6 +243,7 @@ export default function DoctorDashboard() {
       setMyRecords(prev => [{ id: ref.id, ...record }, ...prev]);
       setShowAddRecord(false);
       setRecordForm({ type: "consultation", title: "", description: "", date: new Date().toISOString().split("T")[0] });
+      setPrescriptionMeds([{ value: "", custom: "" }]);
     } finally {
       setSavingRecord(false);
     }
@@ -503,7 +536,10 @@ export default function DoctorDashboard() {
           <div className="space-y-4 py-2">
             <div className="space-y-2">
               <Label>{t("records.record_type")}</Label>
-              <Select value={recordForm.type} onValueChange={v => setRecordForm(f => ({ ...f, type: v as RecordType }))}>
+              <Select value={recordForm.type} onValueChange={v => {
+                setRecordForm(f => ({ ...f, type: v as RecordType, title: "" }));
+                setPrescriptionMeds([{ value: "", custom: "" }]);
+              }}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {(["consultation", "prescription", "surgery", "diagnosis", "imaging", "other"] as RecordType[]).map(rt => (
@@ -512,10 +548,56 @@ export default function DoctorDashboard() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label>{t("records.record_title")}</Label>
-              <Input value={recordForm.title} onChange={e => setRecordForm(f => ({ ...f, title: e.target.value }))} />
-            </div>
+
+            {recordForm.type === "prescription" ? (
+              <div className="space-y-2">
+                <Label>{t("records.med_name_label")}</Label>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {prescriptionMeds.map((med, idx) => (
+                    <div key={idx} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <div style={{ flex: 1 }}>
+                        <Select value={med.value} onValueChange={v => setPrescriptionMeds(prev => prev.map((m, i) => i === idx ? { ...m, value: v, custom: "" } : m))}>
+                          <SelectTrigger style={{ height: 40 }}>
+                            <SelectValue placeholder={t("records.select_med_placeholder")} />
+                          </SelectTrigger>
+                          <SelectContent style={{ maxHeight: 240, overflowY: "auto" }}>
+                            {COMMON_MEDICATIONS.map(name => (
+                              <SelectItem key={name} value={name}>{name}</SelectItem>
+                            ))}
+                            <SelectItem value="__other__">{t("common.other")}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        {med.value === "__other__" && (
+                          <input
+                            style={{ marginTop: 6, height: 38, padding: "0 12px", border: "1.5px solid #e2e8f0", borderRadius: 8, fontSize: 14, width: "100%", boxSizing: "border-box", outline: "none" }}
+                            placeholder={t("records.custom_med_placeholder")}
+                            value={med.custom}
+                            onChange={e => setPrescriptionMeds(prev => prev.map((m, i) => i === idx ? { ...m, custom: e.target.value } : m))}
+                          />
+                        )}
+                      </div>
+                      {prescriptionMeds.length > 1 && (
+                        <button onClick={() => setPrescriptionMeds(prev => prev.filter((_, i) => i !== idx))} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", padding: 4, flexShrink: 0 }}>
+                          <Trash2 size={15} />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    onClick={() => setPrescriptionMeds(prev => [...prev, { value: "", custom: "" }])}
+                    style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 8, border: "1.5px dashed #c4b5fd", background: "#f5f3ff", color: "#7c3aed", fontSize: 13, fontWeight: 600, cursor: "pointer", alignSelf: "flex-start" }}
+                  >
+                    <Plus size={14} /> {t("records.add_med_btn")}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Label>{t("records.record_title")}</Label>
+                <Input value={recordForm.title} onChange={e => setRecordForm(f => ({ ...f, title: e.target.value }))} />
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label>{t("records.record_description")}</Label>
               <Textarea value={recordForm.description} onChange={e => setRecordForm(f => ({ ...f, description: e.target.value }))} rows={4} />
