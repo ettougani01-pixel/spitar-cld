@@ -123,21 +123,21 @@ export default function PatientDashboard() {
     setPermissions(prev => [...prev, { id: ref.id, ...perm }]);
     await updateDoc(doc(db, "access_requests", req.id), { status: "approved" });
     setAccessRequests(prev => prev.filter(r => r.id !== req.id));
-    await sendNotification(
+    sendNotification(
       req.doctorId, "access_approved",
       `${user.firstName} ${user.lastName}`,
       "approved your request to access their medical file",
-    );
+    ).catch(() => {});
   };
 
   const rejectRequest = async (req: { id: string; doctorId: string }) => {
     await updateDoc(doc(db, "access_requests", req.id), { status: "rejected" });
     setAccessRequests(prev => prev.filter(r => r.id !== req.id));
-    if (user) await sendNotification(
+    if (user) sendNotification(
       req.doctorId, "access_rejected",
       "Access Request Declined",
       "The patient declined your request to access their medical file",
-    );
+    ).catch(() => {});
   };
 
   const toggleUniversalAccess = async (value: boolean) => {
@@ -205,15 +205,17 @@ export default function PatientDashboard() {
       };
       const ref = await addDoc(collection(db, "appointments"), appt);
       setAppointments(prev => [{ id: ref.id, ...appt } as Appointment, ...prev]);
-      await sendNotification(
-        apptDialog.doctorId, "appointment_request",
-        `${user.firstName} ${user.lastName}`,
-        `is requesting an appointment on ${apptForm.date} at ${apptForm.time}`,
-      );
+      // Close dialog immediately
       setApptDialog({ open: false, doctorId: "", doctorName: "" });
       setApptForm({ date: "", time: "", reason: "" });
       setActiveSection("overview");
       setActiveTab("appointments");
+      // Send notification silently (don't block on failure)
+      sendNotification(
+        apptDialog.doctorId, "appointment_request",
+        `${user.firstName} ${user.lastName}`,
+        `is requesting an appointment on ${apptForm.date} at ${apptForm.time}`,
+      ).catch(() => {});
     } finally {
       setSavingAppt(false);
     }
@@ -233,11 +235,11 @@ export default function PatientDashboard() {
       time: appt.rescheduleTime ?? appt.time,
       rescheduleDate: undefined, rescheduleTime: undefined,
     } : a));
-    if (user) await sendNotification(
+    if (user) sendNotification(
       appt.doctorId, "appointment_confirmed",
       `${user.firstName} ${user.lastName}`,
       `accepted the rescheduled appointment on ${appt.rescheduleDate} at ${appt.rescheduleTime}`,
-    );
+    ).catch(() => {});
   };
 
   const deleteAppointment = async (apptId: string) => {
@@ -248,11 +250,11 @@ export default function PatientDashboard() {
   const declineReschedule = async (appt: Appointment) => {
     await updateDoc(doc(db, "appointments", appt.id), { status: "cancelled" });
     setAppointments(prev => prev.map(a => a.id === appt.id ? { ...a, status: "cancelled" as const } : a));
-    if (user) await sendNotification(
+    if (user) sendNotification(
       appt.doctorId, "appointment_cancelled",
       `${user.firstName} ${user.lastName}`,
       "declined the rescheduled appointment",
-    );
+    ).catch(() => {});
   };
 
   const navItems = [

@@ -247,12 +247,12 @@ export default function DoctorDashboard() {
       createdAt: new Date().toISOString(),
     });
     setRequestingSent(prev => ({ ...prev, [patient.uid]: true }));
-    await sendNotification(
+    sendNotification(
       patient.uid,
       "access_request",
       `Dr. ${user.firstName} ${user.lastName}`,
       "is requesting access to your medical file",
-    );
+    ).catch(() => {});
   };
 
   const saveRecord = async () => {
@@ -325,20 +325,20 @@ export default function DoctorDashboard() {
 
   const confirmAppointmentWithNotif = async (appt: Appointment) => {
     await updateAppointmentStatus(appt.id, "confirmed");
-    if (user) await sendNotification(
+    if (user) sendNotification(
       appt.patientId, "appointment_confirmed",
       `Dr. ${user.firstName} ${user.lastName}`,
       `confirmed your appointment on ${appt.date} at ${appt.time}`,
-    );
+    ).catch(() => {});
   };
 
   const cancelAppointmentWithNotif = async (appt: Appointment) => {
     await updateAppointmentStatus(appt.id, "cancelled");
-    if (user) await sendNotification(
+    if (user) sendNotification(
       appt.patientId, "appointment_cancelled",
       `Dr. ${user.firstName} ${user.lastName}`,
       `cancelled your appointment scheduled for ${appt.date} at ${appt.time}`,
-    );
+    ).catch(() => {});
   };
 
   const deleteAppointment = async (apptId: string) => {
@@ -360,11 +360,11 @@ export default function DoctorDashboard() {
         ...a, status: "reschedule_requested" as const,
         rescheduleDate: rescheduleForm.date, rescheduleTime: rescheduleForm.time,
       } : a));
-      await sendNotification(
+      sendNotification(
         appt.patientId, "appointment_rescheduled",
         `Dr. ${user.firstName} ${user.lastName}`,
         `proposed a new appointment time: ${rescheduleForm.date} at ${rescheduleForm.time}`,
-      );
+      ).catch(() => {});
       setRescheduleDialog({ open: false, appt: null });
     } finally {
       setSavingReschedule(false);
