@@ -19,8 +19,11 @@ import {
 import {
   FileText, FlaskConical, Users, ShieldCheck, QrCode,
   CalendarDays, Trash2, Search, Globe, Building2,
-  Heart, Clock, Plus, Sparkles,
+  Heart, Clock, Plus, Sparkles, CalendarPlus, CheckCircle, XCircle,
 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import type { MedicalRecord, LabResult, Appointment, AccessPermission, PatientProfile } from "@/lib/types";
 
 type Tab = "records" | "health_profile" | "labs" | "my_team" | "appointments" | "share_qr" | "pending_requests";
@@ -69,6 +72,10 @@ export default function PatientDashboard() {
   const [accessRequests, setAccessRequests] = useState<{ id: string; doctorId: string; doctorName: string; status: string; createdAt: string }[]>([]);
   const [showPendingRequests, setShowPendingRequests] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const [apptDialog, setApptDialog] = useState<{ open: boolean; doctorId: string; doctorName: string }>({ open: false, doctorId: "", doctorName: "" });
+  const [apptForm, setApptForm] = useState({ date: "", time: "", reason: "" });
+  const [savingAppt, setSavingAppt] = useState(false);
 
   const [universalAccess, setUniversalAccess] = useState(false);
   const [hospitalAccess, setHospitalAccess] = useState(false);
@@ -179,6 +186,68 @@ export default function PatientDashboard() {
   const revokeAccess = async (permId: string) => {
     await updateDoc(doc(db, "access_permissions", permId), { isActive: false, revokedAt: new Date().toISOString() });
     setPermissions(prev => prev.filter(p => p.id !== permId));
+  };
+
+  const requestAppointment = async () => {
+    if (!user || !apptDialog.doctorId || !apptForm.date || !apptForm.time) return;
+    setSavingAppt(true);
+    try {
+      const appt = {
+        patientId: user.uid,
+        patientName: `${user.firstName} ${user.lastName}`,
+        doctorId: apptDialog.doctorId,
+        doctorName: apptDialog.doctorName,
+        date: apptForm.date,
+        time: apptForm.time,
+        reason: apptForm.reason,
+        status: "pending",
+        createdAt: new Date().toISOString(),
+      };
+      const ref = await addDoc(collection(db, "appointments"), appt);
+      setAppointments(prev => [{ id: ref.id, ...appt } as Appointment, ...prev]);
+      await sendNotification(
+        apptDialog.doctorId, "appointment_request",
+        `${user.firstName} ${user.lastName}`,
+        `is requesting an appointment on ${apptForm.date} at ${apptForm.time}`,
+      );
+      setApptDialog({ open: false, doctorId: "", doctorName: "" });
+      setApptForm({ date: "", time: "", reason: "" });
+      setActiveSection("overview");
+      setActiveTab("appointments");
+    } finally {
+      setSavingAppt(false);
+    }
+  };
+
+  const acceptReschedule = async (appt: Appointment) => {
+    await updateDoc(doc(db, "appointments", appt.id), {
+      status: "confirmed",
+      date: appt.rescheduleDate ?? appt.date,
+      time: appt.rescheduleTime ?? appt.time,
+      rescheduleDate: null,
+      rescheduleTime: null,
+    });
+    setAppointments(prev => prev.map(a => a.id === appt.id ? {
+      ...a, status: "confirmed" as const,
+      date: appt.rescheduleDate ?? appt.date,
+      time: appt.rescheduleTime ?? appt.time,
+      rescheduleDate: undefined, rescheduleTime: undefined,
+    } : a));
+    if (user) await sendNotification(
+      appt.doctorId, "appointment_confirmed",
+      `${user.firstName} ${user.lastName}`,
+      `accepted the rescheduled appointment on ${appt.rescheduleDate} at ${appt.rescheduleTime}`,
+    );
+  };
+
+  const declineReschedule = async (appt: Appointment) => {
+    await updateDoc(doc(db, "appointments", appt.id), { status: "cancelled" });
+    setAppointments(prev => prev.map(a => a.id === appt.id ? { ...a, status: "cancelled" as const } : a));
+    if (user) await sendNotification(
+      appt.doctorId, "appointment_cancelled",
+      `${user.firstName} ${user.lastName}`,
+      "declined the rescheduled appointment",
+    );
   };
 
   const navItems = [
@@ -473,9 +542,18 @@ export default function PatientDashboard() {
                         <p style={{ fontSize: 12, color: "#64748b", margin: "2px 0 0", textTransform: "capitalize" }}>{p.granteeRole} · {t("dashboard.since")} {new Date(p.grantedAt).toLocaleDateString()}</p>
                       </div>
                     </div>
-                    <button onClick={() => revokeAccess(p.id)} style={{ background: "#fee2e2", border: "none", borderRadius: 10, cursor: "pointer", color: "#dc2626", padding: "6px 14px", fontSize: 12, fontWeight: 700 }}>
-                      Revoke
-                    </button>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      {p.granteeRole === "doctor" && (
+                        <button
+                          onClick={() => { setApptDialog({ open: true, doctorId: p.granteeId, doctorName: p.granteeName }); setApptForm({ date: "", time: "", reason: "" }); }}
+                          style={{ background: "linear-gradient(135deg, #2563eb, #06b6d4)", border: "none", borderRadius: 10, cursor: "pointer", color: "#fff", padding: "6px 14px", fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", gap: 5 }}>
+                          <CalendarPlus size={13} /> {t("appointments.request_appointment")}
+                        </button>
+                      )}
+                      <button onClick={() => revokeAccess(p.id)} style={{ background: "#fee2e2", border: "none", borderRadius: 10, cursor: "pointer", color: "#dc2626", padding: "6px 14px", fontSize: 12, fontWeight: 700 }}>
+                        Revoke
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -489,13 +567,38 @@ export default function PatientDashboard() {
                     <EmptyState icon={CalendarDays} text={t("appointments.no_appointments")} />
                   </div>
                 ) : appointments.map(a => (
-                  <div key={a.id} style={{ background: "#fff", borderRadius: 16, border: "1px solid #e2e8f0", padding: "16px 20px", boxShadow: "0 1px 4px rgba(0,0,0,0.03)" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                      <Pill status={a.status} label={t(`appointments.status_${a.status}`)} />
-                      <span style={{ fontSize: 14, fontWeight: 700, color: "#0f172a" }}>Dr. {a.doctorName}</span>
+                  <div key={a.id} style={{
+                    background: a.status === "reschedule_requested" ? "#fffbeb" : "#fff",
+                    borderRadius: 16,
+                    border: a.status === "reschedule_requested" ? "1.5px solid #fde68a" : "1px solid #e2e8f0",
+                    padding: "16px 20px",
+                    boxShadow: "0 1px 4px rgba(0,0,0,0.03)",
+                  }}>
+                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                          <Pill status={a.status === "reschedule_requested" ? "abnormal" : a.status} label={t(`appointments.status_${a.status}`)} />
+                          <span style={{ fontSize: 14, fontWeight: 700, color: "#0f172a" }}>Dr. {a.doctorName}</span>
+                        </div>
+                        <p style={{ fontSize: 12, color: "#94a3b8", margin: 0 }}>{a.date} · {a.time}</p>
+                        {a.status === "reschedule_requested" && a.rescheduleDate && (
+                          <p style={{ fontSize: 12, color: "#d97706", margin: "4px 0 0", fontWeight: 600 }}>
+                            {t("appointments.new_proposed")}: {a.rescheduleDate} · {a.rescheduleTime}
+                          </p>
+                        )}
+                        {a.reason && <p style={{ fontSize: 13, color: "#64748b", margin: "6px 0 0" }}>{a.reason}</p>}
+                      </div>
+                      {a.status === "reschedule_requested" && (
+                        <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                          <button onClick={() => declineReschedule(a)} style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 14px", borderRadius: 10, background: "#fee2e2", color: "#dc2626", border: "none", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                            <XCircle size={13} /> {t("common.reject")}
+                          </button>
+                          <button onClick={() => acceptReschedule(a)} style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 14px", borderRadius: 10, background: "linear-gradient(135deg, #16a34a, #0d9488)", color: "#fff", border: "none", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>
+                            <CheckCircle size={13} /> {t("common.approve")}
+                          </button>
+                        </div>
+                      )}
                     </div>
-                    <p style={{ fontSize: 12, color: "#94a3b8", margin: 0 }}>{a.date} · {a.time}</p>
-                    {a.reason && <p style={{ fontSize: 13, color: "#64748b", margin: "6px 0 0" }}>{a.reason}</p>}
                   </div>
                 ))}
               </div>
@@ -541,6 +644,52 @@ export default function PatientDashboard() {
           </div>
         </>
       )}
+
+      {/* Appointment Request Dialog */}
+      <Dialog open={apptDialog.open} onOpenChange={open => setApptDialog(d => ({ ...d, open }))}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("appointments.request_appointment")} — {apptDialog.doctorName}</DialogTitle>
+          </DialogHeader>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14, padding: "8px 0" }}>
+            <div>
+              <Label>{t("appointments.appt_date")}</Label>
+              <input
+                type="date"
+                value={apptForm.date}
+                min={new Date().toISOString().split("T")[0]}
+                onChange={e => setApptForm(f => ({ ...f, date: e.target.value }))}
+                style={{ width: "100%", height: 44, marginTop: 6, padding: "0 14px", border: "1.5px solid #e2e8f0", borderRadius: 12, fontSize: 14, outline: "none", boxSizing: "border-box" }}
+              />
+            </div>
+            <div>
+              <Label>{t("appointments.appt_time")}</Label>
+              <input
+                type="time"
+                value={apptForm.time}
+                onChange={e => setApptForm(f => ({ ...f, time: e.target.value }))}
+                style={{ width: "100%", height: 44, marginTop: 6, padding: "0 14px", border: "1.5px solid #e2e8f0", borderRadius: 12, fontSize: 14, outline: "none", boxSizing: "border-box" }}
+              />
+            </div>
+            <div>
+              <Label>{t("appointments.appt_reason")}</Label>
+              <textarea
+                value={apptForm.reason}
+                onChange={e => setApptForm(f => ({ ...f, reason: e.target.value }))}
+                rows={3}
+                placeholder={t("appointments.appt_reason_placeholder")}
+                style={{ width: "100%", marginTop: 6, padding: "10px 14px", border: "1.5px solid #e2e8f0", borderRadius: 12, fontSize: 14, outline: "none", resize: "vertical", boxSizing: "border-box" }}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setApptDialog(d => ({ ...d, open: false }))}>{t("common.cancel")}</Button>
+            <Button onClick={requestAppointment} disabled={savingAppt || !apptForm.date || !apptForm.time}>
+              {savingAppt ? "..." : t("appointments.send_request")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Universal access dialog */}
       <AlertDialog open={showUniversalDialog} onOpenChange={setShowUniversalDialog}>

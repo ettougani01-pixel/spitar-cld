@@ -421,7 +421,16 @@
     "decline_reschedule": "Decline",
     "proposed_by_patient": "Proposed by patient",
     "reschedule_pending_banner": "Awaiting doctor's response for your reschedule request.",
-    "reschedule_request_sent": "Reschedule request sent"
+    "reschedule_request_sent": "Reschedule request sent",
+    "request_appointment": "Request Appointment",
+    "send_request": "Send Request",
+    "send_reschedule": "Propose New Time",
+    "modify": "Modify",
+    "appt_date": "Date",
+    "appt_time": "Time",
+    "appt_reason": "Reason",
+    "appt_reason_placeholder": "Reason for the appointment…",
+    "new_proposed": "New proposed time"
   },
   "common": {
     "save": "Save",

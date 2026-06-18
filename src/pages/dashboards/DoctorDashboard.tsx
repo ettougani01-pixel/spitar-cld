@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { FileText, FlaskConical, Users, CalendarDays, Activity, Search, Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { FileText, FlaskConical, Users, CalendarDays, Activity, Search, Plus, Trash2, ChevronDown, ChevronUp, Edit2 } from "lucide-react";
 import { HealthProfileContent } from "@/components/HealthProfileContent";
 import type { MedicalRecord, LabResult, Appointment, PatientProfile } from "@/lib/types";
 
@@ -111,6 +111,10 @@ export default function DoctorDashboard() {
   });
   const [prescriptionMeds, setPrescriptionMeds] = useState<{ value: string; custom: string; duration: string; frequency: string; timing: string }[]>([{ value: "", custom: "", duration: "", frequency: "", timing: "" }]);
   const [savingRecord, setSavingRecord] = useState(false);
+
+  const [rescheduleDialog, setRescheduleDialog] = useState<{ open: boolean; appt: Appointment | null }>({ open: false, appt: null });
+  const [rescheduleForm, setRescheduleForm] = useState({ date: "", time: "" });
+  const [savingReschedule, setSavingReschedule] = useState(false);
 
   // Doctor's custom medication list
   const [customMedList, setCustomMedList] = useState<string[]>([]);
@@ -319,6 +323,49 @@ export default function DoctorDashboard() {
     setAppointments(prev => prev.map(a => a.id === apptId ? { ...a, status: status as Appointment["status"] } : a));
   };
 
+  const confirmAppointmentWithNotif = async (appt: Appointment) => {
+    await updateAppointmentStatus(appt.id, "confirmed");
+    if (user) await sendNotification(
+      appt.patientId, "appointment_confirmed",
+      `Dr. ${user.firstName} ${user.lastName}`,
+      `confirmed your appointment on ${appt.date} at ${appt.time}`,
+    );
+  };
+
+  const cancelAppointmentWithNotif = async (appt: Appointment) => {
+    await updateAppointmentStatus(appt.id, "cancelled");
+    if (user) await sendNotification(
+      appt.patientId, "appointment_cancelled",
+      `Dr. ${user.firstName} ${user.lastName}`,
+      `cancelled your appointment scheduled for ${appt.date} at ${appt.time}`,
+    );
+  };
+
+  const submitReschedule = async () => {
+    const appt = rescheduleDialog.appt;
+    if (!appt || !rescheduleForm.date || !rescheduleForm.time || !user) return;
+    setSavingReschedule(true);
+    try {
+      await updateDoc(doc(db, "appointments", appt.id), {
+        status: "reschedule_requested",
+        rescheduleDate: rescheduleForm.date,
+        rescheduleTime: rescheduleForm.time,
+      });
+      setAppointments(prev => prev.map(a => a.id === appt.id ? {
+        ...a, status: "reschedule_requested" as const,
+        rescheduleDate: rescheduleForm.date, rescheduleTime: rescheduleForm.time,
+      } : a));
+      await sendNotification(
+        appt.patientId, "appointment_rescheduled",
+        `Dr. ${user.firstName} ${user.lastName}`,
+        `proposed a new appointment time: ${rescheduleForm.date} at ${rescheduleForm.time}`,
+      );
+      setRescheduleDialog({ open: false, appt: null });
+    } finally {
+      setSavingReschedule(false);
+    }
+  };
+
   const pendingAppts = appointments.filter(a => a.status === "pending");
   const confirmedAppts = appointments.filter(a => a.status === "confirmed");
 
@@ -394,10 +441,13 @@ export default function DoctorDashboard() {
                       <p style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>{a.date} · {a.time}</p>
                     </div>
                     <div style={{ display: "flex", gap: 8 }}>
-                      <button onClick={() => updateAppointmentStatus(a.id, "confirmed")} style={{ padding: "6px 14px", borderRadius: 10, background: "linear-gradient(135deg, #16a34a, #15803d)", color: "#fff", border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                      <button onClick={() => confirmAppointmentWithNotif(a)} style={{ padding: "6px 14px", borderRadius: 10, background: "linear-gradient(135deg, #16a34a, #15803d)", color: "#fff", border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
                         {t("appointments.confirm_appt")}
                       </button>
-                      <button onClick={() => updateAppointmentStatus(a.id, "cancelled")} style={{ padding: "6px 14px", borderRadius: 10, background: "#fee2e2", color: "#dc2626", border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                      <button onClick={() => { setRescheduleDialog({ open: true, appt: a }); setRescheduleForm({ date: a.date, time: a.time }); }} style={{ padding: "6px 14px", borderRadius: 10, background: "#f0f9ff", color: "#2563eb", border: "1.5px solid #bae6fd", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
+                        <Edit2 size={12} /> {t("appointments.modify")}
+                      </button>
+                      <button onClick={() => cancelAppointmentWithNotif(a)} style={{ padding: "6px 14px", borderRadius: 10, background: "#fee2e2", color: "#dc2626", border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
                         {t("appointments.cancel_appt")}
                       </button>
                     </div>
@@ -641,10 +691,13 @@ export default function DoctorDashboard() {
                   </div>
                   {a.status === "pending" && (
                     <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-                      <button onClick={() => updateAppointmentStatus(a.id, "confirmed")} style={{ padding: "6px 14px", borderRadius: 10, background: "linear-gradient(135deg, #16a34a, #15803d)", color: "#fff", border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                      <button onClick={() => confirmAppointmentWithNotif(a)} style={{ padding: "6px 14px", borderRadius: 10, background: "linear-gradient(135deg, #16a34a, #15803d)", color: "#fff", border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
                         {t("appointments.confirm_appt")}
                       </button>
-                      <button onClick={() => updateAppointmentStatus(a.id, "cancelled")} style={{ padding: "6px 14px", borderRadius: 10, background: "#fee2e2", color: "#dc2626", border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                      <button onClick={() => { setRescheduleDialog({ open: true, appt: a }); setRescheduleForm({ date: a.date, time: a.time }); }} style={{ padding: "6px 14px", borderRadius: 10, background: "#f0f9ff", color: "#2563eb", border: "1.5px solid #bae6fd", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
+                        <Edit2 size={12} /> {t("appointments.modify")}
+                      </button>
+                      <button onClick={() => cancelAppointmentWithNotif(a)} style={{ padding: "6px 14px", borderRadius: 10, background: "#fee2e2", color: "#dc2626", border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
                         {t("appointments.cancel_appt")}
                       </button>
                     </div>
@@ -655,6 +708,42 @@ export default function DoctorDashboard() {
           )}
         </div>
       )}
+
+      {/* Reschedule Dialog */}
+      <Dialog open={rescheduleDialog.open} onOpenChange={open => setRescheduleDialog(d => ({ ...d, open }))}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("appointments.modify")} — {rescheduleDialog.appt?.patientName}</DialogTitle>
+          </DialogHeader>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14, padding: "8px 0" }}>
+            <div>
+              <Label>{t("appointments.appt_date")}</Label>
+              <input
+                type="date"
+                value={rescheduleForm.date}
+                min={new Date().toISOString().split("T")[0]}
+                onChange={e => setRescheduleForm(f => ({ ...f, date: e.target.value }))}
+                style={{ width: "100%", height: 44, marginTop: 6, padding: "0 14px", border: "1.5px solid #e2e8f0", borderRadius: 12, fontSize: 14, outline: "none", boxSizing: "border-box" }}
+              />
+            </div>
+            <div>
+              <Label>{t("appointments.appt_time")}</Label>
+              <input
+                type="time"
+                value={rescheduleForm.time}
+                onChange={e => setRescheduleForm(f => ({ ...f, time: e.target.value }))}
+                style={{ width: "100%", height: 44, marginTop: 6, padding: "0 14px", border: "1.5px solid #e2e8f0", borderRadius: 12, fontSize: 14, outline: "none", boxSizing: "border-box" }}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRescheduleDialog(d => ({ ...d, open: false }))}>{t("common.cancel")}</Button>
+            <Button onClick={submitReschedule} disabled={savingReschedule || !rescheduleForm.date || !rescheduleForm.time}>
+              {savingReschedule ? "..." : t("appointments.send_reschedule")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Add Record Dialog */}
       <Dialog open={showAddRecord} onOpenChange={setShowAddRecord}>

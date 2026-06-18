@@ -421,7 +421,16 @@
     "decline_reschedule": "Refuser",
     "proposed_by_patient": "Proposé par le patient",
     "reschedule_pending_banner": "En attente de la réponse du médecin.",
-    "reschedule_request_sent": "Demande de replanification envoyée"
+    "reschedule_request_sent": "Demande de replanification envoyée",
+    "request_appointment": "Demander un rendez-vous",
+    "send_request": "Envoyer la demande",
+    "send_reschedule": "Proposer un nouveau créneau",
+    "modify": "Modifier",
+    "appt_date": "Date",
+    "appt_time": "Heure",
+    "appt_reason": "Motif",
+    "appt_reason_placeholder": "Motif du rendez-vous…",
+    "new_proposed": "Nouveau créneau proposé"
   },
   "common": {
     "save": "Enregistrer",

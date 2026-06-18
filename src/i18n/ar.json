@@ -421,7 +421,17 @@
     "decline_reschedule": "رفض",
     "proposed_by_patient": "مقترح من المريض",
     "reschedule_pending_banner": "في انتظار رد الطبيب على طلب إعادة الجدولة.",
-    "reschedule_request_sent": "تم إرسال طلب إعادة الجدولة"
+    "reschedule_request_sent": "تم إرسال طلب إعادة الجدولة",
+    "status_reschedule_requested": "تعديل وقت مقترح",
+    "request_appointment": "طلب موعد",
+    "send_request": "إرسال الطلب",
+    "send_reschedule": "اقتراح وقت جديد",
+    "modify": "تعديل",
+    "appt_date": "التاريخ",
+    "appt_time": "الوقت",
+    "appt_reason": "السبب",
+    "appt_reason_placeholder": "سبب الموعد…",
+    "new_proposed": "الوقت المقترح الجديد"
   },
   "common": {
     "save": "حفظ",

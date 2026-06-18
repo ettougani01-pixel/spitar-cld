@@ -95,6 +95,7 @@ export interface Appointment {
   notes?: string;
   cancelReason?: string;
   rescheduleDate?: string;
+  rescheduleTime?: string;
   createdAt: string;
 }
 
