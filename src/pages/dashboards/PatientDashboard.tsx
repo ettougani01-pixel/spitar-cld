@@ -66,6 +66,7 @@ export default function PatientDashboard() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [permissions, setPermissions] = useState<AccessPermission[]>([]);
   const [accessRequests, setAccessRequests] = useState<{ id: string; doctorId: string; doctorName: string; status: string; createdAt: string }[]>([]);
+  const [showPendingRequests, setShowPendingRequests] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const [universalAccess, setUniversalAccess] = useState(false);
@@ -188,11 +189,11 @@ export default function PatientDashboard() {
   ];
 
   const STATS = [
-    { label: t("records.medical_records"), value: records.length, icon: FileText, grad: "linear-gradient(135deg, #2563eb, #06b6d4)" },
-    { label: t("records.lab_results"), value: labResults.length, icon: FlaskConical, grad: "linear-gradient(135deg, #0891b2, #16a34a)" },
-    { label: t("dashboard.authorized_providers"), value: permissions.length, icon: Users, grad: "linear-gradient(135deg, #7c3aed, #2563eb)" },
-    { label: t("dashboard.pending_requests"), value: accessRequests.length, icon: Clock, grad: "linear-gradient(135deg, #d97706, #f59e0b)" },
-    { label: t("appointments.title"), value: appointments.length, icon: CalendarDays, grad: "linear-gradient(135deg, #0d9488, #16a34a)" },
+    { label: t("records.medical_records"), value: records.length, icon: FileText, grad: "linear-gradient(135deg, #2563eb, #06b6d4)", onClick: undefined as (() => void) | undefined },
+    { label: t("records.lab_results"), value: labResults.length, icon: FlaskConical, grad: "linear-gradient(135deg, #0891b2, #16a34a)", onClick: undefined },
+    { label: t("dashboard.authorized_providers"), value: permissions.length, icon: Users, grad: "linear-gradient(135deg, #7c3aed, #2563eb)", onClick: undefined },
+    { label: t("dashboard.pending_requests"), value: accessRequests.length, icon: Clock, grad: "linear-gradient(135deg, #d97706, #f59e0b)", onClick: accessRequests.length > 0 ? () => setShowPendingRequests(p => !p) : undefined },
+    { label: t("appointments.title"), value: appointments.length, icon: CalendarDays, grad: "linear-gradient(135deg, #0d9488, #16a34a)", onClick: undefined },
   ];
 
   const initials = `${user?.firstName?.[0] ?? ""}${user?.lastName?.[0] ?? ""}`.toUpperCase();
@@ -235,13 +236,16 @@ export default function PatientDashboard() {
 
       {/* ── STAT CARDS ── */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 14, marginBottom: 24 }}>
-        {STATS.map(({ label, value, icon: Icon, grad }) => (
-          <div key={label} style={{
-            background: "#fff", borderRadius: 16, border: "1px solid #e2e8f0",
-            padding: "18px 16px", display: "flex", flexDirection: "column", gap: 14,
-            boxShadow: "0 1px 4px rgba(0,0,0,0.04)", transition: "transform 0.15s, box-shadow 0.15s",
-            cursor: "default",
-          }}
+        {STATS.map(({ label, value, icon: Icon, grad, onClick }) => (
+          <div key={label}
+            onClick={onClick}
+            style={{
+              background: "#fff", borderRadius: 16,
+              border: onClick ? "1.5px solid #fde68a" : "1px solid #e2e8f0",
+              padding: "18px 16px", display: "flex", flexDirection: "column", gap: 14,
+              boxShadow: "0 1px 4px rgba(0,0,0,0.04)", transition: "transform 0.15s, box-shadow 0.15s",
+              cursor: onClick ? "pointer" : "default",
+            }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 6px 20px rgba(0,0,0,0.09)"; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ""; (e.currentTarget as HTMLElement).style.boxShadow = "0 1px 4px rgba(0,0,0,0.04)"; }}
           >
@@ -399,7 +403,7 @@ export default function PatientDashboard() {
           </div>
 
           {/* Pending Access Requests Banner */}
-          {accessRequests.length > 0 && (
+          {showPendingRequests && accessRequests.length > 0 && (
             <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
               <p style={{ fontSize: 13, fontWeight: 700, color: "#d97706", textTransform: "uppercase", letterSpacing: "0.05em", margin: 0 }}>{t("dashboard.pending_requests")}</p>
               {accessRequests.map(req => (
