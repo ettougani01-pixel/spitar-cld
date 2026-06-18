@@ -6,6 +6,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
+import { sendNotification } from "@/lib/notifications";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -242,6 +243,12 @@ export default function DoctorDashboard() {
       createdAt: new Date().toISOString(),
     });
     setRequestingSent(prev => ({ ...prev, [patient.uid]: true }));
+    await sendNotification(
+      patient.uid,
+      "access_request",
+      `Dr. ${user.firstName} ${user.lastName}`,
+      "is requesting access to your medical file",
+    );
   };
 
   const saveRecord = async () => {

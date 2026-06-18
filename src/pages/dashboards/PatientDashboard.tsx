@@ -6,6 +6,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
+import { sendNotification } from "@/lib/notifications";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { HealthProfileContent } from "@/components/HealthProfileContent";
 import { QrAccessContent } from "@/components/QrAccessContent";
@@ -113,14 +114,23 @@ export default function PatientDashboard() {
     };
     const ref = await addDoc(collection(db, "access_permissions"), perm);
     setPermissions(prev => [...prev, { id: ref.id, ...perm }]);
-    // Mark request as approved
     await updateDoc(doc(db, "access_requests", req.id), { status: "approved" });
     setAccessRequests(prev => prev.filter(r => r.id !== req.id));
+    await sendNotification(
+      req.doctorId, "access_approved",
+      `${user.firstName} ${user.lastName}`,
+      "approved your request to access their medical file",
+    );
   };
 
-  const rejectRequest = async (reqId: string) => {
-    await updateDoc(doc(db, "access_requests", reqId), { status: "rejected" });
-    setAccessRequests(prev => prev.filter(r => r.id !== reqId));
+  const rejectRequest = async (req: { id: string; doctorId: string }) => {
+    await updateDoc(doc(db, "access_requests", req.id), { status: "rejected" });
+    setAccessRequests(prev => prev.filter(r => r.id !== req.id));
+    if (user) await sendNotification(
+      req.doctorId, "access_rejected",
+      "Access Request Declined",
+      "The patient declined your request to access their medical file",
+    );
   };
 
   const toggleUniversalAccess = async (value: boolean) => {
@@ -517,7 +527,7 @@ export default function PatientDashboard() {
                       </div>
                     </div>
                     <div style={{ display: "flex", gap: 10 }}>
-                      <button onClick={() => rejectRequest(req.id)} style={{ padding: "9px 18px", borderRadius: 10, background: "#fee2e2", color: "#dc2626", border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                      <button onClick={() => rejectRequest(req)} style={{ padding: "9px 18px", borderRadius: 10, background: "#fee2e2", color: "#dc2626", border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
                         {t("common.reject")}
                       </button>
                       <button onClick={() => approveRequest(req).then(() => { if (accessRequests.length <= 1) setActiveTab("records"); })} style={{ padding: "9px 18px", borderRadius: 10, background: "linear-gradient(135deg, #16a34a, #0d9488)", color: "#fff", border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>

@@ -1,222 +1,196 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import { Bell, CheckCheck, Trash2, QrCode, ShieldCheck, FlaskConical, X, CalendarDays } from "lucide-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { cn } from "@/lib/utils";
+import { useState, useEffect, useRef } from "react";
+import { Bell, CheckCheck, Trash2, ShieldCheck, FlaskConical, QrCode, CalendarDays, FileText, X } from "lucide-react";
+import {
+  collection, query, where, orderBy, onSnapshot,
+  updateDoc, deleteDoc, doc, writeBatch,
+} from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { useAuth } from "@/contexts/AuthContext";
 
-interface Notification {
-  id: number;
+export interface Notif {
+  id: string;
   type: string;
   title: string;
   body: string;
   read: boolean;
-  data: Record<string, unknown> | null;
   createdAt: string;
 }
 
-function typeIcon(type: string) {
-  if (type.startsWith("access")) return <ShieldCheck className="w-4 h-4 text-primary flex-shrink-0" />;
-  if (type === "lab_result") return <FlaskConical className="w-4 h-4 text-secondary flex-shrink-0" />;
-  if (type === "qr_access") return <QrCode className="w-4 h-4 text-primary flex-shrink-0" />;
-  if (type === "appointment_confirmed")   return <CalendarDays className="w-4 h-4 text-green-600 flex-shrink-0" />;
-  if (type === "appointment_cancelled")   return <CalendarDays className="w-4 h-4 text-red-500 flex-shrink-0" />;
-  if (type === "appointment_rescheduled") return <CalendarDays className="w-4 h-4 text-blue-500 flex-shrink-0" />;
-  if (type.startsWith("appointment"))     return <CalendarDays className="w-4 h-4 text-teal-500 flex-shrink-0" />;
-  return <Bell className="w-4 h-4 text-muted-foreground flex-shrink-0" />;
+function TypeIcon({ type }: { type: string }) {
+  const s = { flexShrink: 0 as const };
+  if (type.startsWith("access")) return <ShieldCheck size={16} style={{ ...s, color: "#7c3aed" }} />;
+  if (type === "new_record")      return <FileText size={16} style={{ ...s, color: "#2563eb" }} />;
+  if (type === "lab_result")      return <FlaskConical size={16} style={{ ...s, color: "#0891b2" }} />;
+  if (type === "qr_access")       return <QrCode size={16} style={{ ...s, color: "#7c3aed" }} />;
+  if (type.startsWith("appt"))    return <CalendarDays size={16} style={{ ...s, color: "#0d9488" }} />;
+  return <Bell size={16} style={{ ...s, color: "#64748b" }} />;
 }
 
-function timeAgo(iso: string): string {
+function timeAgo(iso: string) {
   const diff = (Date.now() - new Date(iso).getTime()) / 1000;
-  if (diff < 60) return "just now";
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 60)    return "just now";
+  if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
 export function NotificationBell() {
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
+  const [notifs, setNotifs] = useState<Notif[]>([]);
   const panelRef = useRef<HTMLDivElement>(null);
-  const qc = useQueryClient();
-  const token = localStorage.getItem("spitar_token");
-  const headers = { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
 
-  const { data: notifications = [] } = useQuery<Notification[]>({
-    queryKey: ["notifications"],
-    queryFn: async () => {
-      const res = await fetch("/api/notifications", { headers });
-      if (!res.ok) return [];
-      return res.json();
-    },
-    refetchInterval: 60_000,
-  });
-
-  const unread = notifications.filter(n => !n.read).length;
-
-  // SSE — real-time push
+  // Real-time listener on Firestore
   useEffect(() => {
-    if (!token) return;
-    const es = new EventSource(`/api/notifications/stream?_t=${token}`, {});
-    const handleMessage = (e: MessageEvent) => {
-      try {
-        const payload = JSON.parse(e.data);
-        if (payload.event === "notification") {
-          qc.setQueryData<Notification[]>(["notifications"], (prev = []) =>
-            [payload.notification, ...prev]
-          );
-        }
-      } catch { /* ignore */ }
-    };
-    es.addEventListener("message", handleMessage);
-    return () => { es.removeEventListener("message", handleMessage); es.close(); };
-  }, [token]);
+    if (!user) return;
+    const q = query(
+      collection(db, "notifications", user.uid, "items"),
+      orderBy("createdAt", "desc"),
+    );
+    const unsub = onSnapshot(q, snap => {
+      setNotifs(snap.docs.map(d => ({ id: d.id, ...d.data() } as Notif)));
+    });
+    return unsub;
+  }, [user]);
 
   // Close on outside click
   useEffect(() => {
     if (!open) return;
     const handler = (e: MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+      if (panelRef.current && !panelRef.current.contains(e.target as Node))
         setOpen(false);
-      }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
-  const markAllRead = useMutation({
-    mutationFn: async () => {
-      await fetch("/api/notifications/read-all", { method: "PATCH", headers });
-    },
-    onSuccess: () => qc.setQueryData<Notification[]>(["notifications"], prev =>
-      (prev ?? []).map(n => ({ ...n, read: true }))
-    ),
-  });
+  const unread = notifs.filter(n => !n.read).length;
 
-  const markRead = useCallback(async (id: number) => {
-    await fetch(`/api/notifications/${id}/read`, { method: "PATCH", headers });
-    qc.setQueryData<Notification[]>(["notifications"], prev =>
-      (prev ?? []).map(n => n.id === id ? { ...n, read: true } : n)
-    );
-  }, []);
-
-  const deleteNotif = useMutation({
-    mutationFn: async (id: number) => {
-      await fetch(`/api/notifications/${id}`, { method: "DELETE", headers });
-    },
-    onSuccess: (_: void, id: number) => qc.setQueryData<Notification[]>(["notifications"], prev =>
-      (prev ?? []).filter(n => n.id !== id)
-    ),
-  });
-
-  const handleOpen = () => {
-    setOpen(o => !o);
+  const markRead = async (n: Notif) => {
+    if (n.read || !user) return;
+    await updateDoc(doc(db, "notifications", user.uid, "items", n.id), { read: true });
   };
 
-  const handleClickNotif = (n: Notification) => {
-    if (!n.read) markRead(n.id);
+  const markAllRead = async () => {
+    if (!user) return;
+    const batch = writeBatch(db);
+    notifs.filter(n => !n.read).forEach(n =>
+      batch.update(doc(db, "notifications", user.uid, "items", n.id), { read: true })
+    );
+    await batch.commit();
+  };
+
+  const remove = async (id: string) => {
+    if (!user) return;
+    await deleteDoc(doc(db, "notifications", user.uid, "items", id));
   };
 
   return (
-    <div className="relative" ref={panelRef}>
+    <div style={{ position: "relative" }} ref={panelRef}>
       {/* Bell button */}
       <button
-        onClick={handleOpen}
-        className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
-        aria-label="Notifications"
-        data-testid="button-notifications"
+        onClick={() => setOpen(o => !o)}
+        style={{
+          width: 38, height: 38, borderRadius: "50%", border: "none",
+          background: open ? "#f1f5f9" : "transparent",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          cursor: "pointer", position: "relative", transition: "background 0.15s",
+        }}
+        onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "#f1f5f9"}
+        onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = open ? "#f1f5f9" : "transparent"}
       >
-        <Bell className="w-5 h-5 text-muted-foreground" />
+        <Bell size={19} style={{ color: "#64748b" }} />
         {unread > 0 && (
-          <span className="absolute -top-0.5 -end-0.5 min-w-[18px] h-[18px] rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center px-1 animate-in zoom-in-50 duration-150">
+          <span style={{
+            position: "absolute", top: -1, right: -1,
+            minWidth: 17, height: 17, borderRadius: 10,
+            background: "#ef4444", color: "#fff",
+            fontSize: 10, fontWeight: 700,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: "0 4px",
+          }}>
             {unread > 9 ? "9+" : unread}
           </span>
         )}
       </button>
 
-      {/* Dropdown panel */}
+      {/* Dropdown */}
       {open && (
-        <div className="absolute end-0 top-11 w-80 sm:w-96 bg-white border border-border rounded-xl shadow-xl z-50 flex flex-col max-h-[480px] animate-in slide-in-from-top-2 duration-150">
+        <div style={{
+          position: "absolute", right: 0, top: 46,
+          width: 360, maxHeight: 480,
+          background: "#fff", border: "1px solid #e2e8f0",
+          borderRadius: 16, boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+          zIndex: 100, display: "flex", flexDirection: "column",
+          overflow: "hidden",
+        }}>
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-            <div className="flex items-center gap-2">
-              <Bell className="w-4 h-4 text-primary" />
-              <span className="text-sm font-semibold">Notifications</span>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", borderBottom: "1px solid #f1f5f9" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <Bell size={15} style={{ color: "#7c3aed" }} />
+              <span style={{ fontSize: 14, fontWeight: 700, color: "#0f172a" }}>Notifications</span>
               {unread > 0 && (
-                <span className="text-xs bg-primary/10 text-primary font-semibold px-1.5 py-0.5 rounded-full">
+                <span style={{ fontSize: 11, fontWeight: 700, padding: "1px 8px", borderRadius: 20, background: "#ede9fe", color: "#7c3aed" }}>
                   {unread} new
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-1">
+            <div style={{ display: "flex", gap: 4 }}>
               {unread > 0 && (
-                <button
-                  onClick={() => markAllRead.mutate()}
-                  className="text-xs text-primary hover:underline flex items-center gap-1 px-2 py-1 rounded hover:bg-primary/5 transition-colors"
-                  title="Mark all as read"
-                >
-                  <CheckCheck className="w-3.5 h-3.5" />
-                  All read
+                <button onClick={markAllRead} title="Mark all read" style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#7c3aed", background: "none", border: "none", cursor: "pointer", padding: "4px 8px", borderRadius: 8 }}>
+                  <CheckCheck size={13} /> All read
                 </button>
               )}
-              <button
-                onClick={() => setOpen(false)}
-                className="p-1 rounded hover:bg-muted text-muted-foreground"
-              >
-                <X className="w-4 h-4" />
+              <button onClick={() => setOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "#94a3b8", padding: 4, borderRadius: 8 }}>
+                <X size={15} />
               </button>
             </div>
           </div>
 
           {/* List */}
-          <div className="overflow-y-auto flex-1">
-            {notifications.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center px-6">
-                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
-                  <Bell className="w-6 h-6 text-muted-foreground" />
+          <div style={{ overflowY: "auto", flex: 1 }}>
+            {notifs.length === 0 ? (
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "40px 24px", gap: 10 }}>
+                <div style={{ width: 48, height: 48, borderRadius: "50%", background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Bell size={22} style={{ color: "#94a3b8" }} />
                 </div>
-                <p className="text-sm font-medium text-foreground">All caught up</p>
-                <p className="text-xs text-muted-foreground mt-1">No notifications yet</p>
+                <p style={{ fontSize: 13, fontWeight: 600, color: "#0f172a", margin: 0 }}>All caught up</p>
+                <p style={{ fontSize: 12, color: "#94a3b8", margin: 0 }}>No notifications yet</p>
               </div>
-            ) : (
-              notifications.map(n => (
-                <div
-                  key={n.id}
-                  onClick={() => handleClickNotif(n)}
-                  className={cn(
-                    "flex gap-3 px-4 py-3 hover:bg-muted/50 cursor-pointer group border-b border-border/50 last:border-0 transition-colors",
-                    !n.read && "bg-primary/5"
-                  )}
-                >
-                  {/* Icon */}
-                  <div className="mt-0.5">{typeIcon(n.type)}</div>
-
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <p className={cn("text-sm leading-snug", !n.read ? "font-semibold text-foreground" : "font-medium text-foreground/80")}>
-                        {n.title}
-                      </p>
-                      <span className="text-[10px] text-muted-foreground whitespace-nowrap flex-shrink-0 mt-0.5">
-                        {timeAgo(n.createdAt)}
-                      </span>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{n.body}</p>
+            ) : notifs.map(n => (
+              <div
+                key={n.id}
+                onClick={() => markRead(n)}
+                style={{
+                  display: "flex", gap: 12, padding: "12px 16px",
+                  borderBottom: "1px solid #f8fafc", cursor: "pointer",
+                  background: n.read ? "#fff" : "#faf7ff",
+                  transition: "background 0.1s",
+                }}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = n.read ? "#f8fafc" : "#f3effe"}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = n.read ? "#fff" : "#faf7ff"}
+              >
+                <div style={{ marginTop: 2 }}><TypeIcon type={n.type} /></div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+                    <p style={{ fontSize: 13, fontWeight: n.read ? 500 : 700, color: "#0f172a", margin: 0, lineHeight: 1.3 }}>{n.title}</p>
+                    <span style={{ fontSize: 10, color: "#94a3b8", whiteSpace: "nowrap", flexShrink: 0, marginTop: 2 }}>{timeAgo(n.createdAt)}</span>
                   </div>
-
-                  {/* Unread dot + delete */}
-                  <div className="flex flex-col items-center gap-2 flex-shrink-0">
-                    {!n.read && (
-                      <div className="w-2 h-2 rounded-full bg-primary mt-1" />
-                    )}
-                    <button
-                      onClick={e => { e.stopPropagation(); deleteNotif.mutate(n.id); }}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-muted text-muted-foreground hover:text-red-500"
-                      title="Delete"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
-                  </div>
+                  <p style={{ fontSize: 12, color: "#64748b", margin: "3px 0 0", lineHeight: 1.4 }}>{n.body}</p>
                 </div>
-              ))
-            )}
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                  {!n.read && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#7c3aed", marginTop: 4 }} />}
+                  <button
+                    onClick={e => { e.stopPropagation(); remove(n.id); }}
+                    style={{ background: "none", border: "none", cursor: "pointer", color: "#cbd5e1", padding: 2, borderRadius: 6, lineHeight: 1 }}
+                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = "#ef4444"}
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = "#cbd5e1"}
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}

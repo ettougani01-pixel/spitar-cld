@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { NotificationBell } from "./NotificationBell";
 import { SpitarLogoMark } from "./SpitarLogoMark";
 import { LogOut, Menu, X, User, ChevronRight, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -177,7 +178,8 @@ export function DashboardLayout({ children, navItems, title }: DashboardLayoutPr
             </div>
             <h1 style={{ fontSize: 15, fontWeight: 700, color: "#0f172a", margin: 0 }}>{title ?? t("nav.dashboard")}</h1>
           </div>
-          <div style={{ marginLeft: "auto" }}>
+          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
+            <NotificationBell />
             <LanguageSwitcher />
           </div>
         </header>
