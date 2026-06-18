@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { FileText, FlaskConical, Users, CalendarDays, Activity, Search, Plus, Trash2, ChevronDown, ChevronUp, Edit2 } from "lucide-react";
+import { FileText, FlaskConical, Users, CalendarDays, Activity, Search, Plus, Trash2, ChevronDown, ChevronUp, Edit2, XCircle } from "lucide-react";
 import { HealthProfileContent } from "@/components/HealthProfileContent";
 import type { MedicalRecord, LabResult, Appointment, PatientProfile } from "@/lib/types";
 
@@ -339,6 +339,11 @@ export default function DoctorDashboard() {
       `Dr. ${user.firstName} ${user.lastName}`,
       `cancelled your appointment scheduled for ${appt.date} at ${appt.time}`,
     );
+  };
+
+  const deleteAppointment = async (apptId: string) => {
+    await deleteDoc(doc(db, "appointments", apptId));
+    setAppointments(prev => prev.filter(a => a.id !== apptId));
   };
 
   const submitReschedule = async () => {
@@ -701,6 +706,11 @@ export default function DoctorDashboard() {
                         {t("appointments.cancel_appt")}
                       </button>
                     </div>
+                  )}
+                  {a.status === "cancelled" && (
+                    <button onClick={() => deleteAppointment(a.id)} style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: 10, background: "#fee2e2", color: "#dc2626", border: "none", fontSize: 12, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}>
+                      <Trash2 size={13} /> {t("common.delete")}
+                    </button>
                   )}
                 </div>
               </div>
