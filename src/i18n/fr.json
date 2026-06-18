@@ -211,7 +211,7 @@
   },
   "dashboard": {
     "welcome": "Bienvenue",
-    "authorized_providers": "Prestataires autorisés",
+    "authorized_providers": "Mon équipe médicale",
     "pending_requests": "Demandes en attente",
     "total_records": "Dossiers médicaux",
     "total_lab_results": "Résultats de laboratoire",

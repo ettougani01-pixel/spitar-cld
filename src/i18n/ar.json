@@ -211,7 +211,7 @@
   },
   "dashboard": {
     "welcome": "مرحباً بعودتك",
-    "authorized_providers": "مزودو الرعاية المصرح لهم",
+    "authorized_providers": "فريقي الطبي",
     "pending_requests": "الطلبات المعلقة",
     "total_records": "السجلات الطبية",
     "total_lab_results": "نتائج المختبر",

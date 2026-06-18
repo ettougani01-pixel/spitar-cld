@@ -211,7 +211,7 @@
   },
   "dashboard": {
     "welcome": "Welcome back",
-    "authorized_providers": "Authorized Providers",
+    "authorized_providers": "My Medical Team",
     "pending_requests": "Pending Requests",
     "total_records": "Medical Records",
     "total_lab_results": "Lab Results",
