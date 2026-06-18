@@ -1,29 +1,22 @@
 import { useState, useEffect, useRef } from "react";
-import { Bell, CheckCheck, Trash2, ShieldCheck, FlaskConical, QrCode, CalendarDays, FileText, X } from "lucide-react";
-import {
-  collection, query, where, orderBy, onSnapshot,
-  updateDoc, deleteDoc, doc, writeBatch,
-} from "firebase/firestore";
+import { Bell, CheckCheck, ShieldCheck, CalendarDays, X } from "lucide-react";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 
-export interface Notif {
+interface DerivedNotif {
   id: string;
   type: string;
   title: string;
   body: string;
-  read: boolean;
   createdAt: string;
 }
 
 function TypeIcon({ type }: { type: string }) {
   const s = { flexShrink: 0 as const };
-  if (type.startsWith("access")) return <ShieldCheck size={16} style={{ ...s, color: "#7c3aed" }} />;
-  if (type === "new_record")      return <FileText size={16} style={{ ...s, color: "#2563eb" }} />;
-  if (type === "lab_result")      return <FlaskConical size={16} style={{ ...s, color: "#0891b2" }} />;
-  if (type === "qr_access")       return <QrCode size={16} style={{ ...s, color: "#7c3aed" }} />;
-  if (type.startsWith("appt"))    return <CalendarDays size={16} style={{ ...s, color: "#0d9488" }} />;
-  return <Bell size={16} style={{ ...s, color: "#64748b" }} />;
+  if (type === "access_request" || type === "access_approved" || type === "access_rejected")
+    return <ShieldCheck size={16} style={{ ...s, color: "#7c3aed" }} />;
+  return <CalendarDays size={16} style={{ ...s, color: "#0d9488" }} />;
 }
 
 function timeAgo(iso: string) {
@@ -37,20 +30,155 @@ function timeAgo(iso: string) {
 export function NotificationBell() {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
-  const [notifs, setNotifs] = useState<Notif[]>([]);
+  const [notifs, setNotifs] = useState<DerivedNotif[]>([]);
+  const [seenIds, setSeenIds] = useState<Set<string>>(() => {
+    try { return new Set(JSON.parse(localStorage.getItem("notif_seen_" + "") || "[]")); }
+    catch { return new Set(); }
+  });
   const panelRef = useRef<HTMLDivElement>(null);
 
-  // Real-time listener on Firestore
+  // Load seen IDs per user
   useEffect(() => {
     if (!user) return;
-    const q = query(
-      collection(db, "notifications", user.uid, "items"),
-      orderBy("createdAt", "desc"),
-    );
-    const unsub = onSnapshot(q, snap => {
-      setNotifs(snap.docs.map(d => ({ id: d.id, ...d.data() } as Notif)));
-    });
-    return unsub;
+    try {
+      const stored = JSON.parse(localStorage.getItem("notif_seen_" + user.uid) || "[]");
+      setSeenIds(new Set(stored));
+    } catch { setSeenIds(new Set()); }
+  }, [user?.uid]);
+
+  useEffect(() => {
+    if (!user) return;
+    const unsubs: (() => void)[] = [];
+    const role = user.role;
+
+    if (role === "doctor") {
+      // Doctor: see new pending appointments from patients
+      const apptQ = query(
+        collection(db, "appointments"),
+        where("doctorId", "==", user.uid),
+        where("status", "==", "pending"),
+      );
+      unsubs.push(onSnapshot(apptQ, snap => {
+        const items: DerivedNotif[] = snap.docs.map(d => {
+          const data = d.data();
+          return {
+            id: "appt_" + d.id,
+            type: "appointment_request",
+            title: data.patientName || "Patient",
+            body: `Appointment request: ${data.date} at ${data.time}`,
+            createdAt: data.createdAt || new Date().toISOString(),
+          };
+        });
+        setNotifs(prev => {
+          const filtered = prev.filter(n => !n.id.startsWith("appt_pending_"));
+          const newItems = items.map(i => ({ ...i, id: "appt_pending_" + i.id }));
+          return [...newItems, ...filtered].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+        });
+      }));
+
+      // Doctor: see when access requests are approved/rejected
+      const reqQ = query(
+        collection(db, "access_requests"),
+        where("doctorId", "==", user.uid),
+      );
+      unsubs.push(onSnapshot(reqQ, snap => {
+        const items: DerivedNotif[] = snap.docs
+          .filter(d => d.data().status === "approved" || d.data().status === "rejected")
+          .map(d => {
+            const data = d.data();
+            return {
+              id: "req_" + d.id,
+              type: data.status === "approved" ? "access_approved" : "access_rejected",
+              title: "Access Request",
+              body: data.status === "approved"
+                ? "Patient approved your access request"
+                : "Patient declined your access request",
+              createdAt: data.updatedAt || data.createdAt || new Date().toISOString(),
+            };
+          });
+        setNotifs(prev => {
+          const filtered = prev.filter(n => !n.id.startsWith("req_"));
+          return [...items, ...filtered].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+        });
+      }));
+    }
+
+    if (role === "patient") {
+      // Patient: see confirmed, cancelled, reschedule_requested appointments
+      const apptQ = query(
+        collection(db, "appointments"),
+        where("patientId", "==", user.uid),
+      );
+      unsubs.push(onSnapshot(apptQ, snap => {
+        const items: DerivedNotif[] = snap.docs
+          .filter(d => ["confirmed", "cancelled", "reschedule_requested"].includes(d.data().status))
+          .map(d => {
+            const data = d.data();
+            const bodyMap: Record<string, string> = {
+              confirmed: `Dr. ${data.doctorName} confirmed your appointment on ${data.date}`,
+              cancelled: `Dr. ${data.doctorName} cancelled your appointment on ${data.date}`,
+              reschedule_requested: `Dr. ${data.doctorName} proposed a new time: ${data.rescheduleDate} at ${data.rescheduleTime}`,
+            };
+            return {
+              id: "appt_" + d.id,
+              type: "appointment_" + data.status,
+              title: `Dr. ${data.doctorName}`,
+              body: bodyMap[data.status] || data.status,
+              createdAt: data.updatedAt || data.createdAt || new Date().toISOString(),
+            };
+          });
+        setNotifs(prev => {
+          const filtered = prev.filter(n => !n.id.startsWith("appt_"));
+          return [...items, ...filtered].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+        });
+      }));
+
+      // Patient: see pending access requests from doctors
+      const reqQ = query(
+        collection(db, "access_requests"),
+        where("patientId", "==", user.uid),
+        where("status", "==", "pending"),
+      );
+      unsubs.push(onSnapshot(reqQ, snap => {
+        const items: DerivedNotif[] = snap.docs.map(d => {
+          const data = d.data();
+          return {
+            id: "req_" + d.id,
+            type: "access_request",
+            title: data.doctorName || "Doctor",
+            body: "is requesting access to your medical file",
+            createdAt: data.createdAt || new Date().toISOString(),
+          };
+        });
+        setNotifs(prev => {
+          const filtered = prev.filter(n => !n.id.startsWith("req_"));
+          return [...items, ...filtered].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+        });
+      }));
+    }
+
+    if (role === "admin") {
+      // Admin: new access requests
+      const reqQ = query(
+        collection(db, "access_requests"),
+        where("status", "==", "pending"),
+      );
+      unsubs.push(onSnapshot(reqQ, snap => {
+        const items: DerivedNotif[] = snap.docs.map(d => {
+          const data = d.data();
+          return {
+            id: "req_" + d.id,
+            type: "access_request",
+            title: data.doctorName || "Doctor",
+            body: "requested access to a patient file",
+            createdAt: data.createdAt || new Date().toISOString(),
+          };
+        });
+        setNotifs(items.sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
+      }));
+    }
+
+    return () => unsubs.forEach(u => u());
   }, [user]);
 
   // Close on outside click
@@ -64,32 +192,23 @@ export function NotificationBell() {
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
-  const unread = notifs.filter(n => !n.read).length;
+  const unread = notifs.filter(n => !seenIds.has(n.id)).length;
 
-  const markRead = async (n: Notif) => {
-    if (n.read || !user) return;
-    await updateDoc(doc(db, "notifications", user.uid, "items", n.id), { read: true });
+  const markAllRead = () => {
+    if (!user) return;
+    const newSeen = new Set([...seenIds, ...notifs.map(n => n.id)]);
+    setSeenIds(newSeen);
+    localStorage.setItem("notif_seen_" + user.uid, JSON.stringify([...newSeen]));
   };
 
-  const markAllRead = async () => {
-    if (!user) return;
-    const batch = writeBatch(db);
-    notifs.filter(n => !n.read).forEach(n =>
-      batch.update(doc(db, "notifications", user.uid, "items", n.id), { read: true })
-    );
-    await batch.commit();
-  };
-
-  const remove = async (id: string) => {
-    if (!user) return;
-    await deleteDoc(doc(db, "notifications", user.uid, "items", id));
+  const handleOpen = () => {
+    setOpen(o => !o);
   };
 
   return (
     <div style={{ position: "relative" }} ref={panelRef}>
-      {/* Bell button */}
       <button
-        onClick={() => setOpen(o => !o)}
+        onClick={handleOpen}
         style={{
           width: 38, height: 38, borderRadius: "50%", border: "none",
           background: open ? "#f1f5f9" : "transparent",
@@ -114,7 +233,6 @@ export function NotificationBell() {
         )}
       </button>
 
-      {/* Dropdown */}
       {open && (
         <div style={{
           position: "absolute", right: 0, top: 46,
@@ -124,7 +242,6 @@ export function NotificationBell() {
           zIndex: 100, display: "flex", flexDirection: "column",
           overflow: "hidden",
         }}>
-          {/* Header */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", borderBottom: "1px solid #f1f5f9" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <Bell size={15} style={{ color: "#7c3aed" }} />
@@ -147,7 +264,6 @@ export function NotificationBell() {
             </div>
           </div>
 
-          {/* List */}
           <div style={{ overflowY: "auto", flex: 1 }}>
             {notifs.length === 0 ? (
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "40px 24px", gap: 10 }}>
@@ -157,40 +273,30 @@ export function NotificationBell() {
                 <p style={{ fontSize: 13, fontWeight: 600, color: "#0f172a", margin: 0 }}>All caught up</p>
                 <p style={{ fontSize: 12, color: "#94a3b8", margin: 0 }}>No notifications yet</p>
               </div>
-            ) : notifs.map(n => (
-              <div
-                key={n.id}
-                onClick={() => markRead(n)}
-                style={{
-                  display: "flex", gap: 12, padding: "12px 16px",
-                  borderBottom: "1px solid #f8fafc", cursor: "pointer",
-                  background: n.read ? "#fff" : "#faf7ff",
-                  transition: "background 0.1s",
-                }}
-                onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = n.read ? "#f8fafc" : "#f3effe"}
-                onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = n.read ? "#fff" : "#faf7ff"}
-              >
-                <div style={{ marginTop: 2 }}><TypeIcon type={n.type} /></div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
-                    <p style={{ fontSize: 13, fontWeight: n.read ? 500 : 700, color: "#0f172a", margin: 0, lineHeight: 1.3 }}>{n.title}</p>
-                    <span style={{ fontSize: 10, color: "#94a3b8", whiteSpace: "nowrap", flexShrink: 0, marginTop: 2 }}>{timeAgo(n.createdAt)}</span>
+            ) : notifs.map(n => {
+              const isUnread = !seenIds.has(n.id);
+              return (
+                <div
+                  key={n.id}
+                  style={{
+                    display: "flex", gap: 12, padding: "12px 16px",
+                    borderBottom: "1px solid #f8fafc",
+                    background: isUnread ? "#faf7ff" : "#fff",
+                    transition: "background 0.1s",
+                  }}
+                >
+                  <div style={{ marginTop: 2 }}><TypeIcon type={n.type} /></div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+                      <p style={{ fontSize: 13, fontWeight: isUnread ? 700 : 500, color: "#0f172a", margin: 0, lineHeight: 1.3 }}>{n.title}</p>
+                      <span style={{ fontSize: 10, color: "#94a3b8", whiteSpace: "nowrap", flexShrink: 0, marginTop: 2 }}>{timeAgo(n.createdAt)}</span>
+                    </div>
+                    <p style={{ fontSize: 12, color: "#64748b", margin: "3px 0 0", lineHeight: 1.4 }}>{n.body}</p>
                   </div>
-                  <p style={{ fontSize: 12, color: "#64748b", margin: "3px 0 0", lineHeight: 1.4 }}>{n.body}</p>
+                  {isUnread && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#7c3aed", marginTop: 6, flexShrink: 0 }} />}
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                  {!n.read && <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#7c3aed", marginTop: 4 }} />}
-                  <button
-                    onClick={e => { e.stopPropagation(); remove(n.id); }}
-                    style={{ background: "none", border: "none", cursor: "pointer", color: "#cbd5e1", padding: 2, borderRadius: 6, lineHeight: 1 }}
-                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = "#ef4444"}
-                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = "#cbd5e1"}
-                  >
-                    <Trash2 size={12} />
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
