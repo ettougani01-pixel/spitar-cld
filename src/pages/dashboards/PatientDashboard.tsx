@@ -225,12 +225,6 @@ export default function PatientDashboard() {
               {user?.role} · {user?.spitarId}
             </span>
           </div>
-          <button
-            onClick={() => setActiveSection("access")}
-            style={{ padding: "10px 18px", borderRadius: 12, background: "rgba(255,255,255,0.15)", border: "1.5px solid rgba(255,255,255,0.3)", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, backdropFilter: "blur(8px)", flexShrink: 0 }}
-          >
-            <ShieldCheck size={15} /> {t("dashboard.authorized_providers")}
-          </button>
         </div>
       </div>
 
