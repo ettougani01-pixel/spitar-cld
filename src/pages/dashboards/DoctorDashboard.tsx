@@ -130,7 +130,7 @@ export default function DoctorDashboard() {
         getDocs(query(collection(db, "medical_records"), where("doctorId", "==", user!.uid), orderBy("createdAt", "desc"), limit(30))),
         getDocs(query(collection(db, "access_permissions"), where("granteeId", "==", user!.uid), where("isActive", "==", true))),
       ]);
-      if (apptSnap.status === "fulfilled") setAppointments(apptSnap.value.docs.map(d => ({ id: d.id, ...d.data() } as Appointment)));
+      if (apptSnap.status === "fulfilled") setAppointments(apptSnap.value.docs.map(d => ({ id: d.id, ...d.data() } as Appointment)).filter(a => !(a as any).hiddenForDoctor));
       if (recSnap.status === "fulfilled") setMyRecords(recSnap.value.docs.map(d => ({ id: d.id, ...d.data() } as MedicalRecord)));
       if (permSnap.status === "fulfilled") {
         setAuthorizedPatientsCount(permSnap.value.size);
@@ -342,7 +342,7 @@ export default function DoctorDashboard() {
   };
 
   const deleteAppointment = async (apptId: string) => {
-    await deleteDoc(doc(db, "appointments", apptId));
+    await updateDoc(doc(db, "appointments", apptId), { hiddenForDoctor: true });
     setAppointments(prev => prev.filter(a => a.id !== apptId));
   };
 

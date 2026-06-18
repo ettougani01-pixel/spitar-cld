@@ -103,7 +103,7 @@ export default function PatientDashboard() {
       ]);
       if (recSnap.status === "fulfilled") setRecords(recSnap.value.docs.map(d => ({ id: d.id, ...d.data() } as MedicalRecord)));
       if (labSnap.status === "fulfilled") setLabResults(labSnap.value.docs.map(d => ({ id: d.id, ...d.data() } as LabResult)));
-      if (apptSnap.status === "fulfilled") setAppointments(apptSnap.value.docs.map(d => ({ id: d.id, ...d.data() } as Appointment)));
+      if (apptSnap.status === "fulfilled") setAppointments(apptSnap.value.docs.map(d => ({ id: d.id, ...d.data() } as Appointment)).filter(a => !(a as any).hiddenForPatient));
       if (permSnap.status === "fulfilled") setPermissions(permSnap.value.docs.map(d => ({ id: d.id, ...d.data() } as AccessPermission)));
       if (reqSnap.status === "fulfilled") setAccessRequests(reqSnap.value.docs.map(d => ({ id: d.id, ...d.data() } as { id: string; doctorId: string; doctorName: string; status: string; createdAt: string })).filter(r => r.status === "pending"));
       setLoading(false);
@@ -241,7 +241,7 @@ export default function PatientDashboard() {
   };
 
   const deleteAppointment = async (apptId: string) => {
-    await deleteDoc(doc(db, "appointments", apptId));
+    await updateDoc(doc(db, "appointments", apptId), { hiddenForPatient: true });
     setAppointments(prev => prev.filter(a => a.id !== apptId));
   };
 
