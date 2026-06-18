@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import type { MedicalRecord, LabResult, Appointment, AccessPermission, PatientProfile } from "@/lib/types";
 
-type Tab = "records" | "health_profile" | "labs" | "my_team" | "appointments" | "share_qr";
+type Tab = "records" | "health_profile" | "labs" | "my_team" | "appointments" | "share_qr" | "pending_requests";
 type Section = "overview" | "access";
 
 const STATUS = {
@@ -192,7 +192,7 @@ export default function PatientDashboard() {
     { label: t("records.medical_records"), value: records.length, icon: FileText, grad: "linear-gradient(135deg, #2563eb, #06b6d4)", onClick: undefined as (() => void) | undefined },
     { label: t("records.lab_results"), value: labResults.length, icon: FlaskConical, grad: "linear-gradient(135deg, #0891b2, #16a34a)", onClick: undefined },
     { label: t("dashboard.authorized_providers"), value: permissions.length, icon: Users, grad: "linear-gradient(135deg, #7c3aed, #2563eb)", onClick: undefined },
-    { label: t("dashboard.pending_requests"), value: accessRequests.length, icon: Clock, grad: "linear-gradient(135deg, #d97706, #f59e0b)", onClick: accessRequests.length > 0 ? () => setShowPendingRequests(p => !p) : undefined },
+    { label: t("dashboard.pending_requests"), value: accessRequests.length, icon: Clock, grad: "linear-gradient(135deg, #d97706, #f59e0b)", onClick: accessRequests.length > 0 ? () => { setActiveSection("overview"); setActiveTab("pending_requests"); } : undefined },
     { label: t("appointments.title"), value: appointments.length, icon: CalendarDays, grad: "linear-gradient(135deg, #0d9488, #16a34a)", onClick: undefined },
   ];
 
@@ -402,34 +402,6 @@ export default function PatientDashboard() {
             ))}
           </div>
 
-          {/* Pending Access Requests Banner */}
-          {showPendingRequests && accessRequests.length > 0 && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
-              <p style={{ fontSize: 13, fontWeight: 700, color: "#d97706", textTransform: "uppercase", letterSpacing: "0.05em", margin: 0 }}>{t("dashboard.pending_requests")}</p>
-              {accessRequests.map(req => (
-                <div key={req.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", borderRadius: 14, border: "1.5px solid #fde68a", background: "#fffbeb" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <div style={{ width: 40, height: 40, borderRadius: 12, background: "linear-gradient(135deg, #fbbf2422, #f59e0b22)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <Clock size={18} style={{ color: "#d97706" }} />
-                    </div>
-                    <div>
-                      <p style={{ fontSize: 14, fontWeight: 700, color: "#0f172a", margin: 0 }}>{req.doctorName}</p>
-                      <p style={{ fontSize: 12, color: "#64748b", margin: 0 }}>{t("dashboard.access_request_desc")}</p>
-                    </div>
-                  </div>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <button onClick={() => rejectRequest(req.id)} style={{ padding: "7px 14px", borderRadius: 10, background: "#fee2e2", color: "#dc2626", border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
-                      {t("common.reject")}
-                    </button>
-                    <button onClick={() => approveRequest(req)} style={{ padding: "7px 14px", borderRadius: 10, background: "linear-gradient(135deg, #16a34a, #0d9488)", color: "#fff", border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
-                      {t("common.approve")}
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
           {/* Tab content */}
           <div>
             {/* Medical Records */}
@@ -529,6 +501,37 @@ export default function PatientDashboard() {
             {activeTab === "share_qr" && (
               <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e2e8f0", padding: 20 }}>
                 <QrAccessContent />
+              </div>
+            )}
+
+            {/* Pending Requests */}
+            {activeTab === "pending_requests" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {accessRequests.length === 0 ? (
+                  <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e2e8f0" }}>
+                    <EmptyState icon={Clock} text={t("dashboard.pending_requests")} />
+                  </div>
+                ) : accessRequests.map(req => (
+                  <div key={req.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", borderRadius: 16, border: "1.5px solid #fde68a", background: "#fffbeb", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                      <div style={{ width: 44, height: 44, borderRadius: 12, background: "linear-gradient(135deg, #fbbf2433, #f59e0b33)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <Clock size={20} style={{ color: "#d97706" }} />
+                      </div>
+                      <div>
+                        <p style={{ fontSize: 15, fontWeight: 700, color: "#0f172a", margin: 0 }}>{req.doctorName}</p>
+                        <p style={{ fontSize: 13, color: "#64748b", margin: "2px 0 0" }}>{t("dashboard.access_request_desc")}</p>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", gap: 10 }}>
+                      <button onClick={() => rejectRequest(req.id)} style={{ padding: "9px 18px", borderRadius: 10, background: "#fee2e2", color: "#dc2626", border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                        {t("common.reject")}
+                      </button>
+                      <button onClick={() => approveRequest(req).then(() => { if (accessRequests.length <= 1) setActiveTab("records"); })} style={{ padding: "9px 18px", borderRadius: 10, background: "linear-gradient(135deg, #16a34a, #0d9488)", color: "#fff", border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                        {t("common.approve")}
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
