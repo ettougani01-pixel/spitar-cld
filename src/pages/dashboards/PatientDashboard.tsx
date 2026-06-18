@@ -189,11 +189,11 @@ export default function PatientDashboard() {
   ];
 
   const STATS = [
-    { label: t("records.medical_records"), value: records.length, icon: FileText, grad: "linear-gradient(135deg, #2563eb, #06b6d4)", onClick: undefined as (() => void) | undefined },
-    { label: t("records.lab_results"), value: labResults.length, icon: FlaskConical, grad: "linear-gradient(135deg, #0891b2, #16a34a)", onClick: undefined },
-    { label: t("dashboard.authorized_providers"), value: permissions.length, icon: Users, grad: "linear-gradient(135deg, #7c3aed, #2563eb)", onClick: undefined },
+    { label: t("records.medical_records"), value: records.length, icon: FileText, grad: "linear-gradient(135deg, #2563eb, #06b6d4)", onClick: (() => { setActiveSection("overview"); setActiveTab("records"); }) as (() => void) | undefined },
+    { label: t("records.lab_results"), value: labResults.length, icon: FlaskConical, grad: "linear-gradient(135deg, #0891b2, #16a34a)", onClick: () => { setActiveSection("overview"); setActiveTab("labs"); } },
+    { label: t("dashboard.authorized_providers"), value: permissions.length, icon: Users, grad: "linear-gradient(135deg, #7c3aed, #2563eb)", onClick: () => { setActiveSection("overview"); setActiveTab("my_team"); } },
     { label: t("dashboard.pending_requests"), value: accessRequests.length, icon: Clock, grad: "linear-gradient(135deg, #d97706, #f59e0b)", onClick: accessRequests.length > 0 ? () => { setActiveSection("overview"); setActiveTab("pending_requests"); } : undefined },
-    { label: t("appointments.title"), value: appointments.length, icon: CalendarDays, grad: "linear-gradient(135deg, #0d9488, #16a34a)", onClick: undefined },
+    { label: t("appointments.title"), value: appointments.length, icon: CalendarDays, grad: "linear-gradient(135deg, #0d9488, #16a34a)", onClick: () => { setActiveSection("overview"); setActiveTab("appointments"); } },
   ];
 
   const initials = `${user?.firstName?.[0] ?? ""}${user?.lastName?.[0] ?? ""}`.toUpperCase();
@@ -244,7 +244,7 @@ export default function PatientDashboard() {
               border: onClick ? "1.5px solid #fde68a" : "1px solid #e2e8f0",
               padding: "18px 16px", display: "flex", flexDirection: "column", gap: 14,
               boxShadow: "0 1px 4px rgba(0,0,0,0.04)", transition: "transform 0.15s, box-shadow 0.15s",
-              cursor: onClick ? "pointer" : "default",
+              cursor: "pointer",
             }}
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 6px 20px rgba(0,0,0,0.09)"; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ""; (e.currentTarget as HTMLElement).style.boxShadow = "0 1px 4px rgba(0,0,0,0.04)"; }}
