@@ -419,8 +419,8 @@ export default function DoctorDashboard() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 14 }}>
             {[
               { label: t("dashboard.records_created"), value: myRecords.length, icon: FileText, grad: "linear-gradient(135deg, #7c3aed, #2563eb)" },
-              { label: t("appointments.title"), value: appointments.length, icon: CalendarDays, grad: "linear-gradient(135deg, #0891b2, #06b6d4)" },
-              { label: t("dashboard.pending"), value: pendingAppts.length, icon: Activity, grad: "linear-gradient(135deg, #d97706, #f59e0b)" },
+              { label: t("appointments.title"), value: appointments.length, icon: CalendarDays, grad: "linear-gradient(135deg, #0891b2, #06b6d4)", onClick: () => setActiveTab("appointments") },
+              { label: t("dashboard.pending"), value: pendingAppts.length, icon: Activity, grad: "linear-gradient(135deg, #d97706, #f59e0b)", onClick: () => setActiveTab("appointments") },
               { label: t("dashboard.authorized_patients"), value: authorizedPatientsCount, icon: Users, grad: "linear-gradient(135deg, #16a34a, #15803d)", onClick: () => setActiveTab("patients") },
             ].map(({ label, value, icon: Icon, grad, onClick }) => (
               <div key={label} onClick={onClick} style={{ background: "#fff", borderRadius: 16, border: "1px solid #e2e8f0", padding: "18px 20px", display: "flex", alignItems: "center", gap: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.04)", cursor: onClick ? "pointer" : "default" }}>
