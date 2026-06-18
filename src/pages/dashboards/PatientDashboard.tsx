@@ -444,9 +444,18 @@ export default function PatientDashboard() {
                         <p style={{ fontSize: 12, color: "#64748b", margin: "2px 0 0", textTransform: "capitalize" }}>{p.granteeRole} · {t("dashboard.since")} {new Date(p.grantedAt).toLocaleDateString()}</p>
                       </div>
                     </div>
-                    <button onClick={() => revokeAccess(p.id)} style={{ background: "#fee2e2", border: "none", borderRadius: 10, cursor: "pointer", color: "#dc2626", padding: "6px 12px", fontSize: 12, fontWeight: 700 }}>
-                      Revoke
-                    </button>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      {p.granteeRole === "doctor" && (
+                        <button
+                          onClick={() => { setApptDialog({ open: true, doctorId: p.granteeId, doctorName: p.granteeName }); setApptForm({ date: "", time: "", reason: "" }); }}
+                          style={{ background: "linear-gradient(135deg, #2563eb, #06b6d4)", border: "none", borderRadius: 10, cursor: "pointer", color: "#fff", padding: "6px 14px", fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", gap: 5 }}>
+                          <CalendarPlus size={13} /> {t("appointments.request_appointment")}
+                        </button>
+                      )}
+                      <button onClick={() => revokeAccess(p.id)} style={{ background: "#fee2e2", border: "none", borderRadius: 10, cursor: "pointer", color: "#dc2626", padding: "6px 12px", fontSize: 12, fontWeight: 700 }}>
+                        Revoke
+                      </button>
+                    </div>
                   </div>
                 ))
               )}
