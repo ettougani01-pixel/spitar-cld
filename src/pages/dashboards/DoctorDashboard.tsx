@@ -371,8 +371,10 @@ export default function DoctorDashboard() {
     }
   };
 
+  const today = new Date().toISOString().split("T")[0];
   const pendingAppts = appointments.filter(a => a.status === "pending");
   const confirmedAppts = appointments.filter(a => a.status === "confirmed");
+  const upcomingConfirmedCount = appointments.filter(a => a.status === "confirmed" && a.date >= today).length;
 
   const navItems = [
     { label: t("nav.dashboard"), href: "/dashboard", icon: Activity, onClick: () => setActiveTab("overview"), active: activeTab === "overview" },
@@ -419,7 +421,7 @@ export default function DoctorDashboard() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 14 }}>
             {[
               { label: t("dashboard.records_created"), value: myRecords.length, icon: FileText, grad: "linear-gradient(135deg, #7c3aed, #2563eb)" },
-              { label: t("appointments.title"), value: appointments.length, icon: CalendarDays, grad: "linear-gradient(135deg, #0891b2, #06b6d4)", onClick: () => setActiveTab("appointments") },
+              { label: t("appointments.title"), value: upcomingConfirmedCount, icon: CalendarDays, grad: "linear-gradient(135deg, #0891b2, #06b6d4)", onClick: () => setActiveTab("appointments") },
               { label: t("dashboard.pending"), value: pendingAppts.length, icon: Activity, grad: "linear-gradient(135deg, #d97706, #f59e0b)", onClick: () => setActiveTab("appointments") },
               { label: t("dashboard.authorized_patients"), value: authorizedPatientsCount, icon: Users, grad: "linear-gradient(135deg, #16a34a, #15803d)", onClick: () => setActiveTab("patients") },
             ].map(({ label, value, icon: Icon, grad, onClick }) => (
