@@ -19,7 +19,7 @@ import {
 import {
   FileText, FlaskConical, Users, ShieldCheck, QrCode,
   CalendarDays, Trash2, Search, Globe, Building2,
-  Heart, Clock, Plus, Sparkles, CalendarPlus, CheckCircle, XCircle,
+  Heart, Clock, Plus, Sparkles, CalendarPlus, CheckCircle, XCircle, X,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -238,6 +238,11 @@ export default function PatientDashboard() {
       `${user.firstName} ${user.lastName}`,
       `accepted the rescheduled appointment on ${appt.rescheduleDate} at ${appt.rescheduleTime}`,
     );
+  };
+
+  const deleteAppointment = async (apptId: string) => {
+    await deleteDoc(doc(db, "appointments", apptId));
+    setAppointments(prev => prev.filter(a => a.id !== apptId));
   };
 
   const declineReschedule = async (appt: Appointment) => {
@@ -606,6 +611,11 @@ export default function PatientDashboard() {
                             <CheckCircle size={13} /> {t("common.approve")}
                           </button>
                         </div>
+                      )}
+                      {a.status === "cancelled" && (
+                        <button onClick={() => deleteAppointment(a.id)} style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 12px", borderRadius: 10, background: "#fee2e2", color: "#dc2626", border: "none", fontSize: 12, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}>
+                          <Trash2 size={13} /> {t("common.delete")}
+                        </button>
                       )}
                     </div>
                   </div>
