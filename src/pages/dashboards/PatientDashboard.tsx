@@ -21,6 +21,7 @@ import {
   CalendarDays, Trash2, Search, Globe, Building2,
   Heart, Clock, Plus, Sparkles, CalendarPlus, CheckCircle, XCircle, X,
   MessageCircle, ArrowRight, AlertCircle, ClipboardList, ShieldAlert,
+  BarChart2, Bot, CalendarCheck,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -32,8 +33,13 @@ import { PatientReferrals } from "@/components/ReferralsTab";
 import { PatientVisitSummaries } from "@/components/VisitSummary";
 import { EmergencyCardManager } from "@/components/EmergencyCardManager";
 import { useAppointmentReminders } from "@/hooks/useAppointmentReminders";
+import { useMedicationReminders } from "@/hooks/useMedicationReminders";
+import { LabTrendChart } from "@/components/LabTrendChart";
+import { AiHealthChat } from "@/components/AiHealthChat";
+import { PatientTreatmentPlan } from "@/components/TreatmentPlan";
+import { HealthReport } from "@/components/HealthReport";
 
-type Tab = "records" | "health_profile" | "labs" | "my_team" | "appointments" | "share_qr" | "pending_requests" | "teleconsult" | "referrals" | "summaries" | "emergency";
+type Tab = "records" | "health_profile" | "labs" | "my_team" | "appointments" | "share_qr" | "pending_requests" | "teleconsult" | "referrals" | "summaries" | "emergency" | "report" | "chat" | "treatment";
 type Section = "overview" | "access";
 
 const STATUS = {
@@ -76,6 +82,7 @@ export default function PatientDashboard() {
   const [labResults, setLabResults] = useState<LabResult[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [permissions, setPermissions] = useState<AccessPermission[]>([]);
+  const [medications, setMedications] = useState<{ name: string; dosage?: string; frequency?: string; reminderTimes?: string[] }[]>([]);
   const [accessRequests, setAccessRequests] = useState<{ id: string; doctorId: string; doctorName: string; status: string; createdAt: string }[]>([]);
   const [showPendingRequests, setShowPendingRequests] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -102,18 +109,20 @@ export default function PatientDashboard() {
     async function load() {
       setLoading(true);
       const uid = user!.uid;
-      const [recSnap, labSnap, apptSnap, permSnap, reqSnap] = await Promise.allSettled([
+      const [recSnap, labSnap, apptSnap, permSnap, reqSnap, medSnap] = await Promise.allSettled([
         getDocs(query(collection(db, "medical_records"), where("patientId", "==", uid), orderBy("createdAt", "desc"), limit(20))),
         getDocs(query(collection(db, "lab_results"), where("patientId", "==", uid), orderBy("createdAt", "desc"), limit(20))),
         getDocs(query(collection(db, "appointments"), where("patientId", "==", uid), orderBy("date", "desc"), limit(20))),
         getDocs(query(collection(db, "access_permissions"), where("patientId", "==", uid), where("isActive", "==", true))),
         getDocs(query(collection(db, "access_requests"), where("patientId", "==", uid))),
+        getDocs(query(collection(db, "patient_medications"), where("patientId", "==", uid))),
       ]);
       if (recSnap.status === "fulfilled") setRecords(recSnap.value.docs.map(d => ({ id: d.id, ...d.data() } as MedicalRecord)));
       if (labSnap.status === "fulfilled") setLabResults(labSnap.value.docs.map(d => ({ id: d.id, ...d.data() } as LabResult)));
       if (apptSnap.status === "fulfilled") setAppointments(apptSnap.value.docs.map(d => ({ id: d.id, ...d.data() } as Appointment)).filter(a => !(a as any).hiddenForPatient));
       if (permSnap.status === "fulfilled") setPermissions(permSnap.value.docs.map(d => ({ id: d.id, ...d.data() } as AccessPermission)));
       if (reqSnap.status === "fulfilled") setAccessRequests(reqSnap.value.docs.map(d => ({ id: d.id, ...d.data() } as { id: string; doctorId: string; doctorName: string; status: string; createdAt: string })).filter(r => r.status === "pending"));
+      if (medSnap.status === "fulfilled") setMedications(medSnap.value.docs.map(d => d.data() as { name: string; dosage?: string; frequency?: string; reminderTimes?: string[] }));
       setLoading(false);
     }
     load();
@@ -281,11 +290,16 @@ export default function PatientDashboard() {
     { key: "teleconsult", label: "Teleconsultation", icon: MessageCircle },
     { key: "referrals", label: "Referrals", icon: ArrowRight },
     { key: "emergency", label: "Emergency Card", icon: ShieldAlert },
+    { key: "report", label: "Health Report", icon: BarChart2 },
+    { key: "treatment", label: "Treatment Plan", icon: CalendarCheck },
+    { key: "chat", label: "Health Assistant", icon: Bot },
     { key: "share_qr", label: t("dashboard.share_qr"), icon: QrCode },
   ];
 
   // Browser appointment reminders
   useAppointmentReminders(appointments, "patient");
+  // Medication daily reminders
+  useMedicationReminders(medications);
 
   // Checkup reminder: show banner if no medical record in 6+ months
   const sixMonthsAgo = new Date(); sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
@@ -557,6 +571,7 @@ export default function PatientDashboard() {
             {/* Lab Results */}
             {activeTab === "labs" && (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <LabTrendChart labResults={labResults} />
                 {labResults.length === 0 ? (
                   <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e2e8f0" }}>
                     <EmptyState icon={FlaskConical} text={t("records.lab_no_results")} />
@@ -690,6 +705,26 @@ export default function PatientDashboard() {
             {/* Referrals */}
             {activeTab === "referrals" && user && (
               <PatientReferrals patientId={user.uid} />
+            )}
+
+            {/* Health Report */}
+            {activeTab === "report" && (
+              <HealthReport
+                records={records}
+                labResults={labResults}
+                appointments={appointments}
+                patientName={user ? `${user.firstName} ${user.lastName}` : undefined}
+              />
+            )}
+
+            {/* Treatment Plan */}
+            {activeTab === "treatment" && user && (
+              <PatientTreatmentPlan patientId={user.uid} />
+            )}
+
+            {/* Health Assistant AI */}
+            {activeTab === "chat" && (
+              <AiHealthChat />
             )}
 
             {/* Share QR */}

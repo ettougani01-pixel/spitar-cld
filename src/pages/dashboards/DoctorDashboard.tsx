@@ -21,6 +21,8 @@ import { DoctorReferrals } from "@/components/ReferralsTab";
 import { StarDisplay } from "@/components/RatingDialog";
 import { SendSummaryButton } from "@/components/VisitSummary";
 import { useAppointmentReminders } from "@/hooks/useAppointmentReminders";
+import { DoctorTreatmentPlan } from "@/components/TreatmentPlan";
+import { checkDrugInteractions } from "@/lib/drugInteractions";
 import type { MedicalRecord, LabResult, Appointment, PatientProfile } from "@/lib/types";
 
 type RecordType = "consultation" | "prescription" | "surgery" | "diagnosis" | "imaging" | "other";
@@ -47,7 +49,7 @@ const COMMON_MEDICATIONS = [
   "Heparin", "Warfarin", "Rivaroxaban", "Clopidogrel",
   "Ondansetron", "Acyclovir", "Fluconazole", "Nystatin",
 ];
-type Tab = "overview" | "patients" | "records" | "appointments" | "teleconsult" | "referrals";
+type Tab = "overview" | "patients" | "records" | "appointments" | "teleconsult" | "referrals" | "treatment";
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   normal:    { bg: "#dcfce7", text: "#16a34a" },
@@ -398,6 +400,7 @@ export default function DoctorDashboard() {
     { key: "appointments", label: t("appointments.title") },
     { key: "teleconsult", label: "Teleconsultation" },
     { key: "referrals", label: "Referrals" },
+    { key: "treatment", label: "Treatment Plans" },
   ];
 
   const inp: React.CSSProperties = {
@@ -741,6 +744,15 @@ export default function DoctorDashboard() {
         <DoctorReferrals patients={authorizedPatients.map(p => ({ id: p.uid ?? "", name: `${p.firstName} ${p.lastName}` }))} />
       )}
 
+      {/* Treatment Plans Tab */}
+      {activeTab === "treatment" && user && (
+        <DoctorTreatmentPlan
+          patients={authorizedPatients.map(p => ({ id: p.uid ?? "", name: `${p.firstName} ${p.lastName}` }))}
+          doctorId={user.uid}
+          doctorName={`${user.firstName} ${user.lastName}`}
+        />
+      )}
+
       {/* Reschedule Dialog */}
       <Dialog open={rescheduleDialog.open} onOpenChange={open => setRescheduleDialog(d => ({ ...d, open }))}>
         <DialogContent>
@@ -802,6 +814,26 @@ export default function DoctorDashboard() {
             {recordForm.type === "prescription" ? (
               <div className="space-y-2">
                 <Label>{t("records.med_name_label")}</Label>
+                {/* Drug interaction warning */}
+                {(() => {
+                  const names = prescriptionMeds.map(m => m.value === "__other__" ? m.custom : m.value).filter(Boolean);
+                  const interactions = checkDrugInteractions(names);
+                  if (!interactions.length) return null;
+                  return (
+                    <div style={{ padding: "10px 14px", background: "#fef2f2", border: "1.5px solid #fca5a5", borderRadius: 10, marginBottom: 8 }}>
+                      <p style={{ fontSize: 13, fontWeight: 700, color: "#dc2626", margin: "0 0 6px" }}>⚠️ Drug Interaction Warning</p>
+                      {interactions.map((ia, i) => (
+                        <div key={i} style={{ marginBottom: 4 }}>
+                          <span style={{ fontSize: 12, fontWeight: 700, padding: "1px 8px", borderRadius: 20, background: ia.severity === "high" ? "#fee2e2" : "#fef3c7", color: ia.severity === "high" ? "#dc2626" : "#d97706", marginRight: 6 }}>
+                            {ia.severity.toUpperCase()}
+                          </span>
+                          <span style={{ fontSize: 12, color: "#0f172a", fontWeight: 600 }}>{ia.drugs[0]} + {ia.drugs[1]}:</span>
+                          <span style={{ fontSize: 12, color: "#64748b", marginLeft: 4 }}>{ia.warning}</span>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {prescriptionMeds.map((med, idx) => (
                     <div key={idx} style={{ background: "#f8f7ff", border: "1px solid #ede9fe", borderRadius: 12, padding: "10px 12px", display: "flex", flexDirection: "column", gap: 8 }}>
