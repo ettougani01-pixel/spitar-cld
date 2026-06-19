@@ -19,6 +19,8 @@ import { HealthProfileContent } from "@/components/HealthProfileContent";
 import { DoctorTeleconsultation } from "@/components/TeleconsultationTab";
 import { DoctorReferrals } from "@/components/ReferralsTab";
 import { StarDisplay } from "@/components/RatingDialog";
+import { SendSummaryButton } from "@/components/VisitSummary";
+import { useAppointmentReminders } from "@/hooks/useAppointmentReminders";
 import type { MedicalRecord, LabResult, Appointment, PatientProfile } from "@/lib/types";
 
 type RecordType = "consultation" | "prescription" | "surgery" | "diagnosis" | "imaging" | "other";
@@ -156,6 +158,9 @@ export default function DoctorDashboard() {
     }
     load();
   }, [user]);
+
+  // Browser appointment reminders
+  useAppointmentReminders(appointments, "doctor");
 
   const checkPermission = async (patientId: string, universalDoctorAccess: boolean) => {
     if (universalDoctorAccess) return true;
@@ -481,17 +486,19 @@ export default function DoctorDashboard() {
               <CardHead title={t("dashboard.authorized_patients")} />
               <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 8 }}>
                 {authorizedPatients.map(p => (
-                  <button key={p.uid} onClick={() => loadPatientData(p)}
-                    style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 10, border: "1.5px solid #e2e8f0", background: "#f8fafc", cursor: "pointer", textAlign: "left", width: "100%" }}>
-                    <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg, #16a34a22, #15803d22)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 700, color: "#16a34a" }}>
-                      {p.firstName?.[0]?.toUpperCase()}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <p style={{ fontSize: 14, fontWeight: 600, color: "#0f172a", margin: 0 }}>{p.firstName} {p.lastName}</p>
-                      <p style={{ fontSize: 12, color: "#64748b", margin: 0 }}>{p.spitarId} · {p.city}</p>
-                    </div>
-                    <ChevronDown size={16} style={{ color: "#94a3b8", transform: "rotate(-90deg)" }} />
-                  </button>
+                  <div key={p.uid} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", borderRadius: 10, border: "1.5px solid #e2e8f0", background: "#f8fafc" }}>
+                    <button onClick={() => loadPatientData(p)} style={{ display: "flex", alignItems: "center", gap: 12, flex: 1, cursor: "pointer", textAlign: "left", background: "none", border: "none", padding: 0 }}>
+                      <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg, #16a34a22, #15803d22)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 700, color: "#16a34a" }}>
+                        {p.firstName?.[0]?.toUpperCase()}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <p style={{ fontSize: 14, fontWeight: 600, color: "#0f172a", margin: 0 }}>{p.firstName} {p.lastName}</p>
+                        <p style={{ fontSize: 12, color: "#64748b", margin: 0 }}>{p.spitarId} · {p.city}</p>
+                      </div>
+                    </button>
+                    {user && <SendSummaryButton patientId={p.uid ?? ""} patientName={`${p.firstName} ${p.lastName}`} doctorId={user.uid} doctorName={`${user.firstName} ${user.lastName}`} />}
+                    <ChevronDown size={16} style={{ color: "#94a3b8", transform: "rotate(-90deg)", flexShrink: 0, cursor: "pointer" }} onClick={() => loadPatientData(p)} />
+                  </div>
                 ))}
               </div>
             </Card>

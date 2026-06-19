@@ -20,7 +20,7 @@ import {
   FileText, FlaskConical, Users, ShieldCheck, QrCode,
   CalendarDays, Trash2, Search, Globe, Building2,
   Heart, Clock, Plus, Sparkles, CalendarPlus, CheckCircle, XCircle, X,
-  MessageCircle, ArrowRight, AlertCircle,
+  MessageCircle, ArrowRight, AlertCircle, ClipboardList, ShieldAlert,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -29,8 +29,11 @@ import type { MedicalRecord, LabResult, Appointment, AccessPermission, PatientPr
 import { RatingDialog } from "@/components/RatingDialog";
 import { PatientTeleconsultation } from "@/components/TeleconsultationTab";
 import { PatientReferrals } from "@/components/ReferralsTab";
+import { PatientVisitSummaries } from "@/components/VisitSummary";
+import { EmergencyCardManager } from "@/components/EmergencyCardManager";
+import { useAppointmentReminders } from "@/hooks/useAppointmentReminders";
 
-type Tab = "records" | "health_profile" | "labs" | "my_team" | "appointments" | "share_qr" | "pending_requests" | "teleconsult" | "referrals";
+type Tab = "records" | "health_profile" | "labs" | "my_team" | "appointments" | "share_qr" | "pending_requests" | "teleconsult" | "referrals" | "summaries" | "emergency";
 type Section = "overview" | "access";
 
 const STATUS = {
@@ -275,10 +278,15 @@ export default function PatientDashboard() {
     { key: "health_profile", label: t("nav.health_profile"), icon: Heart },
     { key: "labs", label: t("records.lab_results"), icon: FlaskConical },
     { key: "appointments", label: t("appointments.title"), icon: CalendarDays },
+    { key: "summaries", label: "Visit Summaries", icon: ClipboardList },
     { key: "teleconsult", label: "Teleconsultation", icon: MessageCircle },
     { key: "referrals", label: "Referrals", icon: ArrowRight },
+    { key: "emergency", label: "Emergency Card", icon: ShieldAlert },
     { key: "share_qr", label: t("dashboard.share_qr"), icon: QrCode },
   ];
+
+  // Browser appointment reminders
+  useAppointmentReminders(appointments, "patient");
 
   // Checkup reminder: show banner if no medical record in 6+ months
   const sixMonthsAgo = new Date(); sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
@@ -654,6 +662,24 @@ export default function PatientDashboard() {
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {/* Visit Summaries */}
+            {activeTab === "summaries" && user && (
+              <PatientVisitSummaries patientId={user.uid} />
+            )}
+
+            {/* Emergency Card */}
+            {activeTab === "emergency" && (
+              <div style={{ maxWidth: 560 }}>
+                <div style={{ marginBottom: 16, padding: "14px 18px", background: "#fef2f2", border: "1.5px solid #fca5a5", borderRadius: 14 }}>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: "#dc2626", margin: "0 0 4px" }}>🚨 Emergency Medical Card</p>
+                  <p style={{ fontSize: 12, color: "#7f1d1d", margin: 0 }}>
+                    Your emergency card shows your blood type, allergies, and medications to first responders — without requiring login.
+                  </p>
+                </div>
+                <EmergencyCardManager />
               </div>
             )}
 

@@ -11,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertTriangle, Pill, Users, Activity, Plus, Trash2, Zap, FileText, ChevronDown, ChevronUp, Upload } from "lucide-react";
 import { VitalsChart } from "@/components/VitalsChart";
+import { ChronicTracker } from "@/components/ChronicTracker";
+import { IncidentLog } from "@/components/IncidentLog";
 import { cn } from "@/lib/utils";
 
 interface Allergy { id: string; allergenName: string; type: string; severity: string; reaction: string; }
@@ -347,6 +349,9 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
         )}
       </SectionCard>
 
+      {/* Chronic Disease Tracker */}
+      {vitals.length > 0 && <ChronicTracker vitals={vitals} />}
+
       {/* Vitals Chart */}
       {vitals.length >= 2 && <VitalsChart vitals={vitals} />}
 
@@ -593,6 +598,9 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
           <DialogFooter><Button variant="outline" onClick={() => setShowSideEffectDialog(false)}>{t("common.cancel")}</Button><Button onClick={addSideEffect} disabled={saving}>{t("common.save")}</Button></DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Medical Incident Log */}
+      <IncidentLog patientId={patientIdProp ?? undefined} readOnly={readOnly} />
 
       <Dialog open={showVitalDialog} onOpenChange={setShowVitalDialog}>
         <DialogContent>

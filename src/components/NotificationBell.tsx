@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Bell, CheckCheck, ShieldCheck, CalendarDays, X } from "lucide-react";
+import { Bell, CheckCheck, ShieldCheck, CalendarDays, X, AlertTriangle } from "lucide-react";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,6 +14,8 @@ interface DerivedNotif {
 
 function TypeIcon({ type }: { type: string }) {
   const s = { flexShrink: 0 as const };
+  if (type === "lab_critical")
+    return <AlertTriangle size={16} style={{ ...s, color: "#dc2626" }} />;
   if (type === "access_request" || type === "access_approved" || type === "access_rejected")
     return <ShieldCheck size={16} style={{ ...s, color: "#7c3aed" }} />;
   return <CalendarDays size={16} style={{ ...s, color: "#0d9488" }} />;
@@ -104,6 +106,29 @@ export function NotificationBell() {
     }
 
     if (role === "patient") {
+      // Patient: critical lab results
+      const labQ = query(
+        collection(db, "lab_results"),
+        where("patientId", "==", user.uid),
+        where("status", "==", "critical"),
+      );
+      unsubs.push(onSnapshot(labQ, snap => {
+        const items: DerivedNotif[] = snap.docs.map(d => {
+          const data = d.data();
+          return {
+            id: "lab_" + d.id,
+            type: "lab_critical",
+            title: "🚨 Critical Lab Result",
+            body: `${data.testName}: ${data.result} — Contact your doctor immediately`,
+            createdAt: data.createdAt || new Date().toISOString(),
+          };
+        });
+        setNotifs(prev => {
+          const filtered = prev.filter(n => !n.id.startsWith("lab_"));
+          return [...items, ...filtered].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+        });
+      }));
+
       // Patient: see confirmed, cancelled, reschedule_requested appointments
       const apptQ = query(
         collection(db, "appointments"),
