@@ -269,7 +269,6 @@ export default function PatientDashboard() {
     { key: "records", label: t("records.medical_records"), icon: FileText },
     { key: "health_profile", label: t("nav.health_profile"), icon: Heart },
     { key: "labs", label: t("records.lab_results"), icon: FlaskConical },
-    { key: "my_team", label: t("dashboard.my_medical_team"), icon: ShieldCheck },
     { key: "appointments", label: t("appointments.title"), icon: CalendarDays },
     { key: "share_qr", label: t("dashboard.share_qr"), icon: QrCode },
   ];
