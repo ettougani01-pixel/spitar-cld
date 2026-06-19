@@ -12,7 +12,7 @@
 
 import { SignJWT, importPKCS8 } from "jose";
 
-export const config = { runtime: "nodejs18.x" };
+export const config = { runtime: "nodejs" };
 
 export default async function handler(req, res) {
   // CORS

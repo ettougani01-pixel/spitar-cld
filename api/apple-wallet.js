@@ -16,7 +16,7 @@
 import JSZip from "jszip";
 import crypto from "crypto";
 
-export const config = { runtime: "nodejs18.x" };
+export const config = { runtime: "nodejs" };
 
 function signManifest(manifestJson, certPem, keyPem, wwdrPem) {
   const p7 = crypto.createSign("SHA1");
