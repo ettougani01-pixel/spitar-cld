@@ -42,6 +42,8 @@ export function EmergencyCardManager() {
   const [generating, setGenerating] = useState(false);
   const [cardData, setCardData] = useState<CardData | null>(null);
   const [downloading, setDownloading] = useState(false);
+  const [walletLoading, setWalletLoading] = useState<"google" | "apple" | null>(null);
+  const [walletError, setWalletError] = useState<string | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -273,6 +275,79 @@ export function EmergencyCardManager() {
     }
   };
 
+  const addToGoogleWallet = async () => {
+    if (!cardData) return;
+    setWalletLoading("google");
+    setWalletError(null);
+    try {
+      const res = await fetch("/api/google-wallet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: cardData.name,
+          spitarId: cardData.spitarId,
+          bloodType: cardData.bloodType,
+          dateOfBirth: cardData.dateOfBirth,
+          allergies: cardData.allergies,
+          medications: cardData.medications,
+          emergencyContacts: cardData.emergencyContacts,
+          cardUrl: permanentUrl,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setWalletError(data.setup ?? data.error ?? "Google Wallet error");
+        return;
+      }
+      window.open(data.saveUrl, "_blank");
+    } catch {
+      setWalletError("Failed to reach the wallet service. Check your internet connection.");
+    } finally {
+      setWalletLoading(null);
+    }
+  };
+
+  const addToAppleWallet = async () => {
+    if (!cardData) return;
+    setWalletLoading("apple");
+    setWalletError(null);
+    try {
+      const res = await fetch("/api/apple-wallet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: cardData.name,
+          spitarId: cardData.spitarId,
+          bloodType: cardData.bloodType,
+          dateOfBirth: cardData.dateOfBirth,
+          allergies: cardData.allergies,
+          medications: cardData.medications,
+          emergencyContacts: cardData.emergencyContacts,
+          cardUrl: permanentUrl,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        setWalletError(data.setup ?? data.error ?? "Apple Wallet error");
+        return;
+      }
+
+      // Download .pkpass file — iOS will open it in Wallet automatically
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${cardData.spitarId}-emergency.pkpass`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setWalletError("Failed to reach the wallet service. Check your internet connection.");
+    } finally {
+      setWalletLoading(null);
+    }
+  };
+
   if (loading) return null;
 
   return (
@@ -415,35 +490,51 @@ export function EmergencyCardManager() {
 
               {/* Google Wallet */}
               <button
-                onClick={downloadCardAsImage}
-                style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, background: "#fff", color: "#1a73e8", border: "1.5px solid #1a73e8", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
-                title="Download card image and set as lock screen wallpaper for quick access"
+                onClick={addToGoogleWallet}
+                disabled={walletLoading === "google"}
+                style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, background: "#fff", color: "#1a73e8", border: "1.5px solid #1a73e8", fontSize: 12, fontWeight: 700, cursor: "pointer", opacity: walletLoading === "google" ? 0.7 : 1 }}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z" fill="#1a73e8"/>
-                </svg>
-                Google Wallet *
+                {walletLoading === "google" ? (
+                  <div style={{ width: 14, height: 14, border: "2px solid #1a73e8", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 48 48" style={{ flexShrink: 0 }}>
+                    <path fill="#4285F4" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.2l6.8-6.8C35.8 2.3 30.2 0 24 0 14.6 0 6.6 5.4 2.6 13.3l7.9 6.1C12.3 13.1 17.7 9.5 24 9.5z"/>
+                    <path fill="#34A853" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4 7.1-10 7.1-17z"/>
+                    <path fill="#FBBC05" d="M10.5 28.6A14.6 14.6 0 0 1 9.5 24c0-1.6.3-3.2.7-4.6l-7.9-6.1A23.8 23.8 0 0 0 0 24c0 3.9.9 7.5 2.6 10.7l7.9-6.1z"/>
+                    <path fill="#EA4335" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.5-5.8c-2 1.4-4.6 2.2-7.7 2.2-6.3 0-11.7-3.6-13.5-9.3l-7.9 6.1C6.6 42.6 14.6 48 24 48z"/>
+                  </svg>
+                )}
+                {walletLoading === "google" ? "Adding..." : "Add to Google Wallet"}
               </button>
 
               {/* Apple Wallet */}
               <button
-                onClick={downloadCardAsImage}
-                style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, background: "#000", color: "#fff", border: "none", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
-                title="Download card image and add to Apple Wallet via Shortcuts app"
+                onClick={addToAppleWallet}
+                disabled={walletLoading === "apple"}
+                style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 10, background: "#000", color: "#fff", border: "none", fontSize: 12, fontWeight: 700, cursor: "pointer", opacity: walletLoading === "apple" ? 0.7 : 1 }}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
-                  <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" fill="white"/>
-                </svg>
-                Apple Wallet *
+                {walletLoading === "apple" ? (
+                  <div style={{ width: 14, height: 14, border: "2px solid #fff", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+                    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z" fill="white"/>
+                  </svg>
+                )}
+                {walletLoading === "apple" ? "Generating..." : "Add to Apple Wallet"}
               </button>
             </div>
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
-            {/* Wallet note */}
-            <div style={{ padding: "10px 18px", background: "#fffbeb", borderTop: "1px solid #fef3c7" }}>
-              <p style={{ fontSize: 11, color: "#92400e", margin: 0 }}>
-                <strong>* Wallet integration:</strong> Download the card image → Android: add to Google Photos widget or use "Passes" app. iPhone: use the Shortcuts app "Add to Wallet" or save as lock screen. For best results, print the QR code and keep it in your physical wallet.
-              </p>
-            </div>
+            {/* Error / setup notice */}
+            {walletError && (
+              <div style={{ padding: "10px 18px", background: "#fef2f2", borderTop: "1px solid #fecaca" }}>
+                <p style={{ fontSize: 12, color: "#dc2626", fontWeight: 700, margin: "0 0 4px" }}>⚙️ Wallet Setup Required</p>
+                <p style={{ fontSize: 11, color: "#7f1d1d", margin: 0 }}>{walletError}</p>
+                <p style={{ fontSize: 11, color: "#94a3b8", margin: "6px 0 0" }}>
+                  Use "Download as Image" above as an alternative — save it as your lock screen for emergency access.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}
