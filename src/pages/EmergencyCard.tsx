@@ -4,14 +4,14 @@ import { doc, getDoc, collection, query, where, getDocs } from "firebase/firesto
 import { db } from "@/lib/firebase";
 import { AlertTriangle, Heart, Pill, Phone, User, ShieldAlert } from "lucide-react";
 
+interface EmergencyContact { name: string; phone: string; relation: string; }
 interface EmergencyData {
   name: string;
   spitarId: string;
   bloodType?: string;
   dateOfBirth?: string;
   phone?: string;
-  emergencyContact?: string;
-  emergencyPhone?: string;
+  emergencyContacts: EmergencyContact[];
   allergies: { allergenName: string; severity: string; reaction: string }[];
   medications: { name: string; dosage: string; frequency: string }[];
 }
@@ -54,14 +54,21 @@ export default function EmergencyCard() {
           getDocs(query(collection(db, "patient_medications"), where("patientId", "==", patientId))),
         ]);
 
+        // Build emergency contacts list (new multi-contact or legacy single)
+        let emergencyContacts: EmergencyContact[] = [];
+        if (u.emergencyContacts && u.emergencyContacts.length > 0) {
+          emergencyContacts = u.emergencyContacts;
+        } else if (u.emergencyContactName || u.emergencyContactPhone) {
+          emergencyContacts = [{ name: u.emergencyContactName ?? "", phone: u.emergencyContactPhone ?? "", relation: "Other" }];
+        }
+
         setData({
           name: `${u.firstName} ${u.lastName}`,
           spitarId: u.spitarId,
           bloodType: u.bloodType,
           dateOfBirth: u.dateOfBirth,
           phone: u.phone,
-          emergencyContact: u.emergencyContactName,
-          emergencyPhone: u.emergencyContactPhone,
+          emergencyContacts,
           allergies: allergySnap.status === "fulfilled"
             ? allergySnap.value.docs.map(d => d.data() as any)
             : [],
@@ -114,24 +121,29 @@ export default function EmergencyCard() {
         </div>
 
         {/* Emergency Contacts */}
-        {(data!.phone || data!.emergencyPhone) && (
+        {(data!.phone || data!.emergencyContacts.length > 0) && (
           <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e5e7eb", padding: "16px 18px", marginBottom: 16 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
               <Phone size={15} style={{ color: "#0d9488" }} />
               <span style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Emergency Contacts</span>
             </div>
             {data!.phone && (
-              <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid #f3f4f6" }}>
-                <span style={{ fontSize: 13, color: "#64748b" }}>Patient</span>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "1px solid #f3f4f6" }}>
+                <div>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: "#0f172a", margin: 0 }}>Patient (self)</p>
+                </div>
                 <a href={`tel:${data!.phone}`} style={{ fontSize: 13, fontWeight: 700, color: "#0d9488", textDecoration: "none" }}>{data!.phone}</a>
               </div>
             )}
-            {data!.emergencyContact && data!.emergencyPhone && (
-              <div style={{ display: "flex", justifyContent: "space-between", padding: "6px 0" }}>
-                <span style={{ fontSize: 13, color: "#64748b" }}>{data!.emergencyContact}</span>
-                <a href={`tel:${data!.emergencyPhone}`} style={{ fontSize: 13, fontWeight: 700, color: "#0d9488", textDecoration: "none" }}>{data!.emergencyPhone}</a>
+            {data!.emergencyContacts.filter(c => c.name || c.phone).map((c, i) => (
+              <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: i < data!.emergencyContacts.length - 1 ? "1px solid #f3f4f6" : "none" }}>
+                <div>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: "#0f172a", margin: 0 }}>{c.name || "—"}</p>
+                  <p style={{ fontSize: 11, color: "#94a3b8", margin: 0 }}>{c.relation}</p>
+                </div>
+                {c.phone && <a href={`tel:${c.phone}`} style={{ fontSize: 13, fontWeight: 700, color: "#0d9488", textDecoration: "none" }}>{c.phone}</a>}
               </div>
-            )}
+            ))}
           </div>
         )}
 

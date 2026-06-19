@@ -4,8 +4,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Navbar } from "@/components/Navbar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SpitarIdBadge } from "@/components/SpitarIdBadge";
-import { Loader2, CheckCircle2, User, Stethoscope, FlaskConical, Building2, ShieldCheck, Camera, MapPin, Phone, Mail, Heart, AlertCircle, Briefcase } from "lucide-react";
+import { Loader2, CheckCircle2, User, Stethoscope, FlaskConical, Building2, ShieldCheck, Camera, MapPin, Phone, Mail, Heart, AlertCircle, Briefcase, Plus, Trash2 } from "lucide-react";
 import type { DoctorProfile, PatientProfile } from "@/lib/types";
+
+interface EmergencyContact { name: string; phone: string; relation: string; }
+
+const RELATIONS = ["Spouse", "Parent", "Child", "Sibling", "Friend", "Colleague", "Other"];
 
 const CITIES = [
   "Agadir", "Casablanca", "El Jadida", "Fès", "Kénitra",
@@ -74,8 +78,16 @@ export default function Profile() {
   const [bloodType, setBloodType] = useState((user as PatientProfile)?.bloodType ?? "");
   const [gender, setGender] = useState((user as PatientProfile)?.gender ?? "");
   const [address, setAddress] = useState((user as PatientProfile)?.address ?? "");
-  const [emergencyName, setEmergencyName] = useState((user as PatientProfile)?.emergencyContactName ?? "");
-  const [emergencyPhone, setEmergencyPhone] = useState((user as PatientProfile)?.emergencyContactPhone ?? "");
+  // Emergency contacts list — seed from legacy single-contact fields
+  const [emergencyContacts, setEmergencyContacts] = useState<EmergencyContact[]>(() => {
+    const p = user as PatientProfile;
+    const legacyName = p?.emergencyContactName ?? "";
+    const legacyPhone = p?.emergencyContactPhone ?? "";
+    const stored = (p as any)?.emergencyContacts as EmergencyContact[] | undefined;
+    if (stored && stored.length > 0) return stored;
+    if (legacyName || legacyPhone) return [{ name: legacyName, phone: legacyPhone, relation: "Other" }];
+    return [{ name: "", phone: "", relation: "Other" }];
+  });
   const [bio, setBio] = useState((user as DoctorProfile)?.bio ?? "");
   const [consultationFee, setConsultationFee] = useState(String((user as DoctorProfile)?.consultationFee ?? ""));
 
@@ -91,7 +103,13 @@ export default function Profile() {
     try {
       const base = { firstName, lastName, phone, city };
       const extra: Record<string, unknown> = {};
-      if (user.role === "patient") Object.assign(extra, { dateOfBirth, bloodType, gender, address, emergencyContactName: emergencyName, emergencyContactPhone: emergencyPhone });
+      if (user.role === "patient") Object.assign(extra, {
+        dateOfBirth, bloodType, gender, address,
+        emergencyContacts,
+        // keep legacy fields for backward compat with EmergencyCard page
+        emergencyContactName: emergencyContacts[0]?.name ?? "",
+        emergencyContactPhone: emergencyContacts[0]?.phone ?? "",
+      });
       else if (user.role === "doctor") Object.assign(extra, { bio, consultationFee: consultationFee ? Number(consultationFee) : undefined });
       await updateProfile({ ...base, ...extra });
       setSaved(true);
@@ -208,17 +226,79 @@ export default function Profile() {
                 </Field>
               </Section>
 
-              <Section title="Emergency Contact" icon={AlertCircle} color="#ea580c">
-                <Field label={t("auth.emergency_contact_name")}>
-                  <input style={inputStyle} value={emergencyName} onChange={e => setEmergencyName(e.target.value)}
-                    placeholder={t("auth.emergency_contact_name_placeholder")}
-                    onFocus={e => (e.target.style.borderColor = "#ea580c")} onBlur={e => (e.target.style.borderColor = "#e2e8f0")} />
-                </Field>
-                <Field label={t("auth.emergency_contact_phone")} icon={Phone}>
-                  <input style={inputStyle} type="tel" value={emergencyPhone} onChange={e => setEmergencyPhone(e.target.value)}
-                    onFocus={e => (e.target.style.borderColor = "#ea580c")} onBlur={e => (e.target.style.borderColor = "#e2e8f0")} />
-                </Field>
-              </Section>
+              {/* Emergency Contacts — multiple */}
+              <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e2e8f0", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+                <div style={{ padding: "16px 20px", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 10, background: "#ea580c18", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <AlertCircle size={15} style={{ color: "#ea580c" }} />
+                    </div>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: "#0f172a" }}>Emergency Contacts</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "#fff7ed", color: "#ea580c", border: "1px solid #fed7aa" }}>
+                      {emergencyContacts.length}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setEmergencyContacts(prev => [...prev, { name: "", phone: "", relation: "Other" }])}
+                    style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: 8, background: "#fff7ed", border: "1px solid #fed7aa", color: "#ea580c", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+                  >
+                    <Plus size={13} /> Add Person
+                  </button>
+                </div>
+
+                <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
+                  {emergencyContacts.map((ec, i) => (
+                    <div key={i} style={{ border: "1.5px solid #fed7aa", borderRadius: 12, padding: "14px 16px", background: "#fffbf7", position: "relative" }}>
+                      {/* Remove button */}
+                      {emergencyContacts.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => setEmergencyContacts(prev => prev.filter((_, idx) => idx !== i))}
+                          style={{ position: "absolute", top: 10, right: 10, background: "#fee2e2", border: "none", borderRadius: 6, padding: "3px 6px", cursor: "pointer", color: "#dc2626", display: "flex", alignItems: "center" }}
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      )}
+
+                      <p style={{ fontSize: 11, fontWeight: 700, color: "#ea580c", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                        Contact {i + 1}
+                      </p>
+
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                        <Field label="Full Name">
+                          <input
+                            style={inputStyle} value={ec.name}
+                            onChange={e => setEmergencyContacts(prev => prev.map((c, idx) => idx === i ? { ...c, name: e.target.value } : c))}
+                            placeholder="e.g. Ahmed Mohamed"
+                            onFocus={e => (e.target.style.borderColor = "#ea580c")} onBlur={e => (e.target.style.borderColor = "#e2e8f0")}
+                          />
+                        </Field>
+                        <Field label="Phone" icon={Phone}>
+                          <input
+                            style={inputStyle} type="tel" value={ec.phone}
+                            onChange={e => setEmergencyContacts(prev => prev.map((c, idx) => idx === i ? { ...c, phone: e.target.value } : c))}
+                            placeholder="+212 6XX XXX XXX"
+                            onFocus={e => (e.target.style.borderColor = "#ea580c")} onBlur={e => (e.target.style.borderColor = "#e2e8f0")}
+                          />
+                        </Field>
+                        <div style={{ gridColumn: "1 / -1" }}>
+                          <Field label="Relationship">
+                            <Select value={ec.relation} onValueChange={val => setEmergencyContacts(prev => prev.map((c, idx) => idx === i ? { ...c, relation: val } : c))}>
+                              <SelectTrigger style={{ height: 44, borderRadius: 10, border: "1.5px solid #e2e8f0", background: "#f8fafc", fontSize: 14 }}>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {RELATIONS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          </Field>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </>
           )}
 
