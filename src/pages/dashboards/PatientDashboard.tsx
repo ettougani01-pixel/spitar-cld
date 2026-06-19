@@ -20,13 +20,17 @@ import {
   FileText, FlaskConical, Users, ShieldCheck, QrCode,
   CalendarDays, Trash2, Search, Globe, Building2,
   Heart, Clock, Plus, Sparkles, CalendarPlus, CheckCircle, XCircle, X,
+  MessageCircle, ArrowRight, AlertCircle,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import type { MedicalRecord, LabResult, Appointment, AccessPermission, PatientProfile } from "@/lib/types";
+import { RatingDialog } from "@/components/RatingDialog";
+import { PatientTeleconsultation } from "@/components/TeleconsultationTab";
+import { PatientReferrals } from "@/components/ReferralsTab";
 
-type Tab = "records" | "health_profile" | "labs" | "my_team" | "appointments" | "share_qr" | "pending_requests";
+type Tab = "records" | "health_profile" | "labs" | "my_team" | "appointments" | "share_qr" | "pending_requests" | "teleconsult" | "referrals";
 type Section = "overview" | "access";
 
 const STATUS = {
@@ -73,6 +77,7 @@ export default function PatientDashboard() {
   const [showPendingRequests, setShowPendingRequests] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  const [ratingDialog, setRatingDialog] = useState<{ open: boolean; appointmentId: string; doctorId: string; doctorName: string } | null>(null);
   const [apptDialog, setApptDialog] = useState<{ open: boolean; doctorId: string; doctorName: string }>({ open: false, doctorId: "", doctorName: "" });
   const [apptForm, setApptForm] = useState({ date: "", time: "", reason: "" });
   const [savingAppt, setSavingAppt] = useState(false);
@@ -270,8 +275,15 @@ export default function PatientDashboard() {
     { key: "health_profile", label: t("nav.health_profile"), icon: Heart },
     { key: "labs", label: t("records.lab_results"), icon: FlaskConical },
     { key: "appointments", label: t("appointments.title"), icon: CalendarDays },
+    { key: "teleconsult", label: "Teleconsultation", icon: MessageCircle },
+    { key: "referrals", label: "Referrals", icon: ArrowRight },
     { key: "share_qr", label: t("dashboard.share_qr"), icon: QrCode },
   ];
+
+  // Checkup reminder: show banner if no medical record in 6+ months
+  const sixMonthsAgo = new Date(); sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+  const lastRecord = records[0];
+  const showCheckupBanner = !loading && (!lastRecord || new Date(lastRecord.createdAt) < sixMonthsAgo);
 
   const STATS = [
     { label: t("records.medical_records"), value: records.length, icon: FileText, grad: "linear-gradient(135deg, #2563eb, #06b6d4)", onClick: (() => { setActiveSection("overview"); setActiveTab("records"); }) as (() => void) | undefined },
@@ -312,6 +324,22 @@ export default function PatientDashboard() {
           </div>
         </div>
       </div>
+
+      {/* ── CHECKUP REMINDER BANNER ── */}
+      {showCheckupBanner && (
+        <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 20px", borderRadius: 14, background: "linear-gradient(135deg, #fef3c7, #fde68a)", border: "1.5px solid #fbbf24", marginBottom: 20 }}>
+          <AlertCircle size={22} style={{ color: "#d97706", flexShrink: 0 }} />
+          <div style={{ flex: 1 }}>
+            <p style={{ fontSize: 14, fontWeight: 700, color: "#92400e", margin: 0 }}>Periodic Checkup Reminder</p>
+            <p style={{ fontSize: 13, color: "#78350f", margin: "2px 0 0" }}>
+              {lastRecord ? `Your last medical record was over 6 months ago (${lastRecord.date}). It's time for a checkup.` : "You have no medical records yet. Schedule a checkup with your doctor."}
+            </p>
+          </div>
+          <button onClick={() => { setActiveSection("overview"); setActiveTab("appointments"); }} style={{ background: "#d97706", color: "#fff", border: "none", borderRadius: 10, padding: "8px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}>
+            Book Appointment
+          </button>
+        </div>
+      )}
 
       {/* ── STAT CARDS ── */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 14, marginBottom: 24 }}>
@@ -613,6 +641,11 @@ export default function PatientDashboard() {
                           </button>
                         </div>
                       )}
+                      {a.status === "completed" && (
+                        <button onClick={() => setRatingDialog({ open: true, appointmentId: a.id, doctorId: a.doctorId, doctorName: a.doctorName })} style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 14px", borderRadius: 10, background: "linear-gradient(135deg, #f59e0b, #d97706)", color: "#fff", border: "none", fontSize: 12, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}>
+                          ★ Rate
+                        </button>
+                      )}
                       {a.status === "cancelled" && (
                         <button onClick={() => deleteAppointment(a.id)} style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 12px", borderRadius: 10, background: "#fee2e2", color: "#dc2626", border: "none", fontSize: 12, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}>
                           <Trash2 size={13} /> {t("common.delete")}
@@ -622,6 +655,16 @@ export default function PatientDashboard() {
                   </div>
                 ))}
               </div>
+            )}
+
+            {/* Teleconsultation */}
+            {activeTab === "teleconsult" && (
+              <PatientTeleconsultation permissions={permissions} />
+            )}
+
+            {/* Referrals */}
+            {activeTab === "referrals" && user && (
+              <PatientReferrals patientId={user.uid} />
             )}
 
             {/* Share QR */}
@@ -710,6 +753,19 @@ export default function PatientDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Rating Dialog */}
+      {ratingDialog?.open && user && (
+        <RatingDialog
+          open={ratingDialog.open}
+          onClose={() => setRatingDialog(null)}
+          appointmentId={ratingDialog.appointmentId}
+          doctorId={ratingDialog.doctorId}
+          doctorName={ratingDialog.doctorName}
+          patientId={user.uid}
+          patientName={`${user.firstName} ${user.lastName}`}
+        />
+      )}
 
       {/* Universal access dialog */}
       <AlertDialog open={showUniversalDialog} onOpenChange={setShowUniversalDialog}>

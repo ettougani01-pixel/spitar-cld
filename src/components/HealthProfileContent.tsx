@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertTriangle, Pill, Users, Activity, Plus, Trash2, Zap, FileText, ChevronDown, ChevronUp, Upload } from "lucide-react";
+import { VitalsChart } from "@/components/VitalsChart";
 import { cn } from "@/lib/utils";
 
 interface Allergy { id: string; allergenName: string; type: string; severity: string; reaction: string; }
@@ -345,6 +346,9 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
           ))
         )}
       </SectionCard>
+
+      {/* Vitals Chart */}
+      {vitals.length >= 2 && <VitalsChart vitals={vitals} />}
 
       {/* Vitals */}
       <SectionCard title={t("hp.vitals_biometrics")} icon={Activity} iconColor="#16a34a" iconBg="#dcfce7" addLabel={readOnly ? "" : `Log ${VITAL_TABS.find(v => v.key === activeVitalTab)?.label ?? "Vital"}`} onAdd={() => { if (readOnly) return; setVitalForm(f => ({ ...f, type: activeVitalTab, unit: VITAL_TABS.find(v => v.key === activeVitalTab)?.unit ?? "" })); setShowVitalDialog(true); }}>

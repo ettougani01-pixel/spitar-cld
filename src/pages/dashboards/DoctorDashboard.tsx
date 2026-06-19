@@ -14,8 +14,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { FileText, FlaskConical, Users, CalendarDays, Activity, Search, Plus, Trash2, ChevronDown, ChevronUp, Edit2, XCircle } from "lucide-react";
+import { FileText, FlaskConical, Users, CalendarDays, Activity, Search, Plus, Trash2, ChevronDown, ChevronUp, Edit2, XCircle, MessageCircle, ArrowRight, Star } from "lucide-react";
 import { HealthProfileContent } from "@/components/HealthProfileContent";
+import { DoctorTeleconsultation } from "@/components/TeleconsultationTab";
+import { DoctorReferrals } from "@/components/ReferralsTab";
+import { StarDisplay } from "@/components/RatingDialog";
 import type { MedicalRecord, LabResult, Appointment, PatientProfile } from "@/lib/types";
 
 type RecordType = "consultation" | "prescription" | "surgery" | "diagnosis" | "imaging" | "other";
@@ -42,7 +45,7 @@ const COMMON_MEDICATIONS = [
   "Heparin", "Warfarin", "Rivaroxaban", "Clopidogrel",
   "Ondansetron", "Acyclovir", "Fluconazole", "Nystatin",
 ];
-type Tab = "overview" | "patients" | "records" | "appointments";
+type Tab = "overview" | "patients" | "records" | "appointments" | "teleconsult" | "referrals";
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   normal:    { bg: "#dcfce7", text: "#16a34a" },
@@ -388,6 +391,8 @@ export default function DoctorDashboard() {
     { key: "patients", label: t("dashboard.search_patient") },
     { key: "records", label: t("records.prescriptions") },
     { key: "appointments", label: t("appointments.title") },
+    { key: "teleconsult", label: "Teleconsultation" },
+    { key: "referrals", label: "Referrals" },
   ];
 
   const inp: React.CSSProperties = {
@@ -719,6 +724,14 @@ export default function DoctorDashboard() {
             ))
           )}
         </div>
+      )}
+
+      {/* Teleconsultation Tab */}
+      {activeTab === "teleconsult" && <DoctorTeleconsultation />}
+
+      {/* Referrals Tab */}
+      {activeTab === "referrals" && (
+        <DoctorReferrals patients={authorizedPatients.map(p => ({ id: p.uid ?? "", name: `${p.firstName} ${p.lastName}` }))} />
       )}
 
       {/* Reschedule Dialog */}

@@ -23,6 +23,7 @@ import {
   Hospital, FlaskConical, Stethoscope, User, Clock, TrendingUp,
   AlertCircle, XCircle, Mail,
 } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 import { cn, generateHospitalId, generateHospitalEmail, generatePassword } from "@/lib/utils";
 import { createUserWithEmailAndPassword as createAccount } from "firebase/auth";
 import type { UserProfile } from "@/lib/types";
@@ -597,64 +598,99 @@ export default function AdminDashboard() {
           })()}
 
           {/* ANALYTICS */}
-          {activeTab === "analytics" && (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px,1fr))", gap: 20 }}>
-              <div style={{ background: "#fff", border: "1.5px solid #e2e8f0", borderRadius: 14, padding: 24 }}>
-                <p style={{ fontSize: 14, fontWeight: 700, margin: "0 0 20px", color: "#0f172a", display: "flex", alignItems: "center", gap: 8 }}>
-                  <TrendingUp size={15} color="#0057B8" />User Distribution
-                </p>
-                {[
-                  { label: "Patients", value: stats.patients, color: "#2563eb" },
-                  { label: "Doctors", value: stats.doctors, color: "#16a34a" },
-                  { label: "Labs", value: stats.labs, color: "#7c3aed" },
-                  { label: "Hospitals", value: stats.hospitals, color: "#d97706" },
-                ].map(({ label, value, color }) => (
-                  <div key={label} style={{ marginBottom: 16 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                      <span style={{ fontSize: 13, color: "#374151", fontWeight: 500 }}>{label}</span>
-                      <span style={{ fontSize: 13, fontWeight: 700, color }}>{value} ({stats.total ? Math.round((value / stats.total) * 100) : 0}%)</span>
-                    </div>
-                    <div style={{ height: 8, background: "#f1f5f9", borderRadius: 99, overflow: "hidden" }}>
-                      <div style={{ height: "100%", width: `${stats.total ? (value / stats.total) * 100 : 0}%`, background: color, borderRadius: 99, transition: "width 0.6s" }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
+          {activeTab === "analytics" && (() => {
+            const pieData = [
+              { name: "Patients", value: stats.patients, color: "#2563eb" },
+              { name: "Doctors", value: stats.doctors, color: "#16a34a" },
+              { name: "Labs", value: stats.labs, color: "#7c3aed" },
+              { name: "Hospitals", value: stats.hospitals, color: "#d97706" },
+            ].filter(d => d.value > 0);
 
-              <div style={{ background: "#fff", border: "1.5px solid #e2e8f0", borderRadius: 14, padding: 24 }}>
-                <p style={{ fontSize: 14, fontWeight: 700, margin: "0 0 20px", color: "#0f172a" }}>Platform Summary</p>
-                {[
-                  { label: "Total Users", value: stats.total, color: "#0057B8" },
-                  { label: "Verified", value: stats.verified, color: "#16a34a" },
-                  { label: "Suspended", value: stats.suspended, color: "#dc2626" },
-                  { label: "Hospitals", value: hospitals.length, color: "#d97706" },
-                  { label: "Audit Entries", value: auditLog.length, color: "#7c3aed" },
-                ].map(({ label, value, color }) => (
-                  <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid #f8fafc" }}>
-                    <span style={{ fontSize: 13, color: "#64748b" }}>{label}</span>
-                    <span style={{ fontSize: 22, fontWeight: 800, color }}>{value}</span>
-                  </div>
-                ))}
-              </div>
+            const barData = [
+              { name: "Total", value: stats.total, fill: "#2563eb" },
+              { name: "Verified", value: stats.verified, fill: "#16a34a" },
+              { name: "Suspended", value: stats.suspended, fill: "#dc2626" },
+              { name: "Pending", value: Math.max(0, stats.total - stats.verified - stats.suspended), fill: "#f59e0b" },
+            ];
 
-              <div style={{ background: "#fff", border: "1.5px solid #e2e8f0", borderRadius: 14, padding: 24, gridColumn: "1 / -1" }}>
-                <p style={{ fontSize: 14, fontWeight: 700, margin: "0 0 20px", color: "#0f172a" }}>Verification Status</p>
-                <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+            return (
+              <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                {/* KPI cards */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px,1fr))", gap: 14 }}>
                   {[
-                    { label: "Verified", value: stats.verified, color: "#16a34a", bg: "#dcfce7", icon: CheckCircle2 },
-                    { label: "Pending", value: stats.total - stats.verified - stats.suspended, color: "#d97706", bg: "#fef3c7", icon: AlertCircle },
-                    { label: "Suspended", value: stats.suspended, color: "#dc2626", bg: "#fee2e2", icon: XCircle },
-                  ].map(({ label, value, color, bg, icon: Icon }) => (
-                    <div key={label} style={{ flex: 1, minWidth: 120, background: bg, borderRadius: 12, padding: 20, textAlign: "center" }}>
-                      <Icon size={30} color={color} style={{ margin: "0 auto 8px", display: "block" }} />
-                      <p style={{ fontSize: 30, fontWeight: 800, color, margin: 0 }}>{value}</p>
+                    { label: "Total Users", value: stats.total, color: "#2563eb", bg: "#eff6ff" },
+                    { label: "Patients", value: stats.patients, color: "#0891b2", bg: "#ecfeff" },
+                    { label: "Doctors", value: stats.doctors, color: "#16a34a", bg: "#f0fdf4" },
+                    { label: "Verified", value: stats.verified, color: "#16a34a", bg: "#dcfce7" },
+                    { label: "Suspended", value: stats.suspended, color: "#dc2626", bg: "#fee2e2" },
+                    { label: "Hospitals", value: hospitals.length, color: "#d97706", bg: "#fef3c7" },
+                  ].map(({ label, value, color, bg }) => (
+                    <div key={label} style={{ background: bg, border: `1.5px solid ${color}22`, borderRadius: 14, padding: "18px 20px" }}>
+                      <p style={{ fontSize: 28, fontWeight: 800, color, margin: 0 }}>{value}</p>
                       <p style={{ fontSize: 12, color: "#64748b", margin: "4px 0 0", fontWeight: 600 }}>{label}</p>
                     </div>
                   ))}
                 </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+                  {/* Bar chart */}
+                  <div style={{ background: "#fff", border: "1.5px solid #e2e8f0", borderRadius: 14, padding: 24 }}>
+                    <p style={{ fontSize: 14, fontWeight: 700, margin: "0 0 20px", color: "#0f172a", display: "flex", alignItems: "center", gap: 8 }}>
+                      <BarChart3 size={15} color="#2563eb" /> User Status Overview
+                    </p>
+                    <ResponsiveContainer width="100%" height={200}>
+                      <BarChart data={barData} barSize={36}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                        <XAxis dataKey="name" tick={{ fontSize: 12, fill: "#94a3b8" }} />
+                        <YAxis tick={{ fontSize: 12, fill: "#94a3b8" }} />
+                        <Tooltip contentStyle={{ borderRadius: 10, border: "1px solid #e2e8f0", fontSize: 12 }} />
+                        <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                          {barData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  {/* Pie chart */}
+                  <div style={{ background: "#fff", border: "1.5px solid #e2e8f0", borderRadius: 14, padding: 24 }}>
+                    <p style={{ fontSize: 14, fontWeight: 700, margin: "0 0 20px", color: "#0f172a", display: "flex", alignItems: "center", gap: 8 }}>
+                      <TrendingUp size={15} color="#7c3aed" /> User Distribution
+                    </p>
+                    {pieData.length > 0 ? (
+                      <ResponsiveContainer width="100%" height={200}>
+                        <PieChart>
+                          <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={75} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false} style={{ fontSize: 11 }}>
+                            {pieData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                          </Pie>
+                          <Legend iconSize={10} wrapperStyle={{ fontSize: 12 }} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <p style={{ color: "#94a3b8", fontSize: 13, textAlign: "center", padding: "40px 0" }}>No data yet</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Verification status */}
+                <div style={{ background: "#fff", border: "1.5px solid #e2e8f0", borderRadius: 14, padding: 24 }}>
+                  <p style={{ fontSize: 14, fontWeight: 700, margin: "0 0 20px", color: "#0f172a" }}>Verification Status Breakdown</p>
+                  <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                    {[
+                      { label: "Verified", value: stats.verified, color: "#16a34a", bg: "#dcfce7", icon: CheckCircle2 },
+                      { label: "Pending", value: Math.max(0, stats.total - stats.verified - stats.suspended), color: "#d97706", bg: "#fef3c7", icon: AlertCircle },
+                      { label: "Suspended", value: stats.suspended, color: "#dc2626", bg: "#fee2e2", icon: XCircle },
+                    ].map(({ label, value, color, bg, icon: Icon }) => (
+                      <div key={label} style={{ flex: 1, minWidth: 120, background: bg, borderRadius: 12, padding: 20, textAlign: "center" }}>
+                        <Icon size={30} color={color} style={{ margin: "0 auto 8px", display: "block" }} />
+                        <p style={{ fontSize: 30, fontWeight: 800, color, margin: 0 }}>{value}</p>
+                        <p style={{ fontSize: 12, color: "#64748b", margin: "4px 0 0", fontWeight: 600 }}>{label}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* AUDIT LOG */}
           {activeTab === "audit" && (
