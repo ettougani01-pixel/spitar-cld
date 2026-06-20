@@ -103,7 +103,7 @@ export default async function handler(req, res) {
     hexBackgroundColor: "#dc2626",
     logo: {
       sourceUri: {
-        uri: "https://storage.googleapis.com/wallet-lab-tools-codelab-artifacts-public/pass_google_logo.jpg",
+        uri: "https://spitar-cld.vercel.app/logo.png",
       },
       contentDescription: {
         defaultValue: { language: "en-US", value: "SPITAR Medical Logo" },
