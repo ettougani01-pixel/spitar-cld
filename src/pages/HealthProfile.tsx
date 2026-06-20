@@ -154,19 +154,19 @@ export default function HealthProfile() {
   const hasCriticalAllergy = allergies.some(a => a.severity === "life_threatening" || a.severity === "severe");
 
   const ALL_CONDITIONS: { key: ChronicCondition; label: string; labelAr: string; color: string; bg: string }[] = [
-    { key: "cancer",         label: "Cancer",            labelAr: "السرطان",       color: "#dc2626", bg: "#fee2e2" },
-    { key: "pregnancy",      label: "Pregnancy",         labelAr: "الحمل",         color: "#a855f7", bg: "#fdf4ff" },
-    { key: "diabetes",       label: "Diabetes",          labelAr: "السكري",        color: "#ea580c", bg: "#fff7ed" },
-    { key: "hypertension",   label: "Hypertension",      labelAr: "ضغط الدم",      color: "#2563eb", bg: "#eff6ff" },
-    { key: "asthma",         label: "Asthma",            labelAr: "الربو",         color: "#ca8a04", bg: "#fefce8" },
-    { key: "heart_disease",  label: "Heart Disease",     labelAr: "أمراض القلب",  color: "#e11d48", bg: "#ffe4e6" },
-    { key: "kidney_disease", label: "Kidney Disease",    labelAr: "أمراض الكلى",  color: "#c2410c", bg: "#fff7ed" },
-    { key: "liver_disease",  label: "Liver Disease",     labelAr: "أمراض الكبد",  color: "#b45309", bg: "#fef9c3" },
-    { key: "epilepsy",       label: "Epilepsy",          labelAr: "الصرع",         color: "#7c3aed", bg: "#ede9fe" },
-    { key: "thyroid",        label: "Thyroid Disorder",  labelAr: "الغدة الدرقية", color: "#16a34a", bg: "#f0fdf4" },
-    { key: "hiv",            label: "HIV/AIDS",          labelAr: "فيروس نقص المناعة", color: "#db2777", bg: "#fce7f3" },
-    { key: "tuberculosis",   label: "Tuberculosis",      labelAr: "السل",          color: "#ea580c", bg: "#ffedd5" },
-    { key: "mental_health",  label: "Mental Health",     labelAr: "الصحة النفسية", color: "#0284c7", bg: "#f0f9ff" },
+    { key: "cancer",         label: "Cancer",            labelAr: "السرطان",            color: "#dc2626", bg: "#fee2e2" }, // red
+    { key: "hiv",            label: "HIV/AIDS",          labelAr: "فيروس نقص المناعة", color: "#db2777", bg: "#fce7f3" }, // pink
+    { key: "tuberculosis",   label: "Tuberculosis",      labelAr: "السل",               color: "#d97706", bg: "#fef3c7" }, // amber
+    { key: "pregnancy",      label: "Pregnancy",         labelAr: "الحمل",              color: "#a855f7", bg: "#fdf4ff" }, // purple
+    { key: "heart_disease",  label: "Heart Disease",     labelAr: "أمراض القلب",        color: "#e11d48", bg: "#ffe4e6" }, // rose
+    { key: "kidney_disease", label: "Kidney Disease",    labelAr: "أمراض الكلى",        color: "#0891b2", bg: "#ecfeff" }, // cyan
+    { key: "liver_disease",  label: "Liver Disease",     labelAr: "أمراض الكبد",        color: "#b45309", bg: "#fef9c3" }, // yellow-brown
+    { key: "epilepsy",       label: "Epilepsy",          labelAr: "الصرع",              color: "#7c3aed", bg: "#ede9fe" }, // violet
+    { key: "diabetes",       label: "Diabetes",          labelAr: "السكري",             color: "#ea580c", bg: "#fff7ed" }, // orange
+    { key: "hypertension",   label: "Hypertension",      labelAr: "ضغط الدم",           color: "#2563eb", bg: "#eff6ff" }, // blue
+    { key: "asthma",         label: "Asthma",            labelAr: "الربو",              color: "#16a34a", bg: "#f0fdf4" }, // green
+    { key: "thyroid",        label: "Thyroid Disorder",  labelAr: "الغدة الدرقية",      color: "#0d9488", bg: "#f0fdfa" }, // teal
+    { key: "mental_health",  label: "Mental Health",     labelAr: "الصحة النفسية",      color: "#64748b", bg: "#f8fafc" }, // slate
   ];
 
   const toggleCondition = async (key: ChronicCondition) => {

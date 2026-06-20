@@ -63,19 +63,19 @@ const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
 
 // Priority order: most critical first
 const CONDITION_STYLES: Record<ChronicCondition, { bg: string; border: string; text: string; label: string }> = {
-  cancer:        { bg: "#fee2e2", border: "#dc2626", text: "#dc2626", label: "Cancer" },
-  hiv:           { bg: "#fce7f3", border: "#db2777", text: "#db2777", label: "HIV" },
-  tuberculosis:  { bg: "#ffedd5", border: "#ea580c", text: "#ea580c", label: "TB" },
-  pregnancy:     { bg: "#fdf4ff", border: "#a855f7", text: "#a855f7", label: "Pregnancy" },
-  heart_disease: { bg: "#ffe4e6", border: "#e11d48", text: "#e11d48", label: "Heart" },
-  kidney_disease:{ bg: "#fff7ed", border: "#c2410c", text: "#c2410c", label: "Kidney" },
-  liver_disease: { bg: "#fef9c3", border: "#b45309", text: "#b45309", label: "Liver" },
-  epilepsy:      { bg: "#ede9fe", border: "#7c3aed", text: "#7c3aed", label: "Epilepsy" },
-  diabetes:      { bg: "#fff7ed", border: "#ea580c", text: "#ea580c", label: "Diabetes" },
-  hypertension:  { bg: "#eff6ff", border: "#2563eb", text: "#2563eb", label: "BP" },
-  asthma:        { bg: "#fefce8", border: "#ca8a04", text: "#ca8a04", label: "Asthma" },
-  thyroid:       { bg: "#f0fdf4", border: "#16a34a", text: "#16a34a", label: "Thyroid" },
-  mental_health: { bg: "#f0f9ff", border: "#0284c7", text: "#0284c7", label: "Mental" },
+  cancer:        { bg: "#fee2e2", border: "#dc2626", text: "#dc2626", label: "Cancer" },       // red
+  hiv:           { bg: "#fce7f3", border: "#db2777", text: "#db2777", label: "HIV" },          // pink
+  tuberculosis:  { bg: "#fef3c7", border: "#d97706", text: "#d97706", label: "TB" },           // amber
+  pregnancy:     { bg: "#fdf4ff", border: "#a855f7", text: "#a855f7", label: "Pregnancy" },    // purple
+  heart_disease: { bg: "#ffe4e6", border: "#e11d48", text: "#e11d48", label: "Heart" },        // rose
+  kidney_disease:{ bg: "#ecfeff", border: "#0891b2", text: "#0891b2", label: "Kidney" },       // cyan
+  liver_disease: { bg: "#fef9c3", border: "#b45309", text: "#b45309", label: "Liver" },        // yellow-brown
+  epilepsy:      { bg: "#ede9fe", border: "#7c3aed", text: "#7c3aed", label: "Epilepsy" },     // violet
+  diabetes:      { bg: "#fff7ed", border: "#ea580c", text: "#ea580c", label: "Diabetes" },     // orange
+  hypertension:  { bg: "#eff6ff", border: "#2563eb", text: "#2563eb", label: "BP" },           // blue
+  asthma:        { bg: "#f0fdf4", border: "#16a34a", text: "#16a34a", label: "Asthma" },       // green
+  thyroid:       { bg: "#f0fdfa", border: "#0d9488", text: "#0d9488", label: "Thyroid" },      // teal
+  mental_health: { bg: "#f8fafc", border: "#64748b", text: "#64748b", label: "Mental" },       // slate
 };
 
 const CONDITION_PRIORITY: ChronicCondition[] = [
