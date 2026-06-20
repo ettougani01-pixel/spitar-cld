@@ -687,6 +687,50 @@ export default function PatientDashboard() {
             {/* Emergency Card */}
             {activeTab === "emergency" && (
               <div style={{ maxWidth: 600 }}>
+                {/* Google Wallet quick-add banner */}
+                <div style={{ marginBottom: 16, padding: "16px 18px", background: "linear-gradient(135deg, #fef2f2, #fff5f5)", border: "1.5px solid #fca5a5", borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, flexWrap: "wrap" }}>
+                  <div>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: "#dc2626", margin: "0 0 3px" }}>🚨 Emergency Medical Card</p>
+                    <p style={{ fontSize: 12, color: "#7f1d1d", margin: 0 }}>
+                      Your card is accessible to first responders — no login required.
+                    </p>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      const u = user as any;
+                      try {
+                        const res = await fetch("/api/google-wallet", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            name: `${u.firstName} ${u.lastName}`,
+                            spitarId: u.spitarId,
+                            bloodType: u.bloodType,
+                            dateOfBirth: u.dateOfBirth,
+                          }),
+                        });
+                        const data = await res.json();
+                        if (data.saveUrl) window.open(data.saveUrl, "_blank");
+                      } catch { /* silent */ }
+                    }}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 8,
+                      padding: "10px 18px", borderRadius: 10,
+                      background: "#fff", color: "#1a73e8",
+                      border: "1.5px solid #1a73e8",
+                      fontSize: 13, fontWeight: 700, cursor: "pointer",
+                      flexShrink: 0, boxShadow: "0 1px 4px rgba(26,115,232,0.15)",
+                    }}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 48 48">
+                      <path fill="#4285F4" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.2l6.8-6.8C35.8 2.3 30.2 0 24 0 14.6 0 6.6 5.4 2.6 13.3l7.9 6.1C12.3 13.1 17.7 9.5 24 9.5z"/>
+                      <path fill="#34A853" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4 7.1-10 7.1-17z"/>
+                      <path fill="#FBBC05" d="M10.5 28.6A14.6 14.6 0 0 1 9.5 24c0-1.6.3-3.2.7-4.6l-7.9-6.1A23.8 23.8 0 0 0 0 24c0 3.9.9 7.5 2.6 10.7l7.9-6.1z"/>
+                      <path fill="#EA4335" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.5-5.8c-2 1.4-4.6 2.2-7.7 2.2-6.3 0-11.7-3.6-13.5-9.3l-7.9 6.1C6.6 42.6 14.6 48 24 48z"/>
+                    </svg>
+                    Add to Google Wallet
+                  </button>
+                </div>
                 <EmergencyCardManager />
               </div>
             )}
