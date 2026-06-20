@@ -686,13 +686,7 @@ export default function PatientDashboard() {
 
             {/* Emergency Card */}
             {activeTab === "emergency" && (
-              <div style={{ maxWidth: 560 }}>
-                <div style={{ marginBottom: 16, padding: "14px 18px", background: "#fef2f2", border: "1.5px solid #fca5a5", borderRadius: 14 }}>
-                  <p style={{ fontSize: 13, fontWeight: 700, color: "#dc2626", margin: "0 0 4px" }}>🚨 Emergency Medical Card</p>
-                  <p style={{ fontSize: 12, color: "#7f1d1d", margin: 0 }}>
-                    Your emergency card shows your blood type, allergies, and medications to first responders — without requiring login.
-                  </p>
-                </div>
+              <div style={{ maxWidth: 600 }}>
                 <EmergencyCardManager />
               </div>
             )}

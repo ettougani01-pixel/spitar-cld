@@ -48,14 +48,22 @@ export function EmergencyCardManager() {
 
   useEffect(() => {
     if (!user) return;
+    const u = user as any;
     Promise.all([
       getDoc(doc(db, "emergency_cards", user.uid)),
       getDocs(query(collection(db, "patient_allergies"), where("patientId", "==", user.uid))),
       getDocs(query(collection(db, "patient_medications"), where("patientId", "==", user.uid))),
-    ]).then(([cardDoc, allergySnap, medSnap]) => {
-      if (cardDoc.exists()) setPermanentId(user.uid);
+    ]).then(async ([cardDoc, allergySnap, medSnap]) => {
+      // Auto-create permanent card on first visit
+      if (!cardDoc.exists()) {
+        await setDoc(doc(db, "emergency_cards", user.uid), {
+          patientId: user.uid,
+          permanent: true,
+          createdAt: new Date().toISOString(),
+        });
+      }
+      setPermanentId(user.uid);
 
-      const u = user as any;
       let emergencyContacts: EmergencyContact[] = [];
       if (u.emergencyContacts && u.emergencyContacts.length > 0) {
         emergencyContacts = u.emergencyContacts;
@@ -73,8 +81,22 @@ export function EmergencyCardManager() {
         allergies: allergySnap.docs.map(d => d.data() as Allergy),
         medications: medSnap.docs.map(d => d.data() as Medication),
       });
-      setLoading(false);
-    });
+    }).catch(() => {
+      // Even on error, build card from user profile data
+      const u2 = user as any;
+      setCardData({
+        name: `${u2.firstName} ${u2.lastName}`,
+        spitarId: u2.spitarId,
+        bloodType: u2.bloodType,
+        dateOfBirth: u2.dateOfBirth,
+        phone: u2.phone,
+        emergencyContacts: u2.emergencyContactName || u2.emergencyContactPhone
+          ? [{ name: u2.emergencyContactName ?? "", phone: u2.emergencyContactPhone ?? "", relation: "Other" }]
+          : [],
+        allergies: [],
+        medications: [],
+      });
+    }).finally(() => setLoading(false));
   }, [user]);
 
   const createPermanentCard = async () => {
@@ -348,7 +370,13 @@ export function EmergencyCardManager() {
     }
   };
 
-  if (loading) return null;
+  if (loading) return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: 40, gap: 10, color: "#94a3b8", fontSize: 13 }}>
+      <div style={{ width: 18, height: 18, border: "2px solid #dc2626", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
+      Loading your emergency card...
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -551,17 +579,7 @@ export function EmergencyCardManager() {
           </div>
         </div>
 
-        {!permanentId ? (
-          <div>
-            <p style={{ fontSize: 12, color: "#94a3b8", marginBottom: 12 }}>
-              Create a permanent QR code that emergency responders can scan anytime — even when you're unconscious.
-            </p>
-            <Button onClick={createPermanentCard} disabled={generating} style={{ background: "linear-gradient(135deg, #dc2626, #b91c1c)", color: "#fff", border: "none" }}>
-              <ShieldAlert size={14} style={{ marginRight: 6 }} />
-              {generating ? "Creating..." : "Create Emergency Card"}
-            </Button>
-          </div>
-        ) : (
+        {permanentId ? (
           <div style={{ display: "flex", gap: 20, alignItems: "flex-start", flexWrap: "wrap" }}>
             <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: 10 }}>
               <QRCodeSVG value={permanentUrl!} size={130} level="H" includeMargin />
