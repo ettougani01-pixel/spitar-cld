@@ -614,7 +614,7 @@ export function EmergencyCardManager() {
               </div>
             </div>
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* ── TEMPORARY 24h LINK ── */}
