@@ -23,7 +23,7 @@ import { SendSummaryButton } from "@/components/VisitSummary";
 import { useAppointmentReminders } from "@/hooks/useAppointmentReminders";
 import { DoctorTreatmentPlan } from "@/components/TreatmentPlan";
 import { checkDrugInteractions } from "@/lib/drugInteractions";
-import type { MedicalRecord, LabResult, Appointment, PatientProfile } from "@/lib/types";
+import type { MedicalRecord, LabResult, Appointment, PatientProfile, ChronicCondition } from "@/lib/types";
 
 type RecordType = "consultation" | "prescription" | "surgery" | "diagnosis" | "imaging" | "other";
 
@@ -60,6 +60,60 @@ const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   cancelled: { bg: "#fee2e2", text: "#dc2626" },
   completed: { bg: "#eff6ff", text: "#2563eb" },
 };
+
+// Priority order: most critical first
+const CONDITION_STYLES: Record<ChronicCondition, { bg: string; border: string; text: string; label: string }> = {
+  cancer:        { bg: "#fee2e2", border: "#dc2626", text: "#dc2626", label: "Cancer" },
+  hiv:           { bg: "#fce7f3", border: "#db2777", text: "#db2777", label: "HIV" },
+  tuberculosis:  { bg: "#ffedd5", border: "#ea580c", text: "#ea580c", label: "TB" },
+  pregnancy:     { bg: "#fdf4ff", border: "#a855f7", text: "#a855f7", label: "Pregnancy" },
+  heart_disease: { bg: "#ffe4e6", border: "#e11d48", text: "#e11d48", label: "Heart" },
+  kidney_disease:{ bg: "#fff7ed", border: "#c2410c", text: "#c2410c", label: "Kidney" },
+  liver_disease: { bg: "#fef9c3", border: "#b45309", text: "#b45309", label: "Liver" },
+  epilepsy:      { bg: "#ede9fe", border: "#7c3aed", text: "#7c3aed", label: "Epilepsy" },
+  diabetes:      { bg: "#fff7ed", border: "#ea580c", text: "#ea580c", label: "Diabetes" },
+  hypertension:  { bg: "#eff6ff", border: "#2563eb", text: "#2563eb", label: "BP" },
+  asthma:        { bg: "#fefce8", border: "#ca8a04", text: "#ca8a04", label: "Asthma" },
+  thyroid:       { bg: "#f0fdf4", border: "#16a34a", text: "#16a34a", label: "Thyroid" },
+  mental_health: { bg: "#f0f9ff", border: "#0284c7", text: "#0284c7", label: "Mental" },
+};
+
+const CONDITION_PRIORITY: ChronicCondition[] = [
+  "cancer", "hiv", "tuberculosis", "heart_disease", "kidney_disease",
+  "liver_disease", "epilepsy", "pregnancy", "diabetes", "hypertension",
+  "asthma", "thyroid", "mental_health",
+];
+
+function getPatientConditionStyle(conditions?: ChronicCondition[]) {
+  if (!conditions || conditions.length === 0)
+    return { bg: "linear-gradient(135deg, #16a34a22, #15803d22)", border: "transparent", text: "#16a34a" };
+  const top = CONDITION_PRIORITY.find(c => conditions.includes(c));
+  if (!top) return { bg: "linear-gradient(135deg, #16a34a22, #15803d22)", border: "transparent", text: "#16a34a" };
+  const s = CONDITION_STYLES[top];
+  return { bg: s.bg, border: s.border, text: s.text };
+}
+
+function PatientConditionBadges({ conditions }: { conditions?: ChronicCondition[] }) {
+  if (!conditions || conditions.length === 0) return null;
+  const shown = conditions.slice(0, 3);
+  return (
+    <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+      {shown.map(c => {
+        const s = CONDITION_STYLES[c];
+        return (
+          <span key={c} style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 20, background: s.bg, color: s.text, border: `1px solid ${s.border}` }}>
+            {s.label}
+          </span>
+        );
+      })}
+      {conditions.length > 3 && (
+        <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 20, background: "#f1f5f9", color: "#64748b" }}>
+          +{conditions.length - 3}
+        </span>
+      )}
+    </div>
+  );
+}
 
 function StatusBadge({ status, label }: { status: string; label: string }) {
   const c = STATUS_COLORS[status] ?? { bg: "#f1f5f9", text: "#64748b" };
@@ -489,14 +543,15 @@ export default function DoctorDashboard() {
               <CardHead title={t("dashboard.authorized_patients")} />
               <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 8 }}>
                 {authorizedPatients.map(p => (
-                  <div key={p.uid} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", borderRadius: 10, border: "1.5px solid #e2e8f0", background: "#f8fafc" }}>
+                  <div key={p.uid} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", borderRadius: 10, border: `1.5px solid ${getPatientConditionStyle(p.chronicConditions).border === "transparent" ? "#e2e8f0" : getPatientConditionStyle(p.chronicConditions).border}`, background: "#f8fafc" }}>
                     <button onClick={() => loadPatientData(p)} style={{ display: "flex", alignItems: "center", gap: 12, flex: 1, cursor: "pointer", textAlign: "left", background: "none", border: "none", padding: 0 }}>
-                      <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg, #16a34a22, #15803d22)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 700, color: "#16a34a" }}>
+                      <div style={{ width: 36, height: 36, borderRadius: 10, background: getPatientConditionStyle(p.chronicConditions).bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 700, color: getPatientConditionStyle(p.chronicConditions).text, border: `2px solid ${getPatientConditionStyle(p.chronicConditions).border}`, flexShrink: 0 }}>
                         {p.firstName?.[0]?.toUpperCase()}
                       </div>
                       <div style={{ flex: 1 }}>
-                        <p style={{ fontSize: 14, fontWeight: 600, color: "#0f172a", margin: 0 }}>{p.firstName} {p.lastName}</p>
-                        <p style={{ fontSize: 12, color: "#64748b", margin: 0 }}>{p.spitarId} · {p.city}</p>
+                        <p style={{ fontSize: 14, fontWeight: 600, color: "#0f172a", margin: "0 0 3px" }}>{p.firstName} {p.lastName}</p>
+                        <p style={{ fontSize: 12, color: "#64748b", margin: "0 0 4px" }}>{p.spitarId} · {p.city}</p>
+                        <PatientConditionBadges conditions={p.chronicConditions} />
                       </div>
                     </button>
                     {user && <SendSummaryButton patientId={p.uid ?? ""} patientName={`${p.firstName} ${p.lastName}`} doctorId={user.uid} doctorName={`${user.firstName} ${user.lastName}`} />}

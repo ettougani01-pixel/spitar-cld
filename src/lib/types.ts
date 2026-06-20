@@ -28,6 +28,21 @@ export interface DoctorProfile extends UserProfile {
   rating?: number;
 }
 
+export type ChronicCondition =
+  | "cancer"
+  | "pregnancy"
+  | "diabetes"
+  | "hypertension"
+  | "asthma"
+  | "heart_disease"
+  | "kidney_disease"
+  | "liver_disease"
+  | "epilepsy"
+  | "thyroid"
+  | "hiv"
+  | "tuberculosis"
+  | "mental_health";
+
 export interface PatientProfile extends UserProfile {
   role: "patient";
   dateOfBirth?: string;
@@ -38,6 +53,7 @@ export interface PatientProfile extends UserProfile {
   emergencyContactPhone?: string;
   universalDoctorAccess: boolean;
   hospitalOpenAccess: boolean;
+  chronicConditions?: ChronicCondition[];
 }
 
 export interface HospitalProfile extends UserProfile {

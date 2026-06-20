@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
   collection, query, where, getDocs, addDoc, deleteDoc, doc, orderBy,
+  getDoc, updateDoc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,9 +19,10 @@ import {
 } from "@/components/ui/dialog";
 import {
   AlertTriangle, Heart, Pill, Users, Activity, Plus, Trash2,
-  Droplets, Scale, Wind, Zap,
+  Droplets, Scale, Wind, Zap, ShieldAlert,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { ChronicCondition } from "@/lib/types";
 
 interface Allergy { id: string; allergenName: string; type: string; severity: string; reaction: string; }
 interface Medication { id: string; name: string; type: string; dosage: string; frequency: string; startDate: string; notes?: string; }
@@ -45,8 +47,10 @@ export default function HealthProfile() {
   const [familyHistory, setFamilyHistory] = useState<FamilyHistory[]>([]);
   const [sideEffects, setSideEffects] = useState<SideEffect[]>([]);
   const [vitals, setVitals] = useState<Vital[]>([]);
+  const [chronicConditions, setChronicConditions] = useState<ChronicCondition[]>([]);
   const [activeSection, setActiveSection] = useState("allergies");
   const [loading, setLoading] = useState(true);
+  const [savingConditions, setSavingConditions] = useState(false);
 
   // Dialog states
   const [showAllergyDialog, setShowAllergyDialog] = useState(false);
@@ -68,18 +72,20 @@ export default function HealthProfile() {
     const uid = user.uid;
     async function load() {
       setLoading(true);
-      const [aSnap, mSnap, fSnap, seSnap, vSnap] = await Promise.all([
+      const [aSnap, mSnap, fSnap, seSnap, vSnap, userDoc] = await Promise.all([
         getDocs(query(collection(db, "patient_allergies"), where("patientId", "==", uid))),
         getDocs(query(collection(db, "patient_medications"), where("patientId", "==", uid))),
         getDocs(query(collection(db, "patient_family_history"), where("patientId", "==", uid))),
         getDocs(query(collection(db, "patient_side_effects"), where("patientId", "==", uid))),
         getDocs(query(collection(db, "patient_vitals"), where("patientId", "==", uid), orderBy("recordedAt", "desc"))),
+        getDoc(doc(db, "users", uid)),
       ]);
       setAllergies(aSnap.docs.map(d => ({ id: d.id, ...d.data() } as Allergy)));
       setMedications(mSnap.docs.map(d => ({ id: d.id, ...d.data() } as Medication)));
       setFamilyHistory(fSnap.docs.map(d => ({ id: d.id, ...d.data() } as FamilyHistory)));
       setSideEffects(seSnap.docs.map(d => ({ id: d.id, ...d.data() } as SideEffect)));
       setVitals(vSnap.docs.map(d => ({ id: d.id, ...d.data() } as Vital)));
+      if (userDoc.exists()) setChronicConditions((userDoc.data().chronicConditions ?? []) as ChronicCondition[]);
       setLoading(false);
     }
     load();
@@ -147,7 +153,36 @@ export default function HealthProfile() {
 
   const hasCriticalAllergy = allergies.some(a => a.severity === "life_threatening" || a.severity === "severe");
 
+  const ALL_CONDITIONS: { key: ChronicCondition; label: string; labelAr: string; color: string; bg: string }[] = [
+    { key: "cancer",         label: "Cancer",            labelAr: "السرطان",       color: "#dc2626", bg: "#fee2e2" },
+    { key: "pregnancy",      label: "Pregnancy",         labelAr: "الحمل",         color: "#a855f7", bg: "#fdf4ff" },
+    { key: "diabetes",       label: "Diabetes",          labelAr: "السكري",        color: "#ea580c", bg: "#fff7ed" },
+    { key: "hypertension",   label: "Hypertension",      labelAr: "ضغط الدم",      color: "#2563eb", bg: "#eff6ff" },
+    { key: "asthma",         label: "Asthma",            labelAr: "الربو",         color: "#ca8a04", bg: "#fefce8" },
+    { key: "heart_disease",  label: "Heart Disease",     labelAr: "أمراض القلب",  color: "#e11d48", bg: "#ffe4e6" },
+    { key: "kidney_disease", label: "Kidney Disease",    labelAr: "أمراض الكلى",  color: "#c2410c", bg: "#fff7ed" },
+    { key: "liver_disease",  label: "Liver Disease",     labelAr: "أمراض الكبد",  color: "#b45309", bg: "#fef9c3" },
+    { key: "epilepsy",       label: "Epilepsy",          labelAr: "الصرع",         color: "#7c3aed", bg: "#ede9fe" },
+    { key: "thyroid",        label: "Thyroid Disorder",  labelAr: "الغدة الدرقية", color: "#16a34a", bg: "#f0fdf4" },
+    { key: "hiv",            label: "HIV/AIDS",          labelAr: "فيروس نقص المناعة", color: "#db2777", bg: "#fce7f3" },
+    { key: "tuberculosis",   label: "Tuberculosis",      labelAr: "السل",          color: "#ea580c", bg: "#ffedd5" },
+    { key: "mental_health",  label: "Mental Health",     labelAr: "الصحة النفسية", color: "#0284c7", bg: "#f0f9ff" },
+  ];
+
+  const toggleCondition = async (key: ChronicCondition) => {
+    if (!user) return;
+    setSavingConditions(true);
+    const updated = chronicConditions.includes(key)
+      ? chronicConditions.filter(c => c !== key)
+      : [...chronicConditions, key];
+    try {
+      await updateDoc(doc(db, "users", user.uid), { chronicConditions: updated });
+      setChronicConditions(updated);
+    } finally { setSavingConditions(false); }
+  };
+
   const sections = [
+    { key: "conditions", label: "Chronic Conditions", icon: ShieldAlert, count: chronicConditions.length },
     { key: "allergies", label: t("hp.allergies"), icon: AlertTriangle, count: allergies.length },
     { key: "medications", label: t("hp.medications"), icon: Pill, count: medications.length },
     { key: "family", label: t("hp.family_history"), icon: Users, count: familyHistory.length },
@@ -192,6 +227,60 @@ export default function HealthProfile() {
             </button>
           ))}
         </div>
+
+        {/* ── Chronic Conditions ───────────────────────────────────────── */}
+        {activeSection === "conditions" && (
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm font-medium text-foreground">Chronic Conditions</p>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                Select all conditions that apply. Your doctor will see color-coded indicators based on these.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {ALL_CONDITIONS.map(({ key, label, labelAr, color, bg }) => {
+                const active = chronicConditions.includes(key);
+                return (
+                  <button
+                    key={key}
+                    onClick={() => toggleCondition(key)}
+                    disabled={savingConditions}
+                    style={{
+                      background: active ? bg : "#f8fafc",
+                      border: `2px solid ${active ? color : "#e2e8f0"}`,
+                      borderRadius: 12,
+                      padding: "12px 14px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      cursor: "pointer",
+                      textAlign: "left",
+                      transition: "all 0.15s",
+                    }}
+                  >
+                    <div style={{
+                      width: 10, height: 10, borderRadius: "50%",
+                      background: active ? color : "#cbd5e1",
+                      flexShrink: 0,
+                      boxShadow: active ? `0 0 0 3px ${color}33` : "none",
+                    }} />
+                    <div>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: active ? color : "#374151", margin: 0 }}>{label}</p>
+                      <p style={{ fontSize: 11, color: active ? color + "bb" : "#9ca3af", margin: 0 }}>{labelAr}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            {chronicConditions.length > 0 && (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+                <p className="text-sm font-medium text-amber-800">
+                  {chronicConditions.length} condition{chronicConditions.length > 1 ? "s" : ""} selected — visible to your authorized doctors
+                </p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ── Allergies ─────────────────────────────────────────────────── */}
         {activeSection === "allergies" && (
