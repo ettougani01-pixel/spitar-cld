@@ -60,9 +60,18 @@ export default async function handler(req, res) {
     },
   ].filter(Boolean);
 
+  const classId = `${ISSUER_ID}.spitar-emergency-card`;
+
+  // Fat JWT: include both class and object definitions inline — no pre-creation needed
+  const genericClass = {
+    id: classId,
+    issuerName: "SPITAR Medical",
+    reviewStatus: "UNDER_REVIEW",
+  };
+
   const genericObject = {
     id: objectId,
-    classId: `${ISSUER_ID}.spitar-emergency-card`,
+    classId,
     genericType: "GENERIC_TYPE_UNSPECIFIED",
     hexBackgroundColor: "#dc2626",
     logo: {
@@ -95,7 +104,10 @@ export default async function handler(req, res) {
     aud: "google",
     origins: ["https://spitar-cld.vercel.app", "http://localhost:5173"],
     typ: "savetowallet",
-    payload: { genericObjects: [genericObject] },
+    payload: {
+      genericClasses: [genericClass],
+      genericObjects: [genericObject],
+    },
   };
 
   try {
