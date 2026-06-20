@@ -148,7 +148,7 @@ export default async function handler(req, res) {
       typ: "savetowallet",
       payload: { genericObjects: [genericObject] },
     })
-      .setProtectedHeader({ alg: "RS256" })
+      .setProtectedHeader({ alg: "RS256", typ: "JWT" })
       .setIssuedAt()
       .sign(privateKey);
 
