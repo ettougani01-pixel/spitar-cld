@@ -24,7 +24,7 @@ export default async function handler(req, res) {
   const classSuffix   = "spitar-emergency-card";
   const classId       = `${ISSUER_ID}.${classSuffix}`;
   const objectSuffix  = `spitar-${spitarId.replace(/[^a-zA-Z0-9_-]/g, "_")}`;
-  const objectId      = `${ISSUER_ID}.${objectSuffix}`;
+  const objectId      = `${ISSUER_ID}.${objectSuffix}-v2`;
 
   // Build text modules
   const textModulesData = [
@@ -92,7 +92,7 @@ export default async function handler(req, res) {
     const jwt = await new SignJWT({
       iss: SA_EMAIL,
       aud: "google",
-      origins: ["https://spitar-cld.vercel.app"],
+      origins: [],
       typ: "savetowallet",
       payload: {
         genericClasses: [genericClass],
