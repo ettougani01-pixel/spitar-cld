@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { collection, query, where, getDocs, addDoc, deleteDoc, doc } from "firebase/firestore";
+import { collection, query, where, getDocs, addDoc, deleteDoc, doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -9,11 +9,47 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { AlertTriangle, Pill, Users, Activity, Plus, Trash2, Zap, FileText, ChevronDown, ChevronUp, Upload } from "lucide-react";
+import { AlertTriangle, Pill, Users, Activity, Plus, Trash2, Zap, FileText, ChevronDown, ChevronUp, Upload, ShieldAlert, Baby } from "lucide-react";
 import { VitalsChart } from "@/components/VitalsChart";
 import { ChronicTracker } from "@/components/ChronicTracker";
 import { IncidentLog } from "@/components/IncidentLog";
 import { cn } from "@/lib/utils";
+import type { ChronicCondition } from "@/lib/types";
+
+const CHRONIC_CONDITIONS: { key: ChronicCondition; label: string; labelAr: string; color: string; bg: string }[] = [
+  { key: "cancer",         label: "Cancer",          labelAr: "السرطان",           color: "#dc2626", bg: "#fee2e2" },
+  { key: "hiv",            label: "HIV/AIDS",        labelAr: "فيروس نقص المناعة", color: "#db2777", bg: "#fce7f3" },
+  { key: "tuberculosis",   label: "Tuberculosis",    labelAr: "السل",              color: "#d97706", bg: "#fef3c7" },
+  { key: "heart_disease",  label: "Heart Disease",   labelAr: "أمراض القلب",       color: "#e11d48", bg: "#ffe4e6" },
+  { key: "kidney_disease", label: "Kidney Disease",  labelAr: "أمراض الكلى",       color: "#0891b2", bg: "#ecfeff" },
+  { key: "liver_disease",  label: "Liver Disease",   labelAr: "أمراض الكبد",       color: "#b45309", bg: "#fef9c3" },
+  { key: "epilepsy",       label: "Epilepsy",        labelAr: "الصرع",             color: "#7c3aed", bg: "#ede9fe" },
+  { key: "diabetes",       label: "Diabetes",        labelAr: "السكري",            color: "#ea580c", bg: "#fff7ed" },
+  { key: "hypertension",   label: "Hypertension",    labelAr: "ضغط الدم",          color: "#2563eb", bg: "#eff6ff" },
+  { key: "thyroid",        label: "Thyroid Disorder",labelAr: "الغدة الدرقية",     color: "#0d9488", bg: "#f0fdfa" },
+];
+
+const CANCER_TYPES = [
+  { key: "breast_cancer",     label: "Breast Cancer",         labelAr: "سرطان الثدي" },
+  { key: "lung_cancer",       label: "Lung Cancer",           labelAr: "سرطان الرئة" },
+  { key: "prostate_cancer",   label: "Prostate Cancer",       labelAr: "سرطان البروستاتا" },
+  { key: "colorectal_cancer", label: "Colorectal Cancer",     labelAr: "سرطان القولون والمستقيم" },
+  { key: "leukemia",          label: "Leukemia",              labelAr: "سرطان الدم (اللوكيميا)" },
+  { key: "lymphoma",          label: "Lymphoma",              labelAr: "سرطان الغدد الليمفاوية" },
+  { key: "liver_cancer",      label: "Liver Cancer",          labelAr: "سرطان الكبد" },
+  { key: "cervical_cancer",   label: "Cervical Cancer",       labelAr: "سرطان عنق الرحم" },
+  { key: "brain_cancer",      label: "Brain Cancer",          labelAr: "سرطان الدماغ" },
+  { key: "stomach_cancer",    label: "Stomach Cancer",        labelAr: "سرطان المعدة" },
+  { key: "pancreatic_cancer", label: "Pancreatic Cancer",     labelAr: "سرطان البنكرياس" },
+  { key: "skin_cancer",       label: "Skin Cancer",           labelAr: "سرطان الجلد" },
+  { key: "kidney_cancer",     label: "Kidney Cancer",         labelAr: "سرطان الكلى" },
+  { key: "thyroid_cancer",    label: "Thyroid Cancer",        labelAr: "سرطان الغدة الدرقية" },
+  { key: "bladder_cancer",    label: "Bladder Cancer",        labelAr: "سرطان المثانة" },
+  { key: "bone_cancer",       label: "Bone Cancer",           labelAr: "سرطان العظام" },
+  { key: "ovarian_cancer",    label: "Ovarian Cancer",        labelAr: "سرطان المبيض" },
+  { key: "uterine_cancer",    label: "Uterine Cancer",        labelAr: "سرطان الرحم" },
+  { key: "other_cancer",      label: "Other Cancer",          labelAr: "نوع آخر من السرطان" },
+];
 
 interface Allergy { id: string; allergenName: string; type: string; severity: string; reaction: string; }
 interface Medication { id: string; name: string; type: string; dosage: string; frequency: string; startDate: string; notes?: string; }
@@ -85,6 +121,12 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
   const [activeVitalTab, setActiveVitalTab] = useState("blood_pressure");
   const [loading, setLoading] = useState(true);
 
+  // User profile data for completion tracking
+  const [userProfileData, setUserProfileData] = useState<Record<string, any>>({});
+  const [chronicConditions, setChronicConditions] = useState<ChronicCondition[]>([]);
+  const [cancerTypes, setCancerTypes] = useState<string[]>([]);
+  const [savingConditions, setSavingConditions] = useState(false);
+
   const [showAllergyDialog, setShowAllergyDialog] = useState(false);
   const [showMedDialog, setShowMedDialog] = useState(false);
   const [showFamilyDialog, setShowFamilyDialog] = useState(false);
@@ -108,13 +150,14 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
     async function load() {
       setLoading(true);
       try {
-      const [aRes, mRes, fRes, seRes, vRes, dRes] = await Promise.allSettled([
+      const [aRes, mRes, fRes, seRes, vRes, dRes, uRes] = await Promise.allSettled([
         getDocs(query(collection(db, "patient_allergies"), where("patientId", "==", uid))),
         getDocs(query(collection(db, "patient_medications"), where("patientId", "==", uid))),
         getDocs(query(collection(db, "patient_family_history"), where("patientId", "==", uid))),
         getDocs(query(collection(db, "patient_side_effects"), where("patientId", "==", uid))),
         getDocs(query(collection(db, "patient_vitals"), where("patientId", "==", uid))),
         getDocs(query(collection(db, "patient_documents"), where("patientId", "==", uid))),
+        getDoc(doc(db, "users", uid)),
       ]);
       if (aRes.status === "fulfilled") setAllergies(aRes.value.docs.map(d => ({ id: d.id, ...d.data() } as Allergy)));
       if (mRes.status === "fulfilled") setMedications(mRes.value.docs.map(d => ({ id: d.id, ...d.data() } as Medication)));
@@ -122,6 +165,12 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
       if (seRes.status === "fulfilled") setSideEffects(seRes.value.docs.map(d => ({ id: d.id, ...d.data() } as SideEffect)));
       if (vRes.status === "fulfilled") setVitals(vRes.value.docs.map(d => ({ id: d.id, ...d.data() } as Vital)).sort((a, b) => b.recordedAt.localeCompare(a.recordedAt)));
       if (dRes.status === "fulfilled") setDocuments(dRes.value.docs.map(d => ({ id: d.id, ...d.data() } as PatientDocument)).sort((a, b) => b.docDate.localeCompare(a.docDate)));
+      if (uRes.status === "fulfilled" && uRes.value.exists()) {
+        const data = uRes.value.data();
+        setUserProfileData(data);
+        setChronicConditions((data.chronicConditions ?? []) as ChronicCondition[]);
+        setCancerTypes((data.cancerTypes ?? []) as string[]);
+      }
       } catch (err) {
         console.error("HealthProfile load error:", err);
       } finally {
@@ -224,12 +273,68 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
     }
   };
 
-  const totalSections = 6;
-  const filledSections = [
-    allergies.length > 0, medications.length > 0, familyHistory.length > 0,
-    sideEffects.length > 0, vitals.length > 0, documents.length > 0,
-  ].filter(Boolean).length;
-  const completeness = Math.round((filledSections / totalSections) * 100);
+  const isFemale = (userProfileData.gender ?? "").toLowerCase() === "female";
+
+  const toggleCondition = async (key: ChronicCondition) => {
+    const uid = patientIdProp ?? user?.uid;
+    if (!uid || readOnly) return;
+    setSavingConditions(true);
+    const updated = chronicConditions.includes(key)
+      ? chronicConditions.filter(c => c !== key)
+      : [...chronicConditions, key];
+    try {
+      await updateDoc(doc(db, "users", uid), { chronicConditions: updated });
+      setChronicConditions(updated);
+    } finally { setSavingConditions(false); }
+  };
+
+  const toggleCancerType = async (key: string) => {
+    const uid = patientIdProp ?? user?.uid;
+    if (!uid || readOnly) return;
+    setSavingConditions(true);
+    const updated = cancerTypes.includes(key)
+      ? cancerTypes.filter(c => c !== key)
+      : [...cancerTypes, key];
+    try {
+      await updateDoc(doc(db, "users", uid), { cancerTypes: updated });
+      setCancerTypes(updated);
+    } finally { setSavingConditions(false); }
+  };
+
+  const togglePregnancy = async () => {
+    const uid = patientIdProp ?? user?.uid;
+    if (!uid || readOnly) return;
+    setSavingConditions(true);
+    const isPregnant = chronicConditions.includes("pregnancy");
+    const updated = isPregnant
+      ? chronicConditions.filter(c => c !== "pregnancy")
+      : [...chronicConditions, "pregnancy"];
+    try {
+      await updateDoc(doc(db, "users", uid), { chronicConditions: updated });
+      setChronicConditions(updated);
+    } finally { setSavingConditions(false); }
+  };
+
+  // Completion fields
+  const u = userProfileData;
+  const completionFields = [
+    { labelAr: "الاسم الكامل",                  done: !!(u.firstName && u.lastName) },
+    { labelAr: "البريد الإلكتروني",              done: !!(u.email) },
+    { labelAr: "رقم الهاتف",                    done: !!(u.phone) },
+    { labelAr: "المدينة",                        done: !!(u.city) },
+    { labelAr: "تاريخ الميلاد",                  done: !!(u.dateOfBirth) },
+    { labelAr: "فصيلة الدم",                    done: !!(u.bloodType) },
+    { labelAr: "الجنس",                          done: !!(u.gender) },
+    { labelAr: "العنوان",                        done: !!(u.address) },
+    { labelAr: "جهة الاتصال للطوارئ",            done: !!(u.emergencyContactName || u.emergencyContactPhone) },
+    { labelAr: "الحساسيات",                      done: allergies.length > 0 },
+    { labelAr: "الأدوية والمكملات",              done: medications.length > 0 },
+    { labelAr: "التاريخ العائلي الطبي",          done: familyHistory.length > 0 },
+    { labelAr: "مذكرة الآثار الجانبية",          done: sideEffects.length > 0 },
+    { labelAr: "الأمراض المزمنة",                done: chronicConditions.filter(c => c !== "pregnancy").length > 0 },
+    ...(isFemale ? [{ labelAr: "الحمل", done: chronicConditions.includes("pregnancy") }] : []),
+  ];
+  const completeness = Math.round((completionFields.filter(f => f.done).length / completionFields.length) * 100);
 
   const hasCritical = allergies.some(a => a.severity === "life_threatening" || a.severity === "severe");
   const vitalsByType = (type: string) => vitals.filter(v => v.type === type);
@@ -248,28 +353,149 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
 
       {/* Profile Completeness */}
       <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 10, padding: "14px 16px", marginBottom: 12, boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>{t("hp.profile_completeness")}</span>
-          <span style={{ fontSize: 13, fontWeight: 800, color: completeness === 100 ? "#16a34a" : completeness >= 50 ? "#d97706" : "#dc2626" }}>{completeness}%</span>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>اكتمال البروفايل</span>
+          <span style={{
+            fontSize: 15, fontWeight: 800,
+            color: completeness === 100 ? "#16a34a" : "#dc2626",
+          }}>{completeness}%</span>
         </div>
-        <div style={{ height: 6, background: "#f3f4f6", borderRadius: 99, overflow: "hidden" }}>
-          <div style={{ height: "100%", width: `${completeness}%`, background: completeness === 100 ? "#16a34a" : completeness >= 50 ? "#f59e0b" : "#ef4444", borderRadius: 99, transition: "width 0.4s" }} />
+        <div style={{ height: 7, background: "#f3f4f6", borderRadius: 99, overflow: "hidden", marginBottom: 12 }}>
+          <div style={{
+            height: "100%", width: `${completeness}%`,
+            background: completeness === 100 ? "#16a34a" : "#ef4444",
+            borderRadius: 99, transition: "width 0.5s",
+          }} />
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px 24px", marginTop: 10 }}>
-          {[
-            { label: t("hp.allergies"), done: allergies.length > 0 },
-            { label: t("hp.medications"), done: medications.length > 0 },
-            { label: t("hp.family_history"), done: familyHistory.length > 0 },
-            { label: t("hp.side_effects_journal"), done: sideEffects.length > 0 },
-            { label: t("hp.vitals_biometrics"), done: vitals.length > 0 },
-            { label: t("hp.documents_vault"), done: documents.length > 0 },
-          ].map(({ label, done }) => (
-            <div key={label} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: done ? "#16a34a" : "#9ca3af" }}>
-              <span style={{ fontSize: 10 }}>{done ? "✓" : "○"}</span> {label}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "5px 16px" }}>
+          {completionFields.map(({ labelAr, done }) => (
+            <div key={labelAr} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: done ? "#16a34a" : "#9ca3af" }}>
+              <span style={{
+                display: "inline-flex", alignItems: "center", justifyContent: "center",
+                width: 16, height: 16, borderRadius: "50%",
+                background: done ? "#dcfce7" : "#f3f4f6",
+                color: done ? "#16a34a" : "#9ca3af",
+                fontSize: 10, fontWeight: 700, flexShrink: 0,
+              }}>{done ? "✓" : "○"}</span>
+              <span style={{ direction: "rtl", textAlign: "right" }}>{labelAr}</span>
             </div>
           ))}
         </div>
       </div>
+
+      {/* Chronic Conditions */}
+      {!readOnly && (
+        <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 10, padding: "14px 16px", marginBottom: 12, boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+            <div style={{ width: 30, height: 30, borderRadius: 8, background: "#fee2e2", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <ShieldAlert size={15} style={{ color: "#dc2626" }} />
+            </div>
+            <div>
+              <p style={{ fontSize: 14, fontWeight: 700, color: "#0f172a", margin: 0 }}>الأمراض المزمنة</p>
+              <p style={{ fontSize: 11, color: "#9ca3af", margin: 0 }}>اختر الأمراض التي تنطبق عليك</p>
+            </div>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            {CHRONIC_CONDITIONS.map(({ key, label, labelAr, color, bg }) => {
+              const active = chronicConditions.includes(key);
+              return (
+                <button
+                  key={key}
+                  onClick={() => toggleCondition(key)}
+                  disabled={savingConditions}
+                  style={{
+                    background: active ? bg : "#f8fafc",
+                    border: `2px solid ${active ? color : "#e2e8f0"}`,
+                    borderRadius: 10, padding: "10px 12px",
+                    display: "flex", alignItems: "center", gap: 8,
+                    cursor: "pointer", textAlign: "left", transition: "all 0.15s",
+                  }}
+                >
+                  <div style={{
+                    width: 9, height: 9, borderRadius: "50%",
+                    background: active ? color : "#cbd5e1", flexShrink: 0,
+                    boxShadow: active ? `0 0 0 3px ${color}33` : "none",
+                  }} />
+                  <div style={{ minWidth: 0 }}>
+                    <p style={{ fontSize: 12, fontWeight: 700, color: active ? color : "#374151", margin: 0 }}>{label}</p>
+                    <p style={{ fontSize: 10, color: active ? color + "bb" : "#9ca3af", margin: 0 }}>{labelAr}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Cancer subtypes */}
+          {chronicConditions.includes("cancer") && (
+            <div style={{ marginTop: 14, padding: "12px 14px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 10 }}>
+              <p style={{ fontSize: 12, fontWeight: 700, color: "#dc2626", marginBottom: 10 }}>نوع السرطان — اختر ما ينطبق عليك:</p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                {CANCER_TYPES.map(({ key, label, labelAr }) => {
+                  const active = cancerTypes.includes(key);
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => toggleCancerType(key)}
+                      disabled={savingConditions}
+                      style={{
+                        background: active ? "#fee2e2" : "#fff",
+                        border: `1.5px solid ${active ? "#dc2626" : "#fecaca"}`,
+                        borderRadius: 8, padding: "7px 10px",
+                        display: "flex", alignItems: "center", gap: 6,
+                        cursor: "pointer", textAlign: "left", transition: "all 0.12s",
+                      }}
+                    >
+                      <div style={{
+                        width: 7, height: 7, borderRadius: "50%",
+                        background: active ? "#dc2626" : "#fca5a5", flexShrink: 0,
+                      }} />
+                      <div>
+                        <p style={{ fontSize: 11, fontWeight: 600, color: active ? "#dc2626" : "#374151", margin: 0 }}>{label}</p>
+                        <p style={{ fontSize: 10, color: active ? "#dc262699" : "#9ca3af", margin: 0 }}>{labelAr}</p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Pregnancy (females only) */}
+          {isFemale && (
+            <div style={{ marginTop: 12 }}>
+              <button
+                onClick={togglePregnancy}
+                disabled={savingConditions}
+                style={{
+                  width: "100%",
+                  background: chronicConditions.includes("pregnancy") ? "#fdf4ff" : "#f8fafc",
+                  border: `2px solid ${chronicConditions.includes("pregnancy") ? "#a855f7" : "#e2e8f0"}`,
+                  borderRadius: 10, padding: "10px 14px",
+                  display: "flex", alignItems: "center", gap: 10,
+                  cursor: "pointer", textAlign: "left", transition: "all 0.15s",
+                }}
+              >
+                <Baby size={16} style={{ color: chronicConditions.includes("pregnancy") ? "#a855f7" : "#9ca3af", flexShrink: 0 }} />
+                <div>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: chronicConditions.includes("pregnancy") ? "#a855f7" : "#374151", margin: 0 }}>Pregnancy</p>
+                  <p style={{ fontSize: 11, color: chronicConditions.includes("pregnancy") ? "#a855f799" : "#9ca3af", margin: 0 }}>الحمل</p>
+                </div>
+                <div style={{ marginLeft: "auto", width: 18, height: 18, borderRadius: "50%", background: chronicConditions.includes("pregnancy") ? "#a855f7" : "#e2e8f0", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  {chronicConditions.includes("pregnancy") && <span style={{ fontSize: 10, color: "#fff", fontWeight: 700 }}>✓</span>}
+                </div>
+              </button>
+            </div>
+          )}
+
+          {chronicConditions.filter(c => c !== "pregnancy").length > 0 && (
+            <div style={{ marginTop: 10, background: "#fffbeb", border: "1px solid #fde68a", borderRadius: 8, padding: "8px 12px" }}>
+              <p style={{ fontSize: 12, fontWeight: 600, color: "#92400e", margin: 0 }}>
+                {chronicConditions.filter(c => c !== "pregnancy").length} مرض مزمن مسجل — مرئي لأطبائك المعتمدين
+              </p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Allergies */}
       <SectionCard title={t("hp.allergies")} icon={AlertTriangle} iconColor="#dc2626" iconBg="#fef2f2" addLabel={readOnly ? "" : t("hp.add_allergy")} onAdd={() => !readOnly && setShowAllergyDialog(true)}>
