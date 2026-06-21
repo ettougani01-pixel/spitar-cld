@@ -414,7 +414,7 @@ export default function Profile() {
       {/* Full health sections for patients */}
       {user.role === "patient" && (
         <div style={{ maxWidth: 680, margin: "0 auto", padding: "0 16px 48px" }}>
-          <HealthProfileContent />
+          <HealthProfileContent hideDocumentsAndIncidents />
         </div>
       )}
 

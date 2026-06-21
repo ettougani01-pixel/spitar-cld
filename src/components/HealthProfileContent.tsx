@@ -108,7 +108,7 @@ function SectionCard({ title, icon: Icon, iconColor, iconBg, children, addLabel,
   );
 }
 
-export function HealthProfileContent({ patientId: patientIdProp, readOnly = false }: { patientId?: string; readOnly?: boolean } = {}) {
+export function HealthProfileContent({ patientId: patientIdProp, readOnly = false, hideDocumentsAndIncidents = false }: { patientId?: string; readOnly?: boolean; hideDocumentsAndIncidents?: boolean } = {}) {
   const { t } = useTranslation();
   const { user } = useAuth();
 
@@ -617,7 +617,7 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
       </SectionCard>
 
       {/* Documents Vault */}
-      <SectionCard title={t("hp.documents_vault")} icon={FileText} iconColor="#2563eb" iconBg="#eff6ff" addLabel={readOnly ? "" : t("hp.document_uploaded")} onAdd={() => !readOnly && fileInputRef.current?.click()}>
+      {!hideDocumentsAndIncidents && <SectionCard title={t("hp.documents_vault")} icon={FileText} iconColor="#2563eb" iconBg="#eff6ff" addLabel={readOnly ? "" : t("hp.document_uploaded")} onAdd={() => !readOnly && fileInputRef.current?.click()}>
         {!readOnly && (
           <>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
@@ -707,7 +707,7 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
             ))}
           </div>
         )}
-      </SectionCard>
+      </SectionCard>}
 
       {/* ── Dialogs ── */}
       <Dialog open={showAllergyDialog} onOpenChange={setShowAllergyDialog}>
@@ -826,7 +826,7 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
       </Dialog>
 
       {/* Medical Incident Log */}
-      <IncidentLog patientId={patientIdProp ?? undefined} readOnly={readOnly} />
+      {!hideDocumentsAndIncidents && <IncidentLog patientId={patientIdProp ?? undefined} readOnly={readOnly} />}
 
       <Dialog open={showVitalDialog} onOpenChange={setShowVitalDialog}>
         <DialogContent>
