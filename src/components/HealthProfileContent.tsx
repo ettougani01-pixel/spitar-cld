@@ -108,7 +108,7 @@ function SectionCard({ title, icon: Icon, iconColor, iconBg, children, addLabel,
   );
 }
 
-export function HealthProfileContent({ patientId: patientIdProp, readOnly = false, hideDocumentsAndIncidents = false }: { patientId?: string; readOnly?: boolean; hideDocumentsAndIncidents?: boolean } = {}) {
+export function HealthProfileContent({ patientId: patientIdProp, readOnly = false, hideDocumentsAndIncidents = false, hideVitals = false }: { patientId?: string; readOnly?: boolean; hideDocumentsAndIncidents?: boolean; hideVitals?: boolean } = {}) {
   const { t } = useTranslation();
   const { user } = useAuth();
 
@@ -582,7 +582,7 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
       {vitals.length >= 2 && <VitalsChart vitals={vitals} />}
 
       {/* Vitals */}
-      <SectionCard title={t("hp.vitals_biometrics")} icon={Activity} iconColor="#16a34a" iconBg="#dcfce7" addLabel={readOnly ? "" : `Log ${VITAL_TABS.find(v => v.key === activeVitalTab)?.label ?? "Vital"}`} onAdd={() => { if (readOnly) return; setVitalForm(f => ({ ...f, type: activeVitalTab, unit: VITAL_TABS.find(v => v.key === activeVitalTab)?.unit ?? "" })); setShowVitalDialog(true); }}>
+      {!hideVitals && <SectionCard title={t("hp.vitals_biometrics")} icon={Activity} iconColor="#16a34a" iconBg="#dcfce7" addLabel={readOnly ? "" : `Log ${VITAL_TABS.find(v => v.key === activeVitalTab)?.label ?? "Vital"}`} onAdd={() => { if (readOnly) return; setVitalForm(f => ({ ...f, type: activeVitalTab, unit: VITAL_TABS.find(v => v.key === activeVitalTab)?.unit ?? "" })); setShowVitalDialog(true); }}>
         {/* Vital type tabs */}
         <div style={{ display: "flex", gap: 6, marginBottom: 12, overflowX: "auto", flexWrap: "wrap" }}>
           {VITAL_TABS.map(vt => (
@@ -614,7 +614,7 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
             </div>
           ))
         )}
-      </SectionCard>
+      </SectionCard>}
 
       {/* Documents Vault */}
       {!hideDocumentsAndIncidents && <SectionCard title={t("hp.documents_vault")} icon={FileText} iconColor="#2563eb" iconBg="#eff6ff" addLabel={readOnly ? "" : t("hp.document_uploaded")} onAdd={() => !readOnly && fileInputRef.current?.click()}>
