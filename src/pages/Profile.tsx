@@ -6,65 +6,67 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Navbar } from "@/components/Navbar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SpitarIdBadge } from "@/components/SpitarIdBadge";
-import { Loader2, CheckCircle2, User, Stethoscope, FlaskConical, Building2, ShieldCheck, Camera, MapPin, Phone, Mail, Heart, AlertCircle, Briefcase, Plus, Trash2 } from "lucide-react";
+import {
+  Loader2, CheckCircle2, User, Stethoscope, FlaskConical, Building2, ShieldCheck,
+  MapPin, Phone, Mail, Heart, AlertCircle, Briefcase, Plus, Trash2,
+  Droplets, Baby, Calendar, Home, UserCheck,
+} from "lucide-react";
 import type { DoctorProfile, PatientProfile } from "@/lib/types";
 import { HealthProfileContent } from "@/components/HealthProfileContent";
 
 interface EmergencyContact { name: string; phone: string; relation: string; }
 
 const RELATIONS = ["Spouse", "Parent", "Child", "Sibling", "Friend", "Colleague", "Other"];
+const CITIES = ["Agadir","Casablanca","El Jadida","Fès","Kénitra","Marrakech","Meknès","Oujda","Rabat","Safi","Tanger","Tétouan"];
+const BLOOD_TYPES = ["A+","A-","B+","B-","AB+","AB-","O+","O-"];
 
-const CITIES = [
-  "Agadir", "Casablanca", "El Jadida", "Fès", "Kénitra",
-  "Marrakech", "Meknès", "Oujda", "Rabat", "Safi", "Tanger", "Tétouan",
-];
-const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
-
-const ROLE_META: Record<string, { icon: React.ElementType; gradient: string; label: string }> = {
-  patient: { icon: User, gradient: "linear-gradient(135deg, #2563eb 0%, #06b6d4 100%)", label: "Patient" },
-  doctor: { icon: Stethoscope, gradient: "linear-gradient(135deg, #7c3aed 0%, #2563eb 100%)", label: "Doctor" },
-  lab: { icon: FlaskConical, gradient: "linear-gradient(135deg, #0891b2 0%, #06b6d4 100%)", label: "Laboratory" },
-  hospital: { icon: Building2, gradient: "linear-gradient(135deg, #0d9488 0%, #16a34a 100%)", label: "Hospital" },
-  admin: { icon: ShieldCheck, gradient: "linear-gradient(135deg, #dc2626 0%, #ea580c 100%)", label: "Admin" },
+const ROLE_META: Record<string, { icon: React.ElementType; gradient: string; accentColor: string; label: string }> = {
+  patient:  { icon: User,        gradient: "linear-gradient(135deg,#2563eb,#06b6d4)", accentColor: "#2563eb", label: "Patient" },
+  doctor:   { icon: Stethoscope, gradient: "linear-gradient(135deg,#7c3aed,#2563eb)", accentColor: "#7c3aed", label: "Doctor" },
+  lab:      { icon: FlaskConical,gradient: "linear-gradient(135deg,#0891b2,#06b6d4)", accentColor: "#0891b2", label: "Laboratory" },
+  hospital: { icon: Building2,   gradient: "linear-gradient(135deg,#0d9488,#16a34a)", accentColor: "#0d9488", label: "Hospital" },
+  admin:    { icon: ShieldCheck,  gradient: "linear-gradient(135deg,#dc2626,#ea580c)", accentColor: "#dc2626", label: "Admin" },
 };
 
-function Field({ label, icon: Icon, children }: { label: string; icon?: React.ElementType; children: React.ReactNode }) {
+const inp: React.CSSProperties = {
+  width: "100%", height: 46, padding: "0 14px 0 40px", border: "1.5px solid #e2e8f0",
+  borderRadius: 12, fontSize: 14, color: "#0f172a", background: "#fff",
+  boxSizing: "border-box", outline: "none", transition: "all 0.2s",
+};
+const inpNoIcon: React.CSSProperties = { ...inp, paddingLeft: 14 };
+const disabledInp: React.CSSProperties = { ...inp, paddingLeft: 14, opacity: 0.55, cursor: "not-allowed", background: "#f8fafc" };
+
+function InputWrap({ icon: Icon, color, children }: { icon?: React.ElementType; color?: string; children: React.ReactNode }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <label style={{ fontSize: 12, fontWeight: 600, color: "#64748b", display: "flex", alignItems: "center", gap: 5, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-        {Icon && <Icon size={12} />} {label}
-      </label>
+    <div style={{ position: "relative" }}>
+      {Icon && (
+        <div style={{ position: "absolute", left: 13, top: "50%", transform: "translateY(-50%)", zIndex: 1, pointerEvents: "none" }}>
+          <Icon size={15} style={{ color: color ?? "#94a3b8" }} />
+        </div>
+      )}
       {children}
     </div>
   );
 }
 
-const inputStyle: React.CSSProperties = {
-  width: "100%", height: 44, padding: "0 14px", border: "1.5px solid #e2e8f0",
-  borderRadius: 10, fontSize: 14, color: "#0f172a", background: "#f8fafc",
-  boxSizing: "border-box", outline: "none", transition: "border-color 0.15s",
-};
-
-const disabledStyle: React.CSSProperties = { ...inputStyle, opacity: 0.5, cursor: "not-allowed", background: "#f1f5f9" };
-
-function Section({ title, icon: Icon, color, children }: { title: string; icon: React.ElementType; color: string; children: React.ReactNode }) {
+function CardSection({ title, icon: Icon, accent, children }: { title: string; icon: React.ElementType; accent: string; children: React.ReactNode }) {
   return (
-    <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e2e8f0", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
-      <div style={{ padding: "16px 20px", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", gap: 10 }}>
-        <div style={{ width: 32, height: 32, borderRadius: 10, background: color + "18", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <Icon size={15} style={{ color }} />
+    <div style={{ background: "#fff", borderRadius: 20, border: "1px solid #f1f5f9", overflow: "hidden", boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
+      <div style={{ padding: "18px 24px 14px", borderBottom: "1px solid #f8fafc", display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ width: 36, height: 36, borderRadius: 12, background: accent + "15", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Icon size={17} style={{ color: accent }} />
         </div>
-        <span style={{ fontSize: 14, fontWeight: 700, color: "#0f172a" }}>{title}</span>
+        <span style={{ fontSize: 15, fontWeight: 700, color: "#0f172a" }}>{title}</span>
       </div>
-      <div style={{ padding: "20px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+      <div style={{ padding: "20px 24px" }}>
         {children}
       </div>
     </div>
   );
 }
 
-function FullRow({ children }: { children: React.ReactNode }) {
-  return <div style={{ gridColumn: "1 / -1" }}>{children}</div>;
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return <p style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 6px" }}>{children}</p>;
 }
 
 export default function Profile() {
@@ -74,91 +76,88 @@ export default function Profile() {
   const [saved, setSaved] = useState(false);
 
   const [firstName, setFirstName] = useState(user?.firstName ?? "");
-  const [lastName, setLastName] = useState(user?.lastName ?? "");
+  const [lastName,  setLastName]  = useState(user?.lastName  ?? "");
   const [phone, setPhone] = useState(user?.phone ?? "");
-  const [city, setCity] = useState(user?.city ?? "");
+  const [city,  setCity]  = useState(user?.city  ?? "");
   const [dateOfBirth, setDateOfBirth] = useState((user as PatientProfile)?.dateOfBirth ?? "");
-  const [bloodType, setBloodType] = useState((user as PatientProfile)?.bloodType ?? "");
-  const [gender, setGender] = useState((user as PatientProfile)?.gender ?? "");
-  const [address, setAddress] = useState((user as PatientProfile)?.address ?? "");
-  // Emergency contacts list — seed from legacy single-contact fields
-  const [emergencyContacts, setEmergencyContacts] = useState<EmergencyContact[]>(() => {
-    const p = user as PatientProfile;
-    const legacyName = p?.emergencyContactName ?? "";
-    const legacyPhone = p?.emergencyContactPhone ?? "";
-    const stored = (p as any)?.emergencyContacts as EmergencyContact[] | undefined;
-    if (stored && stored.length > 0) return stored;
-    if (legacyName || legacyPhone) return [{ name: legacyName, phone: legacyPhone, relation: "Other" }];
-    return [{ name: "", phone: "", relation: "Other" }];
-  });
-  const [bio, setBio] = useState((user as DoctorProfile)?.bio ?? "");
+  const [bloodType,   setBloodType]   = useState((user as PatientProfile)?.bloodType   ?? "");
+  const [gender,      setGender]      = useState((user as PatientProfile)?.gender      ?? "");
+  const [address,     setAddress]     = useState((user as PatientProfile)?.address     ?? "");
+  const [bio,             setBio]             = useState((user as DoctorProfile)?.bio             ?? "");
   const [consultationFee, setConsultationFee] = useState(String((user as DoctorProfile)?.consultationFee ?? ""));
 
-  // Health data for completion tracking (patients only)
+  const [emergencyContacts, setEmergencyContacts] = useState<EmergencyContact[]>(() => {
+    const p = user as PatientProfile;
+    const stored = (p as any)?.emergencyContacts as EmergencyContact[] | undefined;
+    if (stored && stored.length > 0) return stored;
+    const ln = p?.emergencyContactName ?? "", lp = p?.emergencyContactPhone ?? "";
+    if (ln || lp) return [{ name: ln, phone: lp, relation: "Other" }];
+    return [{ name: "", phone: "", relation: "Other" }];
+  });
+
   const [healthCounts, setHealthCounts] = useState({ allergies: 0, medications: 0, familyHistory: 0, sideEffects: 0 });
   const [firestoreProfile, setFirestoreProfile] = useState<Record<string, any>>({});
 
   useEffect(() => {
     if (!user || user.role !== "patient") return;
     const uid = user.uid;
-    async function loadHealth() {
-      const [aRes, mRes, fRes, seRes, uRes] = await Promise.allSettled([
-        getDocs(query(collection(db, "patient_allergies"), where("patientId", "==", uid))),
-        getDocs(query(collection(db, "patient_medications"), where("patientId", "==", uid))),
-        getDocs(query(collection(db, "patient_family_history"), where("patientId", "==", uid))),
-        getDocs(query(collection(db, "patient_side_effects"), where("patientId", "==", uid))),
+    async function load() {
+      const [aR, mR, fR, sR, uR] = await Promise.allSettled([
+        getDocs(query(collection(db, "patient_allergies"),     where("patientId", "==", uid))),
+        getDocs(query(collection(db, "patient_medications"),   where("patientId", "==", uid))),
+        getDocs(query(collection(db, "patient_family_history"),where("patientId", "==", uid))),
+        getDocs(query(collection(db, "patient_side_effects"),  where("patientId", "==", uid))),
         getDoc(doc(db, "users", uid)),
       ]);
       setHealthCounts({
-        allergies:     aRes.status  === "fulfilled" ? aRes.value.size  : 0,
-        medications:   mRes.status  === "fulfilled" ? mRes.value.size  : 0,
-        familyHistory: fRes.status  === "fulfilled" ? fRes.value.size  : 0,
-        sideEffects:   seRes.status === "fulfilled" ? seRes.value.size : 0,
+        allergies:     aR.status === "fulfilled" ? aR.value.size : 0,
+        medications:   mR.status === "fulfilled" ? mR.value.size : 0,
+        familyHistory: fR.status === "fulfilled" ? fR.value.size : 0,
+        sideEffects:   sR.status === "fulfilled" ? sR.value.size : 0,
       });
-      if (uRes.status === "fulfilled" && uRes.value.exists()) {
-        setFirestoreProfile(uRes.value.data());
-        const d = uRes.value.data();
+      if (uR.status === "fulfilled" && uR.value.exists()) {
+        const d = uR.value.data();
+        setFirestoreProfile(d);
         if (d.dateOfBirth && !dateOfBirth) setDateOfBirth(d.dateOfBirth);
         if (d.bloodType   && !bloodType)   setBloodType(d.bloodType);
         if (d.gender      && !gender)      setGender(d.gender);
         if (d.address     && !address)     setAddress(d.address);
       }
     }
-    loadHealth();
+    load();
   }, [user?.uid]);
-
-  // Compute completion for patients
-  const isFemale = gender.toLowerCase() === "female";
-  const chronicConditions: string[] = (firestoreProfile.chronicConditions ?? []) as string[];
-  const hasEmergencyContact = emergencyContacts.some(c => c.name || c.phone)
-    || !!(firestoreProfile.emergencyContactName || firestoreProfile.emergencyContactPhone);
-
-  const completionFields = user?.role === "patient" ? [
-    { labelAr: "الاسم الكامل",          done: !!(firstName && lastName) },
-    { labelAr: "البريد الإلكتروني",      done: !!(user.email) },
-    { labelAr: "رقم الهاتف",            done: !!(phone) },
-    { labelAr: "المدينة",               done: !!(city) },
-    { labelAr: "تاريخ الميلاد",          done: !!(dateOfBirth) },
-    { labelAr: "فصيلة الدم",            done: !!(bloodType) },
-    { labelAr: "الجنس",                 done: !!(gender) },
-    { labelAr: "العنوان",               done: !!(address) },
-    { labelAr: "جهة الاتصال للطوارئ",   done: hasEmergencyContact },
-    { labelAr: "الحساسيات",             done: healthCounts.allergies > 0 },
-    { labelAr: "الأدوية والمكملات",     done: healthCounts.medications > 0 },
-    { labelAr: "التاريخ العائلي الطبي", done: healthCounts.familyHistory > 0 },
-    { labelAr: "مذكرة الآثار الجانبية", done: healthCounts.sideEffects > 0 },
-    { labelAr: "الأمراض المزمنة",       done: chronicConditions.filter(c => c !== "pregnancy").length > 0 },
-    ...(isFemale ? [{ labelAr: "الحمل", done: chronicConditions.includes("pregnancy") }] : []),
-  ] : [];
-  const completeness = completionFields.length > 0
-    ? Math.round((completionFields.filter(f => f.done).length / completionFields.length) * 100)
-    : 0;
 
   if (!user) return null;
 
   const meta = ROLE_META[user.role] ?? ROLE_META.patient;
   const RoleIcon = meta.icon;
   const initials = `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase();
+
+  const isFemale = gender.toLowerCase() === "female";
+  const chronicConditions: string[] = (firestoreProfile.chronicConditions ?? []) as string[];
+  const hasEmergencyContact = emergencyContacts.some(c => c.name || c.phone)
+    || !!(firestoreProfile.emergencyContactName || firestoreProfile.emergencyContactPhone);
+
+  const completionFields = user.role === "patient" ? [
+    { label: "الاسم الكامل",          done: !!(firstName && lastName) },
+    { label: "البريد الإلكتروني",      done: !!(user.email) },
+    { label: "رقم الهاتف",            done: !!(phone) },
+    { label: "المدينة",               done: !!(city) },
+    { label: "تاريخ الميلاد",          done: !!(dateOfBirth) },
+    { label: "فصيلة الدم",            done: !!(bloodType) },
+    { label: "الجنس",                 done: !!(gender) },
+    { label: "العنوان",               done: !!(address) },
+    { label: "جهة الاتصال للطوارئ",   done: hasEmergencyContact },
+    { label: "الحساسيات",             done: healthCounts.allergies > 0 },
+    { label: "الأدوية والمكملات",     done: healthCounts.medications > 0 },
+    { label: "التاريخ العائلي الطبي", done: healthCounts.familyHistory > 0 },
+    { label: "مذكرة الآثار الجانبية", done: healthCounts.sideEffects > 0 },
+    { label: "الأمراض المزمنة",       done: chronicConditions.filter(c => c !== "pregnancy").length > 0 },
+    ...(isFemale ? [{ label: "الحمل", done: chronicConditions.includes("pregnancy") }] : []),
+  ] : [];
+  const doneCnt = completionFields.filter(f => f.done).length;
+  const completeness = completionFields.length > 0 ? Math.round((doneCnt / completionFields.length) * 100) : 0;
+  const isComplete = completeness === 100;
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -167,9 +166,7 @@ export default function Profile() {
       const base = { firstName, lastName, phone, city };
       const extra: Record<string, unknown> = {};
       if (user.role === "patient") Object.assign(extra, {
-        dateOfBirth, bloodType, gender, address,
-        emergencyContacts,
-        // keep legacy fields for backward compat with EmergencyCard page
+        dateOfBirth, bloodType, gender, address, emergencyContacts,
         emergencyContactName: emergencyContacts[0]?.name ?? "",
         emergencyContactPhone: emergencyContacts[0]?.phone ?? "",
       });
@@ -181,244 +178,313 @@ export default function Profile() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f8fafc" }}>
+    <div style={{ minHeight: "100vh", background: "#f1f5f9" }}>
       <Navbar />
 
-      {/* Hero banner */}
-      <div style={{ background: meta.gradient, height: 160, position: "relative" }}>
-        <div style={{ position: "absolute", inset: 0, opacity: 0.1, backgroundImage: "radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)", backgroundSize: "40px 40px" }} />
+      {/* Hero */}
+      <div style={{ background: meta.gradient, height: 200, position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(circle at 15% 50%, rgba(255,255,255,0.12) 0%, transparent 60%), radial-gradient(circle at 85% 20%, rgba(255,255,255,0.08) 0%, transparent 50%)" }} />
+        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 60, background: "linear-gradient(to bottom, transparent, rgba(241,245,249,0.5))" }} />
       </div>
 
-      <div style={{ maxWidth: 680, margin: "0 auto", padding: "0 16px 48px" }}>
-        {/* Avatar card */}
-        <div style={{ background: "#fff", borderRadius: 20, border: "1px solid #e2e8f0", padding: "0 24px 24px", marginBottom: 20, marginTop: -60, boxShadow: "0 4px 20px rgba(0,0,0,0.08)", position: "relative" }}>
-          <div style={{ display: "flex", alignItems: "flex-end", gap: 20, paddingTop: 0 }}>
+      <div style={{ maxWidth: 720, margin: "0 auto", padding: "0 16px 60px" }}>
+
+        {/* Profile Card */}
+        <div style={{ background: "#fff", borderRadius: 24, border: "1px solid #e2e8f0", padding: "28px 28px 24px", marginTop: -80, marginBottom: 20, boxShadow: "0 8px 32px rgba(0,0,0,0.1)", position: "relative" }}>
+          <div style={{ display: "flex", alignItems: "flex-end", gap: 20, flexWrap: "wrap" }}>
             {/* Avatar */}
-            <div style={{ position: "relative", marginTop: -40 }}>
-              <div style={{ width: 88, height: 88, borderRadius: 22, background: meta.gradient, display: "flex", alignItems: "center", justifyContent: "center", border: "4px solid #fff", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
-                <span style={{ fontSize: 28, fontWeight: 800, color: "#fff" }}>{initials}</span>
+            <div style={{ position: "relative" }}>
+              <div style={{
+                width: 96, height: 96, borderRadius: 26, background: meta.gradient,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                border: "4px solid #fff", boxShadow: "0 6px 20px rgba(0,0,0,0.18)",
+              }}>
+                <span style={{ fontSize: 32, fontWeight: 900, color: "#fff", letterSpacing: -1 }}>{initials}</span>
               </div>
-              <div style={{ position: "absolute", bottom: 2, right: 2, width: 24, height: 24, borderRadius: "50%", background: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid #fff", cursor: "pointer" }}>
-                <Camera size={11} style={{ color: "#fff" }} />
-              </div>
+              {/* Online dot */}
+              <div style={{ position: "absolute", bottom: 4, right: 4, width: 16, height: 16, borderRadius: "50%", background: "#22c55e", border: "3px solid #fff" }} />
             </div>
 
-            {/* Name + badges */}
-            <div style={{ flex: 1, paddingTop: 12 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                <h1 style={{ fontSize: 20, fontWeight: 800, color: "#0f172a", margin: 0 }}>{user.firstName} {user.lastName}</h1>
+            {/* Info */}
+            <div style={{ flex: 1, minWidth: 0, paddingBottom: 4 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
+                <h1 style={{ fontSize: 22, fontWeight: 800, color: "#0f172a", margin: 0 }}>{user.firstName} {user.lastName}</h1>
                 {user.isVerified
-                  ? <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 10px", borderRadius: 20, background: "#dcfce7", color: "#16a34a" }}>✓ Verified</span>
-                  : <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 10px", borderRadius: 20, background: "#fef3c7", color: "#d97706" }}>Unverified</span>
+                  ? <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20, background: "#dcfce7", color: "#16a34a", border: "1px solid #bbf7d0" }}>✓ Verified</span>
+                  : <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20, background: "#fef3c7", color: "#d97706", border: "1px solid #fde68a" }}>Pending</span>
                 }
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
-                <RoleIcon size={13} style={{ color: "#64748b" }} />
-                <span style={{ fontSize: 13, color: "#64748b" }}>{meta.label}</span>
-                <span style={{ color: "#e2e8f0" }}>·</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, color: "#64748b", background: "#f8fafc", padding: "3px 10px", borderRadius: 20, border: "1px solid #e2e8f0" }}>
+                  <RoleIcon size={12} /> {meta.label}
+                </span>
                 <SpitarIdBadge id={user.spitarId} size="sm" />
+                {user.city && (
+                  <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#94a3b8" }}>
+                    <MapPin size={11} /> {user.city}
+                  </span>
+                )}
               </div>
             </div>
+
+            {/* Completion ring (patients only) */}
+            {user.role === "patient" && (
+              <div style={{ textAlign: "center", paddingBottom: 4 }}>
+                <div style={{
+                  position: "relative", width: 64, height: 64,
+                  background: `conic-gradient(${isComplete ? "#16a34a" : "#ef4444"} ${completeness * 3.6}deg, #f1f5f9 0deg)`,
+                  borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center",
+                  boxShadow: `0 0 0 4px #fff, 0 0 0 6px ${isComplete ? "#16a34a" : "#ef4444"}22`,
+                }}>
+                  <div style={{ width: 46, height: 46, borderRadius: "50%", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <span style={{ fontSize: 13, fontWeight: 800, color: isComplete ? "#16a34a" : "#ef4444" }}>{completeness}%</span>
+                  </div>
+                </div>
+                <p style={{ fontSize: 10, fontWeight: 600, color: "#94a3b8", margin: "6px 0 0", textAlign: "center" }}>اكتمال</p>
+              </div>
+            )}
           </div>
+
+          {/* Completion checklist (patients) */}
+          {user.role === "patient" && (
+            <div style={{ marginTop: 20, paddingTop: 18, borderTop: "1px solid #f1f5f9" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em" }}>اكتمال البروفايل</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: isComplete ? "#16a34a" : "#ef4444" }}>{doneCnt}/{completionFields.length} حقل</span>
+              </div>
+              {/* Progress bar */}
+              <div style={{ height: 6, background: "#f1f5f9", borderRadius: 99, overflow: "hidden", marginBottom: 14 }}>
+                <div style={{ height: "100%", width: `${completeness}%`, background: isComplete ? "#16a34a" : "#ef4444", borderRadius: 99, transition: "width 0.6s cubic-bezier(.4,0,.2,1)" }} />
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "6px 12px" }}>
+                {completionFields.map(({ label, done }) => (
+                  <div key={label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <div style={{
+                      width: 16, height: 16, borderRadius: "50%", flexShrink: 0,
+                      background: done ? "#dcfce7" : "#f1f5f9",
+                      border: `1.5px solid ${done ? "#16a34a" : "#e2e8f0"}`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 9, fontWeight: 800, color: done ? "#16a34a" : "#cbd5e1",
+                    }}>{done ? "✓" : ""}</div>
+                    <span style={{ fontSize: 11, color: done ? "#374151" : "#94a3b8", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
+        {/* Form */}
         <form onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
           {/* Basic Information */}
-          <Section title="Basic Information" icon={User} color="#2563eb">
-            <Field label={t("auth.first_name")}>
-              <input style={inputStyle} value={firstName} onChange={e => setFirstName(e.target.value)} required
-                onFocus={e => (e.target.style.borderColor = "#2563eb")} onBlur={e => (e.target.style.borderColor = "#e2e8f0")} />
-            </Field>
-            <Field label={t("auth.last_name")}>
-              <input style={inputStyle} value={lastName} onChange={e => setLastName(e.target.value)} required
-                onFocus={e => (e.target.style.borderColor = "#2563eb")} onBlur={e => (e.target.style.borderColor = "#e2e8f0")} />
-            </Field>
-            <FullRow>
-              <Field label={t("auth.email")} icon={Mail}>
-                <input style={disabledStyle} value={user.email} disabled />
-              </Field>
-            </FullRow>
-            <Field label={t("auth.phone")} icon={Phone}>
-              <input style={inputStyle} type="tel" value={phone} onChange={e => setPhone(e.target.value)}
-                onFocus={e => (e.target.style.borderColor = "#2563eb")} onBlur={e => (e.target.style.borderColor = "#e2e8f0")} />
-            </Field>
-            <Field label={t("auth.city")} icon={MapPin}>
-              <Select value={city} onValueChange={setCity}>
-                <SelectTrigger style={{ height: 44, borderRadius: 10, border: "1.5px solid #e2e8f0", background: "#f8fafc", fontSize: 14 }}>
-                  <SelectValue placeholder="Select city" />
-                </SelectTrigger>
-                <SelectContent>
-                  {CITIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </Field>
-          </Section>
+          <CardSection title="المعلومات الأساسية" icon={User} accent={meta.accentColor}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+              <div>
+                <FieldLabel>الاسم الأول</FieldLabel>
+                <InputWrap icon={User} color={meta.accentColor}>
+                  <input style={inp} value={firstName} onChange={e => setFirstName(e.target.value)} required
+                    onFocus={e => (e.target.style.borderColor = meta.accentColor)} onBlur={e => (e.target.style.borderColor = "#e2e8f0")} />
+                </InputWrap>
+              </div>
+              <div>
+                <FieldLabel>الاسم الأخير</FieldLabel>
+                <InputWrap icon={User} color={meta.accentColor}>
+                  <input style={inp} value={lastName} onChange={e => setLastName(e.target.value)} required
+                    onFocus={e => (e.target.style.borderColor = meta.accentColor)} onBlur={e => (e.target.style.borderColor = "#e2e8f0")} />
+                </InputWrap>
+              </div>
+              <div style={{ gridColumn: "1 / -1" }}>
+                <FieldLabel>البريد الإلكتروني</FieldLabel>
+                <InputWrap icon={Mail}>
+                  <input style={disabledInp} value={user.email} disabled />
+                </InputWrap>
+              </div>
+              <div>
+                <FieldLabel>رقم الهاتف</FieldLabel>
+                <InputWrap icon={Phone} color={meta.accentColor}>
+                  <input style={inp} type="tel" value={phone} onChange={e => setPhone(e.target.value)}
+                    onFocus={e => (e.target.style.borderColor = meta.accentColor)} onBlur={e => (e.target.style.borderColor = "#e2e8f0")} />
+                </InputWrap>
+              </div>
+              <div>
+                <FieldLabel>المدينة</FieldLabel>
+                <Select value={city} onValueChange={setCity}>
+                  <SelectTrigger style={{ height: 46, borderRadius: 12, border: "1.5px solid #e2e8f0", background: "#fff", fontSize: 14 }}>
+                    <SelectValue placeholder="اختر المدينة" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CITIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardSection>
 
           {/* Patient: Health Info */}
           {user.role === "patient" && (
             <>
-              <Section title="Health Information" icon={Heart} color="#dc2626">
-                <Field label="Date of Birth">
-                  <input style={inputStyle} type="date" value={dateOfBirth} onChange={e => setDateOfBirth(e.target.value)}
-                    onFocus={e => (e.target.style.borderColor = "#dc2626")} onBlur={e => (e.target.style.borderColor = "#e2e8f0")} />
-                </Field>
-                <Field label="Blood Type">
-                  <Select value={bloodType} onValueChange={setBloodType}>
-                    <SelectTrigger style={{ height: 44, borderRadius: 10, border: "1.5px solid #e2e8f0", background: "#f8fafc", fontSize: 14 }}>
-                      <SelectValue placeholder="Select" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {BLOOD_TYPES.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </Field>
-                <Field label="Gender">
-                  <Select value={gender} onValueChange={setGender}>
-                    <SelectTrigger style={{ height: 44, borderRadius: 10, border: "1.5px solid #e2e8f0", background: "#f8fafc", fontSize: 14 }}>
-                      <SelectValue placeholder="Select" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="male">Male / ذكر</SelectItem>
-                      <SelectItem value="female">Female / أنثى</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </Field>
-                <Field label="Address" icon={MapPin}>
-                  <input style={inputStyle} value={address} onChange={e => setAddress(e.target.value)} placeholder="Full address"
-                    onFocus={e => (e.target.style.borderColor = "#dc2626")} onBlur={e => (e.target.style.borderColor = "#e2e8f0")} />
-                </Field>
-              </Section>
-
-              {/* Emergency Contacts — multiple */}
-              <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e2e8f0", overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
-                <div style={{ padding: "16px 20px", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 10, background: "#ea580c18", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <AlertCircle size={15} style={{ color: "#ea580c" }} />
-                    </div>
-                    <span style={{ fontSize: 14, fontWeight: 700, color: "#0f172a" }}>Emergency Contacts</span>
-                    <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "#fff7ed", color: "#ea580c", border: "1px solid #fed7aa" }}>
-                      {emergencyContacts.length}
-                    </span>
+              <CardSection title="المعلومات الصحية" icon={Heart} accent="#ef4444">
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                  <div>
+                    <FieldLabel>تاريخ الميلاد</FieldLabel>
+                    <InputWrap icon={Calendar} color="#ef4444">
+                      <input style={inp} type="date" value={dateOfBirth} onChange={e => setDateOfBirth(e.target.value)}
+                        onFocus={e => (e.target.style.borderColor = "#ef4444")} onBlur={e => (e.target.style.borderColor = "#e2e8f0")} />
+                    </InputWrap>
                   </div>
+                  <div>
+                    <FieldLabel>فصيلة الدم</FieldLabel>
+                    <Select value={bloodType} onValueChange={setBloodType}>
+                      <SelectTrigger style={{ height: 46, borderRadius: 12, border: "1.5px solid #e2e8f0", background: "#fff", fontSize: 14 }}>
+                        <SelectValue placeholder="اختر" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {BLOOD_TYPES.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <FieldLabel>الجنس</FieldLabel>
+                    <Select value={gender} onValueChange={setGender}>
+                      <SelectTrigger style={{ height: 46, borderRadius: 12, border: "1.5px solid #e2e8f0", background: "#fff", fontSize: 14 }}>
+                        <SelectValue placeholder="اختر" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="male">ذكر — Male</SelectItem>
+                        <SelectItem value="female">أنثى — Female</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <FieldLabel>العنوان</FieldLabel>
+                    <InputWrap icon={Home} color="#ef4444">
+                      <input style={inp} value={address} onChange={e => setAddress(e.target.value)} placeholder="العنوان الكامل"
+                        onFocus={e => (e.target.style.borderColor = "#ef4444")} onBlur={e => (e.target.style.borderColor = "#e2e8f0")} />
+                    </InputWrap>
+                  </div>
+                </div>
+              </CardSection>
+
+              {/* Emergency Contacts */}
+              <CardSection title="جهات الاتصال للطوارئ" icon={AlertCircle} accent="#f97316">
+                <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 14 }}>
                   <button
                     type="button"
-                    onClick={() => setEmergencyContacts(prev => [...prev, { name: "", phone: "", relation: "Other" }])}
-                    style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: 8, background: "#fff7ed", border: "1px solid #fed7aa", color: "#ea580c", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+                    onClick={() => setEmergencyContacts(p => [...p, { name: "", phone: "", relation: "Other" }])}
+                    style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 10, background: "#fff7ed", border: "1.5px solid #fed7aa", color: "#f97316", fontSize: 13, fontWeight: 700, cursor: "pointer" }}
                   >
-                    <Plus size={13} /> Add Person
+                    <Plus size={14} /> إضافة شخص
                   </button>
                 </div>
-
-                <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {emergencyContacts.map((ec, i) => (
-                    <div key={i} style={{ border: "1.5px solid #fed7aa", borderRadius: 12, padding: "14px 16px", background: "#fffbf7", position: "relative" }}>
-                      {/* Remove button */}
-                      {emergencyContacts.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => setEmergencyContacts(prev => prev.filter((_, idx) => idx !== i))}
-                          style={{ position: "absolute", top: 10, right: 10, background: "#fee2e2", border: "none", borderRadius: 6, padding: "3px 6px", cursor: "pointer", color: "#dc2626", display: "flex", alignItems: "center" }}
-                        >
-                          <Trash2 size={12} />
-                        </button>
-                      )}
-
-                      <p style={{ fontSize: 11, fontWeight: 700, color: "#ea580c", margin: "0 0 12px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                        Contact {i + 1}
-                      </p>
-
+                    <div key={i} style={{ borderRadius: 14, border: "1.5px solid #fed7aa", background: "linear-gradient(135deg,#fffbf5,#fff7ed)", padding: "16px 18px", position: "relative" }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <div style={{ width: 26, height: 26, borderRadius: 8, background: "#fed7aa", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <UserCheck size={13} style={{ color: "#f97316" }} />
+                          </div>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: "#ea580c" }}>جهة الاتصال {i + 1}</span>
+                        </div>
+                        {emergencyContacts.length > 1 && (
+                          <button type="button" onClick={() => setEmergencyContacts(p => p.filter((_, idx) => idx !== i))}
+                            style={{ width: 28, height: 28, borderRadius: 8, background: "#fee2e2", border: "none", cursor: "pointer", color: "#dc2626", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <Trash2 size={13} />
+                          </button>
+                        )}
+                      </div>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                        <Field label="Full Name">
-                          <input
-                            style={inputStyle} value={ec.name}
-                            onChange={e => setEmergencyContacts(prev => prev.map((c, idx) => idx === i ? { ...c, name: e.target.value } : c))}
-                            placeholder="e.g. Ahmed Mohamed"
-                            onFocus={e => (e.target.style.borderColor = "#ea580c")} onBlur={e => (e.target.style.borderColor = "#e2e8f0")}
-                          />
-                        </Field>
-                        <Field label="Phone" icon={Phone}>
-                          <input
-                            style={inputStyle} type="tel" value={ec.phone}
-                            onChange={e => setEmergencyContacts(prev => prev.map((c, idx) => idx === i ? { ...c, phone: e.target.value } : c))}
-                            placeholder="+212 6XX XXX XXX"
-                            onFocus={e => (e.target.style.borderColor = "#ea580c")} onBlur={e => (e.target.style.borderColor = "#e2e8f0")}
-                          />
-                        </Field>
+                        <div>
+                          <FieldLabel>الاسم الكامل</FieldLabel>
+                          <InputWrap icon={User} color="#f97316">
+                            <input style={inp} value={ec.name}
+                              onChange={e => setEmergencyContacts(p => p.map((c, idx) => idx === i ? { ...c, name: e.target.value } : c))}
+                              placeholder="Ahmed Mohamed"
+                              onFocus={e => (e.target.style.borderColor = "#f97316")} onBlur={e => (e.target.style.borderColor = "#e2e8f0")} />
+                          </InputWrap>
+                        </div>
+                        <div>
+                          <FieldLabel>رقم الهاتف</FieldLabel>
+                          <InputWrap icon={Phone} color="#f97316">
+                            <input style={inp} type="tel" value={ec.phone}
+                              onChange={e => setEmergencyContacts(p => p.map((c, idx) => idx === i ? { ...c, phone: e.target.value } : c))}
+                              placeholder="+212 6XX XXX XXX"
+                              onFocus={e => (e.target.style.borderColor = "#f97316")} onBlur={e => (e.target.style.borderColor = "#e2e8f0")} />
+                          </InputWrap>
+                        </div>
                         <div style={{ gridColumn: "1 / -1" }}>
-                          <Field label="Relationship">
-                            <Select value={ec.relation} onValueChange={val => setEmergencyContacts(prev => prev.map((c, idx) => idx === i ? { ...c, relation: val } : c))}>
-                              <SelectTrigger style={{ height: 44, borderRadius: 10, border: "1.5px solid #e2e8f0", background: "#f8fafc", fontSize: 14 }}>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {RELATIONS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                              </SelectContent>
-                            </Select>
-                          </Field>
+                          <FieldLabel>العلاقة</FieldLabel>
+                          <Select value={ec.relation} onValueChange={val => setEmergencyContacts(p => p.map((c, idx) => idx === i ? { ...c, relation: val } : c))}>
+                            <SelectTrigger style={{ height: 46, borderRadius: 12, border: "1.5px solid #e2e8f0", background: "#fff", fontSize: 14 }}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {RELATIONS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
                         </div>
                       </div>
                     </div>
                   ))}
                 </div>
-              </div>
+              </CardSection>
             </>
           )}
 
           {/* Doctor: Professional */}
           {user.role === "doctor" && (
-            <Section title="Professional Details" icon={Briefcase} color="#7c3aed">
-              <FullRow>
-                <Field label="Specialty">
-                  <input style={disabledStyle} value={(user as DoctorProfile).specialty ?? ""} disabled />
-                  <p style={{ fontSize: 11, color: "#94a3b8", margin: "4px 0 0" }}>Contact admin to update your specialty</p>
-                </Field>
-              </FullRow>
-              <FullRow>
-                <Field label="Bio / About">
+            <CardSection title="التفاصيل المهنية" icon={Briefcase} accent="#7c3aed">
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                <div>
+                  <FieldLabel>التخصص</FieldLabel>
+                  <input style={{ ...disabledInp, paddingLeft: 14 }} value={(user as DoctorProfile).specialty ?? ""} disabled />
+                  <p style={{ fontSize: 11, color: "#94a3b8", margin: "4px 0 0" }}>تواصل مع المسؤول لتغيير تخصصك</p>
+                </div>
+                <div>
+                  <FieldLabel>نبذة تعريفية</FieldLabel>
                   <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3}
-                    placeholder="Brief description of your practice..."
-                    style={{ ...inputStyle, height: "auto", padding: "12px 14px", resize: "none", lineHeight: 1.6 }}
+                    placeholder="وصف مختصر عن ممارستك الطبية..."
+                    style={{ ...inpNoIcon, height: "auto", padding: "12px 14px", resize: "none", lineHeight: 1.7 }}
                     onFocus={e => (e.target.style.borderColor = "#7c3aed")} onBlur={e => (e.target.style.borderColor = "#e2e8f0")} />
-                </Field>
-              </FullRow>
-              <Field label="Consultation Fee (MAD)">
-                <input style={inputStyle} type="number" value={consultationFee} onChange={e => setConsultationFee(e.target.value)}
-                  placeholder="e.g. 300"
-                  onFocus={e => (e.target.style.borderColor = "#7c3aed")} onBlur={e => (e.target.style.borderColor = "#e2e8f0")} />
-              </Field>
-            </Section>
+                </div>
+                <div>
+                  <FieldLabel>رسوم الاستشارة (درهم)</FieldLabel>
+                  <input style={inpNoIcon} type="number" value={consultationFee} onChange={e => setConsultationFee(e.target.value)}
+                    placeholder="مثال: 300"
+                    onFocus={e => (e.target.style.borderColor = "#7c3aed")} onBlur={e => (e.target.style.borderColor = "#e2e8f0")} />
+                </div>
+              </div>
+            </CardSection>
           )}
 
-          {/* Save button */}
-          <button
-            type="submit"
-            disabled={saving}
-            style={{
-              width: "100%", height: 50, borderRadius: 14, border: "none", cursor: saving ? "wait" : "pointer",
-              background: saved ? "linear-gradient(135deg, #16a34a, #15803d)" : meta.gradient,
-              color: "#fff", fontSize: 15, fontWeight: 700, display: "flex", alignItems: "center",
-              justifyContent: "center", gap: 8, transition: "all 0.2s", boxShadow: "0 4px 14px rgba(37,99,235,0.3)",
-            }}
-          >
+          {/* Save */}
+          <button type="submit" disabled={saving} style={{
+            width: "100%", height: 54, borderRadius: 16, border: "none",
+            cursor: saving ? "wait" : "pointer",
+            background: saved ? "linear-gradient(135deg,#16a34a,#15803d)" : meta.gradient,
+            color: "#fff", fontSize: 15, fontWeight: 700,
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+            transition: "all 0.25s", boxShadow: `0 6px 20px ${meta.accentColor}40`,
+          }}>
             {saving
-              ? <><Loader2 size={18} style={{ animation: "spin 1s linear infinite" }} /> {t("common.loading")}</>
+              ? <><Loader2 size={18} style={{ animation: "spin 1s linear infinite" }} /> جارٍ الحفظ...</>
               : saved
-              ? <><CheckCircle2 size={18} /> Saved successfully!</>
-              : t("common.save")
+              ? <><CheckCircle2 size={18} /> تم الحفظ بنجاح!</>
+              : "حفظ التغييرات"
             }
           </button>
         </form>
+
+        {/* Health sections */}
+        {user.role === "patient" && (
+          <div style={{ marginTop: 20 }}>
+            <HealthProfileContent hideDocumentsAndIncidents />
+          </div>
+        )}
       </div>
 
-      {/* Full health sections for patients */}
-      {user.role === "patient" && (
-        <div style={{ maxWidth: 680, margin: "0 auto", padding: "0 16px 48px" }}>
-          <HealthProfileContent hideDocumentsAndIncidents />
-        </div>
-      )}
-
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   );
 }
