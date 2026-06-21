@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { SpitarIdBadge } from "@/components/SpitarIdBadge";
 import { Loader2, CheckCircle2, User, Stethoscope, FlaskConical, Building2, ShieldCheck, Camera, MapPin, Phone, Mail, Heart, AlertCircle, Briefcase, Plus, Trash2 } from "lucide-react";
 import type { DoctorProfile, PatientProfile } from "@/lib/types";
+import { HealthProfileContent } from "@/components/HealthProfileContent";
 
 interface EmergencyContact { name: string; phone: string; relation: string; }
 
@@ -445,6 +446,13 @@ export default function Profile() {
           </button>
         </form>
       </div>
+
+      {/* Full health sections for patients */}
+      {user.role === "patient" && (
+        <div style={{ maxWidth: 680, margin: "0 auto", padding: "0 16px 48px" }}>
+          <HealthProfileContent />
+        </div>
+      )}
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
