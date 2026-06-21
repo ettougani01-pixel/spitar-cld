@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  collection, query, where, getDocs, addDoc, deleteDoc, doc, orderBy,
+  collection, query, where, getDocs, addDoc, deleteDoc, doc,
   getDoc, updateDoc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -11,15 +11,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  AlertTriangle, Heart, Pill, Users, Activity, Plus, Trash2,
-  Droplets, Scale, Wind, Zap, ShieldAlert,
+  AlertTriangle, Pill, Users, Activity, Plus, Trash2,
+  Zap, ShieldAlert, Baby, Heart, Droplets, Scale,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ChronicCondition } from "@/lib/types";
@@ -38,6 +38,41 @@ const SEVERITY_COLORS: Record<SeverityLevel, string> = {
   life_threatening: "bg-red-100 text-red-700 border-red-200",
 };
 
+const CHRONIC_CONDITIONS: { key: ChronicCondition; label: string; labelAr: string; color: string; bg: string }[] = [
+  { key: "cancer",         label: "Cancer",           labelAr: "السرطان",           color: "#dc2626", bg: "#fee2e2" },
+  { key: "hiv",            label: "HIV/AIDS",         labelAr: "فيروس نقص المناعة", color: "#db2777", bg: "#fce7f3" },
+  { key: "tuberculosis",   label: "Tuberculosis",     labelAr: "السل",              color: "#d97706", bg: "#fef3c7" },
+  { key: "heart_disease",  label: "Heart Disease",    labelAr: "أمراض القلب",       color: "#e11d48", bg: "#ffe4e6" },
+  { key: "kidney_disease", label: "Kidney Disease",   labelAr: "أمراض الكلى",       color: "#0891b2", bg: "#ecfeff" },
+  { key: "liver_disease",  label: "Liver Disease",    labelAr: "أمراض الكبد",       color: "#b45309", bg: "#fef9c3" },
+  { key: "epilepsy",       label: "Epilepsy",         labelAr: "الصرع",             color: "#7c3aed", bg: "#ede9fe" },
+  { key: "diabetes",       label: "Diabetes",         labelAr: "السكري",            color: "#ea580c", bg: "#fff7ed" },
+  { key: "hypertension",   label: "Hypertension",     labelAr: "ضغط الدم",          color: "#2563eb", bg: "#eff6ff" },
+  { key: "thyroid",        label: "Thyroid Disorder", labelAr: "الغدة الدرقية",     color: "#0d9488", bg: "#f0fdfa" },
+];
+
+const CANCER_TYPES = [
+  { key: "breast_cancer",     label: "Breast Cancer",      labelAr: "سرطان الثدي" },
+  { key: "lung_cancer",       label: "Lung Cancer",        labelAr: "سرطان الرئة" },
+  { key: "prostate_cancer",   label: "Prostate Cancer",    labelAr: "سرطان البروستاتا" },
+  { key: "colorectal_cancer", label: "Colorectal Cancer",  labelAr: "سرطان القولون والمستقيم" },
+  { key: "leukemia",          label: "Leukemia",           labelAr: "سرطان الدم (اللوكيميا)" },
+  { key: "lymphoma",          label: "Lymphoma",           labelAr: "سرطان الغدد الليمفاوية" },
+  { key: "liver_cancer",      label: "Liver Cancer",       labelAr: "سرطان الكبد" },
+  { key: "cervical_cancer",   label: "Cervical Cancer",    labelAr: "سرطان عنق الرحم" },
+  { key: "brain_cancer",      label: "Brain Cancer",       labelAr: "سرطان الدماغ" },
+  { key: "stomach_cancer",    label: "Stomach Cancer",     labelAr: "سرطان المعدة" },
+  { key: "pancreatic_cancer", label: "Pancreatic Cancer",  labelAr: "سرطان البنكرياس" },
+  { key: "skin_cancer",       label: "Skin Cancer",        labelAr: "سرطان الجلد" },
+  { key: "kidney_cancer",     label: "Kidney Cancer",      labelAr: "سرطان الكلى" },
+  { key: "thyroid_cancer",    label: "Thyroid Cancer",     labelAr: "سرطان الغدة الدرقية" },
+  { key: "bladder_cancer",    label: "Bladder Cancer",     labelAr: "سرطان المثانة" },
+  { key: "bone_cancer",       label: "Bone Cancer",        labelAr: "سرطان العظام" },
+  { key: "ovarian_cancer",    label: "Ovarian Cancer",     labelAr: "سرطان المبيض" },
+  { key: "uterine_cancer",    label: "Uterine Cancer",     labelAr: "سرطان الرحم" },
+  { key: "other_cancer",      label: "Other Cancer",       labelAr: "نوع آخر من السرطان" },
+];
+
 export default function HealthProfile() {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -48,18 +83,18 @@ export default function HealthProfile() {
   const [sideEffects, setSideEffects] = useState<SideEffect[]>([]);
   const [vitals, setVitals] = useState<Vital[]>([]);
   const [chronicConditions, setChronicConditions] = useState<ChronicCondition[]>([]);
-  const [activeSection, setActiveSection] = useState("allergies");
+  const [cancerTypes, setCancerTypes] = useState<string[]>([]);
+  const [userProfileData, setUserProfileData] = useState<Record<string, any>>({});
+  const [activeSection, setActiveSection] = useState("conditions");
   const [loading, setLoading] = useState(true);
   const [savingConditions, setSavingConditions] = useState(false);
 
-  // Dialog states
   const [showAllergyDialog, setShowAllergyDialog] = useState(false);
   const [showMedDialog, setShowMedDialog] = useState(false);
   const [showFamilyDialog, setShowFamilyDialog] = useState(false);
   const [showSideEffectDialog, setShowSideEffectDialog] = useState(false);
   const [showVitalDialog, setShowVitalDialog] = useState(false);
 
-  // Forms
   const [allergyForm, setAllergyForm] = useState({ allergenName: "", type: "medication", severity: "mild", reaction: "" });
   const [medForm, setMedForm] = useState({ name: "", type: "prescription_med", dosage: "", frequency: "", startDate: "", notes: "" });
   const [familyForm, setFamilyForm] = useState({ relation: "parent", condition: "diabetes", detail: "" });
@@ -77,7 +112,7 @@ export default function HealthProfile() {
         getDocs(query(collection(db, "patient_medications"), where("patientId", "==", uid))),
         getDocs(query(collection(db, "patient_family_history"), where("patientId", "==", uid))),
         getDocs(query(collection(db, "patient_side_effects"), where("patientId", "==", uid))),
-        getDocs(query(collection(db, "patient_vitals"), where("patientId", "==", uid), orderBy("recordedAt", "desc"))),
+        getDocs(query(collection(db, "patient_vitals"), where("patientId", "==", uid))),
         getDoc(doc(db, "users", uid)),
       ]);
       setAllergies(aSnap.docs.map(d => ({ id: d.id, ...d.data() } as Allergy)));
@@ -85,7 +120,12 @@ export default function HealthProfile() {
       setFamilyHistory(fSnap.docs.map(d => ({ id: d.id, ...d.data() } as FamilyHistory)));
       setSideEffects(seSnap.docs.map(d => ({ id: d.id, ...d.data() } as SideEffect)));
       setVitals(vSnap.docs.map(d => ({ id: d.id, ...d.data() } as Vital)));
-      if (userDoc.exists()) setChronicConditions((userDoc.data().chronicConditions ?? []) as ChronicCondition[]);
+      if (userDoc.exists()) {
+        const data = userDoc.data();
+        setUserProfileData(data);
+        setChronicConditions((data.chronicConditions ?? []) as ChronicCondition[]);
+        setCancerTypes((data.cancerTypes ?? []) as string[]);
+      }
       setLoading(false);
     }
     load();
@@ -151,24 +191,6 @@ export default function HealthProfile() {
     setter((p: any[]) => p.filter((x: any) => x.id !== id));
   };
 
-  const hasCriticalAllergy = allergies.some(a => a.severity === "life_threatening" || a.severity === "severe");
-
-  const ALL_CONDITIONS: { key: ChronicCondition; label: string; labelAr: string; color: string; bg: string }[] = [
-    { key: "cancer",         label: "Cancer",            labelAr: "السرطان",            color: "#dc2626", bg: "#fee2e2" }, // red
-    { key: "hiv",            label: "HIV/AIDS",          labelAr: "فيروس نقص المناعة", color: "#db2777", bg: "#fce7f3" }, // pink
-    { key: "tuberculosis",   label: "Tuberculosis",      labelAr: "السل",               color: "#d97706", bg: "#fef3c7" }, // amber
-    { key: "pregnancy",      label: "Pregnancy",         labelAr: "الحمل",              color: "#a855f7", bg: "#fdf4ff" }, // purple
-    { key: "heart_disease",  label: "Heart Disease",     labelAr: "أمراض القلب",        color: "#e11d48", bg: "#ffe4e6" }, // rose
-    { key: "kidney_disease", label: "Kidney Disease",    labelAr: "أمراض الكلى",        color: "#0891b2", bg: "#ecfeff" }, // cyan
-    { key: "liver_disease",  label: "Liver Disease",     labelAr: "أمراض الكبد",        color: "#b45309", bg: "#fef9c3" }, // yellow-brown
-    { key: "epilepsy",       label: "Epilepsy",          labelAr: "الصرع",              color: "#7c3aed", bg: "#ede9fe" }, // violet
-    { key: "diabetes",       label: "Diabetes",          labelAr: "السكري",             color: "#ea580c", bg: "#fff7ed" }, // orange
-    { key: "hypertension",   label: "Hypertension",      labelAr: "ضغط الدم",           color: "#2563eb", bg: "#eff6ff" }, // blue
-    { key: "asthma",         label: "Asthma",            labelAr: "الربو",              color: "#16a34a", bg: "#f0fdf4" }, // green
-    { key: "thyroid",        label: "Thyroid Disorder",  labelAr: "الغدة الدرقية",      color: "#0d9488", bg: "#f0fdfa" }, // teal
-    { key: "mental_health",  label: "Mental Health",     labelAr: "الصحة النفسية",      color: "#64748b", bg: "#f8fafc" }, // slate
-  ];
-
   const toggleCondition = async (key: ChronicCondition) => {
     if (!user) return;
     setSavingConditions(true);
@@ -181,8 +203,56 @@ export default function HealthProfile() {
     } finally { setSavingConditions(false); }
   };
 
+  const toggleCancerType = async (key: string) => {
+    if (!user) return;
+    setSavingConditions(true);
+    const updated = cancerTypes.includes(key)
+      ? cancerTypes.filter(c => c !== key)
+      : [...cancerTypes, key];
+    try {
+      await updateDoc(doc(db, "users", user.uid), { cancerTypes: updated });
+      setCancerTypes(updated);
+    } finally { setSavingConditions(false); }
+  };
+
+  const togglePregnancy = async () => {
+    if (!user) return;
+    setSavingConditions(true);
+    const isPregnant = chronicConditions.includes("pregnancy");
+    const updated = isPregnant
+      ? chronicConditions.filter(c => c !== "pregnancy")
+      : [...chronicConditions, "pregnancy"];
+    try {
+      await updateDoc(doc(db, "users", user.uid), { chronicConditions: updated });
+      setChronicConditions(updated);
+    } finally { setSavingConditions(false); }
+  };
+
+  const hasCriticalAllergy = allergies.some(a => a.severity === "life_threatening" || a.severity === "severe");
+  const isFemale = (userProfileData.gender ?? "").toLowerCase() === "female";
+  const u = userProfileData;
+
+  const completionFields = [
+    { labelAr: "الاسم الكامل",           done: !!(u.firstName && u.lastName) },
+    { labelAr: "البريد الإلكتروني",       done: !!(u.email) },
+    { labelAr: "رقم الهاتف",             done: !!(u.phone) },
+    { labelAr: "المدينة",                done: !!(u.city) },
+    { labelAr: "تاريخ الميلاد",           done: !!(u.dateOfBirth) },
+    { labelAr: "فصيلة الدم",             done: !!(u.bloodType) },
+    { labelAr: "الجنس",                  done: !!(u.gender) },
+    { labelAr: "العنوان",                done: !!(u.address) },
+    { labelAr: "جهة الاتصال للطوارئ",    done: !!(u.emergencyContactName || u.emergencyContactPhone) },
+    { labelAr: "الحساسيات",              done: allergies.length > 0 },
+    { labelAr: "الأدوية والمكملات",      done: medications.length > 0 },
+    { labelAr: "التاريخ العائلي الطبي",  done: familyHistory.length > 0 },
+    { labelAr: "مذكرة الآثار الجانبية",  done: sideEffects.length > 0 },
+    { labelAr: "الأمراض المزمنة",        done: chronicConditions.filter(c => c !== "pregnancy").length > 0 },
+    ...(isFemale ? [{ labelAr: "الحمل", done: chronicConditions.includes("pregnancy") }] : []),
+  ];
+  const completeness = Math.round((completionFields.filter(f => f.done).length / completionFields.length) * 100);
+
   const sections = [
-    { key: "conditions", label: "Chronic Conditions", icon: ShieldAlert, count: chronicConditions.length },
+    { key: "conditions", label: "الأمراض المزمنة", icon: ShieldAlert },
     { key: "allergies", label: t("hp.allergies"), icon: AlertTriangle, count: allergies.length },
     { key: "medications", label: t("hp.medications"), icon: Pill, count: medications.length },
     { key: "family", label: t("hp.family_history"), icon: Users, count: familyHistory.length },
@@ -190,13 +260,49 @@ export default function HealthProfile() {
     { key: "vitals", label: t("hp.vitals_biometrics"), icon: Activity, count: vitals.length },
   ];
 
+  if (loading) return (
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <div className="flex items-center justify-center py-32 text-muted-foreground">Loading...</div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="max-w-3xl mx-auto px-4 py-8">
         <div className="mb-6">
           <h1 className="text-2xl font-bold">{t("hp.health_profile")}</h1>
-          <p className="text-sm text-muted-foreground mt-1">Your personal health information, accessible by your doctors</p>
+          <p className="text-sm text-muted-foreground mt-1">معلوماتك الصحية الشخصية، متاحة لأطبائك المعتمدين</p>
+        </div>
+
+        {/* Profile Completion */}
+        <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 12, padding: "16px 18px", marginBottom: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+            <span style={{ fontSize: 14, fontWeight: 700, color: "#0f172a" }}>اكتمال البروفايل</span>
+            <span style={{ fontSize: 16, fontWeight: 800, color: completeness === 100 ? "#16a34a" : "#dc2626" }}>{completeness}%</span>
+          </div>
+          <div style={{ height: 8, background: "#f3f4f6", borderRadius: 99, overflow: "hidden", marginBottom: 14 }}>
+            <div style={{
+              height: "100%", width: `${completeness}%`,
+              background: completeness === 100 ? "#16a34a" : "#ef4444",
+              borderRadius: 99, transition: "width 0.5s",
+            }} />
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 20px" }}>
+            {completionFields.map(({ labelAr, done }) => (
+              <div key={labelAr} style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 12, color: done ? "#16a34a" : "#9ca3af" }}>
+                <span style={{
+                  display: "inline-flex", alignItems: "center", justifyContent: "center",
+                  width: 17, height: 17, borderRadius: "50%",
+                  background: done ? "#dcfce7" : "#f3f4f6",
+                  color: done ? "#16a34a" : "#9ca3af",
+                  fontSize: 10, fontWeight: 700, flexShrink: 0,
+                }}>{done ? "✓" : "○"}</span>
+                <span style={{ direction: "rtl" }}>{labelAr}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
         {hasCriticalAllergy && (
@@ -219,7 +325,7 @@ export default function HealthProfile() {
             >
               <Icon className="w-3.5 h-3.5" />
               {label}
-              {count > 0 && (
+              {count != null && count > 0 && (
                 <span className={cn("text-xs rounded-full px-1.5 py-0.5", activeSection === key ? "bg-primary/10 text-primary" : "bg-muted-foreground/20")}>
                   {count}
                 </span>
@@ -228,17 +334,16 @@ export default function HealthProfile() {
           ))}
         </div>
 
-        {/* ── Chronic Conditions ───────────────────────────────────────── */}
+        {/* ── Chronic Conditions ── */}
         {activeSection === "conditions" && (
           <div className="space-y-4">
             <div>
-              <p className="text-sm font-medium text-foreground">Chronic Conditions</p>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                Select all conditions that apply. Your doctor will see color-coded indicators based on these.
-              </p>
+              <p className="text-sm font-semibold text-foreground">الأمراض المزمنة</p>
+              <p className="text-xs text-muted-foreground mt-0.5">اختر الأمراض التي تنطبق عليك — ستظهر للأطباء المعتمدين</p>
             </div>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {ALL_CONDITIONS.map(({ key, label, labelAr, color, bg }) => {
+
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-2">
+              {CHRONIC_CONDITIONS.map(({ key, label, labelAr, color, bg }) => {
                 const active = chronicConditions.includes(key);
                 return (
                   <button
@@ -248,20 +353,14 @@ export default function HealthProfile() {
                     style={{
                       background: active ? bg : "#f8fafc",
                       border: `2px solid ${active ? color : "#e2e8f0"}`,
-                      borderRadius: 12,
-                      padding: "12px 14px",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 10,
-                      cursor: "pointer",
-                      textAlign: "left",
-                      transition: "all 0.15s",
+                      borderRadius: 12, padding: "12px 14px",
+                      display: "flex", alignItems: "center", gap: 10,
+                      cursor: "pointer", textAlign: "left", transition: "all 0.15s",
                     }}
                   >
                     <div style={{
                       width: 10, height: 10, borderRadius: "50%",
-                      background: active ? color : "#cbd5e1",
-                      flexShrink: 0,
+                      background: active ? color : "#cbd5e1", flexShrink: 0,
                       boxShadow: active ? `0 0 0 3px ${color}33` : "none",
                     }} />
                     <div>
@@ -272,17 +371,78 @@ export default function HealthProfile() {
                 );
               })}
             </div>
-            {chronicConditions.length > 0 && (
+
+            {/* Cancer subtypes */}
+            {chronicConditions.includes("cancer") && (
+              <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 12, padding: "14px 16px" }}>
+                <p style={{ fontSize: 13, fontWeight: 700, color: "#dc2626", marginBottom: 12 }}>نوع السرطان — اختر ما ينطبق عليك:</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {CANCER_TYPES.map(({ key, label, labelAr }) => {
+                    const active = cancerTypes.includes(key);
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => toggleCancerType(key)}
+                        disabled={savingConditions}
+                        style={{
+                          background: active ? "#fee2e2" : "#fff",
+                          border: `1.5px solid ${active ? "#dc2626" : "#fecaca"}`,
+                          borderRadius: 8, padding: "8px 10px",
+                          display: "flex", alignItems: "center", gap: 6,
+                          cursor: "pointer", textAlign: "left", transition: "all 0.12s",
+                        }}
+                      >
+                        <div style={{
+                          width: 7, height: 7, borderRadius: "50%",
+                          background: active ? "#dc2626" : "#fca5a5", flexShrink: 0,
+                        }} />
+                        <div>
+                          <p style={{ fontSize: 12, fontWeight: 600, color: active ? "#dc2626" : "#374151", margin: 0 }}>{label}</p>
+                          <p style={{ fontSize: 10, color: active ? "#dc262699" : "#9ca3af", margin: 0 }}>{labelAr}</p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Pregnancy (females only) */}
+            {isFemale && (
+              <button
+                onClick={togglePregnancy}
+                disabled={savingConditions}
+                style={{
+                  width: "100%",
+                  background: chronicConditions.includes("pregnancy") ? "#fdf4ff" : "#f8fafc",
+                  border: `2px solid ${chronicConditions.includes("pregnancy") ? "#a855f7" : "#e2e8f0"}`,
+                  borderRadius: 12, padding: "12px 16px",
+                  display: "flex", alignItems: "center", gap: 12,
+                  cursor: "pointer", textAlign: "left", transition: "all 0.15s",
+                }}
+              >
+                <Baby size={18} style={{ color: chronicConditions.includes("pregnancy") ? "#a855f7" : "#9ca3af", flexShrink: 0 }} />
+                <div>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: chronicConditions.includes("pregnancy") ? "#a855f7" : "#374151", margin: 0 }}>Pregnancy</p>
+                  <p style={{ fontSize: 12, color: chronicConditions.includes("pregnancy") ? "#a855f799" : "#9ca3af", margin: 0 }}>الحمل</p>
+                </div>
+                <div style={{ marginLeft: "auto", width: 20, height: 20, borderRadius: "50%", background: chronicConditions.includes("pregnancy") ? "#a855f7" : "#e2e8f0", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  {chronicConditions.includes("pregnancy") && <span style={{ fontSize: 11, color: "#fff", fontWeight: 700 }}>✓</span>}
+                </div>
+              </button>
+            )}
+
+            {chronicConditions.filter(c => c !== "pregnancy").length > 0 && (
               <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
                 <p className="text-sm font-medium text-amber-800">
-                  {chronicConditions.length} condition{chronicConditions.length > 1 ? "s" : ""} selected — visible to your authorized doctors
+                  {chronicConditions.filter(c => c !== "pregnancy").length} مرض مزمن مسجل — مرئي لأطبائك المعتمدين
                 </p>
               </div>
             )}
           </div>
         )}
 
-        {/* ── Allergies ─────────────────────────────────────────────────── */}
+        {/* ── Allergies ── */}
         {activeSection === "allergies" && (
           <div className="space-y-3">
             <div className="flex justify-between items-center">
@@ -315,7 +475,7 @@ export default function HealthProfile() {
           </div>
         )}
 
-        {/* ── Medications ───────────────────────────────────────────────── */}
+        {/* ── Medications ── */}
         {activeSection === "medications" && (
           <div className="space-y-3">
             <div className="flex justify-between items-center">
@@ -347,7 +507,7 @@ export default function HealthProfile() {
           </div>
         )}
 
-        {/* ── Family History ─────────────────────────────────────────────── */}
+        {/* ── Family History ── */}
         {activeSection === "family" && (
           <div className="space-y-3">
             <div className="flex justify-between items-center">
@@ -377,7 +537,7 @@ export default function HealthProfile() {
           </div>
         )}
 
-        {/* ── Side Effects ───────────────────────────────────────────────── */}
+        {/* ── Side Effects ── */}
         {activeSection === "side_effects" && (
           <div className="space-y-3">
             <div className="flex justify-between items-center">
@@ -405,7 +565,7 @@ export default function HealthProfile() {
           </div>
         )}
 
-        {/* ── Vitals ─────────────────────────────────────────────────────── */}
+        {/* ── Vitals ── */}
         {activeSection === "vitals" && (
           <div className="space-y-3">
             <div className="flex justify-between items-center">
@@ -414,8 +574,6 @@ export default function HealthProfile() {
                 <Plus className="w-4 h-4 me-1" />Log Vital
               </Button>
             </div>
-
-            {/* Summary cards */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
               {[
                 { type: "blood_pressure", label: t("hp.blood_pressure"), icon: Heart, color: "text-red-500", bg: "bg-red-50" },
@@ -434,7 +592,6 @@ export default function HealthProfile() {
                 );
               })}
             </div>
-
             {vitals.length === 0
               ? <Card><CardContent className="py-10 text-center text-muted-foreground">{t("hp.no_vitals", { type: "" })}</CardContent></Card>
               : vitals.slice(0, 20).map(v => (
@@ -453,7 +610,7 @@ export default function HealthProfile() {
         )}
       </div>
 
-      {/* ── Add Allergy Dialog ───────────────────────────────────────────── */}
+      {/* ── Add Allergy Dialog ── */}
       <Dialog open={showAllergyDialog} onOpenChange={setShowAllergyDialog}>
         <DialogContent>
           <DialogHeader><DialogTitle>{t("hp.add_allergy")}</DialogTitle></DialogHeader>
@@ -499,7 +656,7 @@ export default function HealthProfile() {
         </DialogContent>
       </Dialog>
 
-      {/* ── Add Medication Dialog ────────────────────────────────────────── */}
+      {/* ── Add Medication Dialog ── */}
       <Dialog open={showMedDialog} onOpenChange={setShowMedDialog}>
         <DialogContent>
           <DialogHeader><DialogTitle>{t("hp.add_medication")}</DialogTitle></DialogHeader>
@@ -549,7 +706,7 @@ export default function HealthProfile() {
         </DialogContent>
       </Dialog>
 
-      {/* ── Add Family History Dialog ────────────────────────────────────── */}
+      {/* ── Add Family History Dialog ── */}
       <Dialog open={showFamilyDialog} onOpenChange={setShowFamilyDialog}>
         <DialogContent>
           <DialogHeader><DialogTitle>{t("hp.add_family_entry")}</DialogTitle></DialogHeader>
@@ -592,7 +749,7 @@ export default function HealthProfile() {
         </DialogContent>
       </Dialog>
 
-      {/* ── Add Side Effect Dialog ───────────────────────────────────────── */}
+      {/* ── Add Side Effect Dialog ── */}
       <Dialog open={showSideEffectDialog} onOpenChange={setShowSideEffectDialog}>
         <DialogContent>
           <DialogHeader><DialogTitle>{t("hp.log_side_effect")}</DialogTitle></DialogHeader>
@@ -617,7 +774,7 @@ export default function HealthProfile() {
         </DialogContent>
       </Dialog>
 
-      {/* ── Add Vital Dialog ─────────────────────────────────────────────── */}
+      {/* ── Add Vital Dialog ── */}
       <Dialog open={showVitalDialog} onOpenChange={setShowVitalDialog}>
         <DialogContent>
           <DialogHeader><DialogTitle>Log Vital Reading</DialogTitle></DialogHeader>
