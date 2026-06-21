@@ -60,7 +60,7 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "Google Wallet not configured" });
   }
 
-  const { name, spitarId, bloodType, dateOfBirth, allergies = [], medications = [], emergencyContacts = [], cardUrl } = req.body ?? {};
+  const { name, spitarId, bloodType, dateOfBirth, allergies = [], medications = [], emergencyContacts = [], cardUrl, hexBackgroundColor = "#dc2626" } = req.body ?? {};
   if (!name || !spitarId) return res.status(400).json({ error: "name and spitarId required" });
 
   const privateKeyPem = PK_RAW.replace(/\\n/g, "\n");
@@ -100,7 +100,7 @@ export default async function handler(req, res) {
     classId,
     genericType: "GENERIC_TYPE_UNSPECIFIED",
     state: "ACTIVE",
-    hexBackgroundColor: "#dc2626",
+    hexBackgroundColor: hexBackgroundColor,
     logo: {
       sourceUri: {
         uri: "https://spitar-cld.vercel.app/logo.png",

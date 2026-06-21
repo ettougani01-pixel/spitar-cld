@@ -23,6 +23,35 @@ interface CardData {
   emergencyContacts: EmergencyContact[];
   allergies: Allergy[];
   medications: Medication[];
+  chronicConditions?: string[];
+}
+
+const CONDITION_COLORS: Record<string, string> = {
+  cancer:        "#dc2626", // أحمر
+  hiv:           "#ec4899", // وردي
+  tuberculosis:  "#d97706", // عنبري
+  pregnancy:     "#7c3aed", // بنفسجي
+  heart_disease: "#be185d", // وردي داكن
+  kidney_disease:"#0ea5e9", // سماوي
+  liver_disease: "#a16207", // بني-أصفر
+  epilepsy:      "#6d28d9", // بنفسجي غامق
+  diabetes:      "#ea580c", // برتقالي
+  hypertension:  "#1d4ed8", // أزرق
+  asthma:        "#16a34a", // أخضر
+  thyroid:       "#0891b2", // زمردي
+  mental_health: "#6b7280", // رمادي
+};
+
+const CONDITION_PRIORITY = [
+  "cancer","hiv","heart_disease","epilepsy","tuberculosis",
+  "pregnancy","kidney_disease","liver_disease","diabetes",
+  "hypertension","asthma","thyroid","mental_health",
+];
+
+function getConditionColor(conditions?: string[]): string {
+  if (!conditions || conditions.length === 0) return "#dc2626";
+  const top = CONDITION_PRIORITY.find(c => conditions.includes(c));
+  return top ? (CONDITION_COLORS[top] ?? "#dc2626") : "#dc2626";
 }
 
 const SEVERITY_COLOR: Record<string, string> = {
@@ -80,6 +109,7 @@ export function EmergencyCardManager() {
         emergencyContacts,
         allergies: allergySnap.docs.map(d => d.data() as Allergy),
         medications: medSnap.docs.map(d => d.data() as Medication),
+        chronicConditions: u.chronicConditions ?? [],
       });
     }).catch(() => {
       // Even on error, build card from user profile data
@@ -95,6 +125,7 @@ export function EmergencyCardManager() {
           : [],
         allergies: [],
         medications: [],
+        chronicConditions: (u2 as any).chronicConditions ?? [],
       });
     }).finally(() => setLoading(false));
   }, [user]);
@@ -314,6 +345,7 @@ export function EmergencyCardManager() {
           medications: cardData.medications,
           emergencyContacts: cardData.emergencyContacts,
           cardUrl: permanentUrl,
+          hexBackgroundColor: getConditionColor(cardData.chronicConditions),
         }),
       });
       const data = await res.json();

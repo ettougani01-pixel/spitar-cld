@@ -699,6 +699,17 @@ export default function PatientDashboard() {
                     onClick={async () => {
                       const u = user as any;
                       try {
+                        const conditionColors: Record<string, string> = {
+                          cancer: "#dc2626", hiv: "#ec4899", tuberculosis: "#d97706",
+                          pregnancy: "#7c3aed", heart_disease: "#be185d", kidney_disease: "#0ea5e9",
+                          liver_disease: "#a16207", epilepsy: "#6d28d9", diabetes: "#ea580c",
+                          hypertension: "#1d4ed8", asthma: "#16a34a", thyroid: "#0891b2",
+                          mental_health: "#6b7280",
+                        };
+                        const conditionPriority = ["cancer","hiv","heart_disease","epilepsy","tuberculosis","pregnancy","kidney_disease","liver_disease","diabetes","hypertension","asthma","thyroid","mental_health"];
+                        const conditions: string[] = u.chronicConditions || [];
+                        const topCondition = conditionPriority.find(c => conditions.includes(c));
+                        const hexBackgroundColor = topCondition ? (conditionColors[topCondition] ?? "#dc2626") : "#dc2626";
                         const res = await fetch("/api/google-wallet", {
                           method: "POST",
                           headers: { "Content-Type": "application/json" },
@@ -707,6 +718,7 @@ export default function PatientDashboard() {
                             spitarId: u.spitarId,
                             bloodType: u.bloodType,
                             dateOfBirth: u.dateOfBirth,
+                            hexBackgroundColor,
                           }),
                         });
                         const data = await res.json();
