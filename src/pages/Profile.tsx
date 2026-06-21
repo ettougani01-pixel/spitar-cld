@@ -222,42 +222,6 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* Profile Completion (patients only) */}
-        {user.role === "patient" && (
-          <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e2e8f0", padding: "18px 20px", marginBottom: 4, boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-              <span style={{ fontSize: 14, fontWeight: 700, color: "#0f172a" }}>اكتمال البروفايل</span>
-              <span style={{ fontSize: 18, fontWeight: 800, color: completeness === 100 ? "#16a34a" : "#dc2626" }}>{completeness}%</span>
-            </div>
-            <div style={{ height: 8, background: "#f3f4f6", borderRadius: 99, overflow: "hidden", marginBottom: 14 }}>
-              <div style={{
-                height: "100%", width: `${completeness}%`,
-                background: completeness === 100 ? "#16a34a" : "#ef4444",
-                borderRadius: 99, transition: "width 0.5s",
-              }} />
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "7px 20px" }}>
-              {completionFields.map(({ labelAr, done }) => (
-                <div key={labelAr} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
-                  <span style={{
-                    display: "inline-flex", alignItems: "center", justifyContent: "center",
-                    width: 18, height: 18, borderRadius: "50%",
-                    background: done ? "#dcfce7" : "#f3f4f6",
-                    color: done ? "#16a34a" : "#9ca3af",
-                    fontSize: 10, fontWeight: 700, flexShrink: 0,
-                  }}>{done ? "✓" : "○"}</span>
-                  <span style={{ color: done ? "#16a34a" : "#9ca3af", direction: "rtl" }}>{labelAr}</span>
-                </div>
-              ))}
-            </div>
-            {completeness < 100 && (
-              <p style={{ fontSize: 11, color: "#6b7280", marginTop: 12, textAlign: "center" }}>
-                أكمل بياناتك ثم توجه إلى <strong>Health Profile</strong> لإضافة المعلومات الصحية
-              </p>
-            )}
-          </div>
-        )}
-
         <form onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {/* Basic Information */}
           <Section title="Basic Information" icon={User} color="#2563eb">
