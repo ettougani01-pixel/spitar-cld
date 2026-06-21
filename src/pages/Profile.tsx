@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navbar } from "@/components/Navbar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -91,6 +93,66 @@ export default function Profile() {
   const [bio, setBio] = useState((user as DoctorProfile)?.bio ?? "");
   const [consultationFee, setConsultationFee] = useState(String((user as DoctorProfile)?.consultationFee ?? ""));
 
+  // Health data for completion tracking (patients only)
+  const [healthCounts, setHealthCounts] = useState({ allergies: 0, medications: 0, familyHistory: 0, sideEffects: 0 });
+  const [firestoreProfile, setFirestoreProfile] = useState<Record<string, any>>({});
+
+  useEffect(() => {
+    if (!user || user.role !== "patient") return;
+    const uid = user.uid;
+    async function loadHealth() {
+      const [aRes, mRes, fRes, seRes, uRes] = await Promise.allSettled([
+        getDocs(query(collection(db, "patient_allergies"), where("patientId", "==", uid))),
+        getDocs(query(collection(db, "patient_medications"), where("patientId", "==", uid))),
+        getDocs(query(collection(db, "patient_family_history"), where("patientId", "==", uid))),
+        getDocs(query(collection(db, "patient_side_effects"), where("patientId", "==", uid))),
+        getDoc(doc(db, "users", uid)),
+      ]);
+      setHealthCounts({
+        allergies:     aRes.status  === "fulfilled" ? aRes.value.size  : 0,
+        medications:   mRes.status  === "fulfilled" ? mRes.value.size  : 0,
+        familyHistory: fRes.status  === "fulfilled" ? fRes.value.size  : 0,
+        sideEffects:   seRes.status === "fulfilled" ? seRes.value.size : 0,
+      });
+      if (uRes.status === "fulfilled" && uRes.value.exists()) {
+        setFirestoreProfile(uRes.value.data());
+        const d = uRes.value.data();
+        if (d.dateOfBirth && !dateOfBirth) setDateOfBirth(d.dateOfBirth);
+        if (d.bloodType   && !bloodType)   setBloodType(d.bloodType);
+        if (d.gender      && !gender)      setGender(d.gender);
+        if (d.address     && !address)     setAddress(d.address);
+      }
+    }
+    loadHealth();
+  }, [user?.uid]);
+
+  // Compute completion for patients
+  const isFemale = gender.toLowerCase() === "female";
+  const chronicConditions: string[] = (firestoreProfile.chronicConditions ?? []) as string[];
+  const hasEmergencyContact = emergencyContacts.some(c => c.name || c.phone)
+    || !!(firestoreProfile.emergencyContactName || firestoreProfile.emergencyContactPhone);
+
+  const completionFields = user?.role === "patient" ? [
+    { labelAr: "الاسم الكامل",          done: !!(firstName && lastName) },
+    { labelAr: "البريد الإلكتروني",      done: !!(user.email) },
+    { labelAr: "رقم الهاتف",            done: !!(phone) },
+    { labelAr: "المدينة",               done: !!(city) },
+    { labelAr: "تاريخ الميلاد",          done: !!(dateOfBirth) },
+    { labelAr: "فصيلة الدم",            done: !!(bloodType) },
+    { labelAr: "الجنس",                 done: !!(gender) },
+    { labelAr: "العنوان",               done: !!(address) },
+    { labelAr: "جهة الاتصال للطوارئ",   done: hasEmergencyContact },
+    { labelAr: "الحساسيات",             done: healthCounts.allergies > 0 },
+    { labelAr: "الأدوية والمكملات",     done: healthCounts.medications > 0 },
+    { labelAr: "التاريخ العائلي الطبي", done: healthCounts.familyHistory > 0 },
+    { labelAr: "مذكرة الآثار الجانبية", done: healthCounts.sideEffects > 0 },
+    { labelAr: "الأمراض المزمنة",       done: chronicConditions.filter(c => c !== "pregnancy").length > 0 },
+    ...(isFemale ? [{ labelAr: "الحمل", done: chronicConditions.includes("pregnancy") }] : []),
+  ] : [];
+  const completeness = completionFields.length > 0
+    ? Math.round((completionFields.filter(f => f.done).length / completionFields.length) * 100)
+    : 0;
+
   if (!user) return null;
 
   const meta = ROLE_META[user.role] ?? ROLE_META.patient;
@@ -158,6 +220,42 @@ export default function Profile() {
             </div>
           </div>
         </div>
+
+        {/* Profile Completion (patients only) */}
+        {user.role === "patient" && (
+          <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e2e8f0", padding: "18px 20px", marginBottom: 4, boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+              <span style={{ fontSize: 14, fontWeight: 700, color: "#0f172a" }}>اكتمال البروفايل</span>
+              <span style={{ fontSize: 18, fontWeight: 800, color: completeness === 100 ? "#16a34a" : "#dc2626" }}>{completeness}%</span>
+            </div>
+            <div style={{ height: 8, background: "#f3f4f6", borderRadius: 99, overflow: "hidden", marginBottom: 14 }}>
+              <div style={{
+                height: "100%", width: `${completeness}%`,
+                background: completeness === 100 ? "#16a34a" : "#ef4444",
+                borderRadius: 99, transition: "width 0.5s",
+              }} />
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "7px 20px" }}>
+              {completionFields.map(({ labelAr, done }) => (
+                <div key={labelAr} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
+                  <span style={{
+                    display: "inline-flex", alignItems: "center", justifyContent: "center",
+                    width: 18, height: 18, borderRadius: "50%",
+                    background: done ? "#dcfce7" : "#f3f4f6",
+                    color: done ? "#16a34a" : "#9ca3af",
+                    fontSize: 10, fontWeight: 700, flexShrink: 0,
+                  }}>{done ? "✓" : "○"}</span>
+                  <span style={{ color: done ? "#16a34a" : "#9ca3af", direction: "rtl" }}>{labelAr}</span>
+                </div>
+              ))}
+            </div>
+            {completeness < 100 && (
+              <p style={{ fontSize: 11, color: "#6b7280", marginTop: 12, textAlign: "center" }}>
+                أكمل بياناتك ثم توجه إلى <strong>Health Profile</strong> لإضافة المعلومات الصحية
+              </p>
+            )}
+          </div>
+        )}
 
         <form onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {/* Basic Information */}
