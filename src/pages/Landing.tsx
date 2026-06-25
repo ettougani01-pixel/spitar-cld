@@ -419,20 +419,20 @@ export default function Landing() {
                 <span style={{ color: "#7ee8f5" }}>{t("landing.for_doctors_title_2")}</span>
               </h2>
               <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 16, lineHeight: 1.7, margin: "0 0 32px" }}>
-                انضم لشبكة SPITAR وأدر مواعيدك ومرضاك بكفاءة عالية — وصول فوري للملفات الطبية، لوحة تحكم ذكية، وتواصل مباشر مع مرضاك.
+                {t("landing.for_doctors_desc")}
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 36 }}>
                 {[
-                  { Icon: ClipboardList, text: "وصول آمن للسجلات الطبية بموافقة المريض" },
-                  { Icon: BarChart3,     text: "لوحة تحكم تتبّع كل مرضاك ومواعيدك" },
-                  { Icon: Clock,         text: "توفير وقت الاستشارة بنسبة تصل إلى 40%" },
-                  { Icon: Smartphone,    text: "تطبيق متاح على الهاتف والحاسوب في أي وقت" },
-                ].map(({ Icon, text }) => (
-                  <div key={text} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  { Icon: ClipboardList, key: "for_doctors_feat1" },
+                  { Icon: BarChart3,     key: "for_doctors_feat2" },
+                  { Icon: Clock,         key: "for_doctors_feat3" },
+                  { Icon: Smartphone,    key: "for_doctors_feat4" },
+                ].map(({ Icon, key }) => (
+                  <div key={key} style={{ display: "flex", alignItems: "center", gap: 12 }}>
                     <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(0,180,200,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       <Icon size={15} color="#00B4C8" />
                     </div>
-                    <span style={{ fontSize: 14, color: "rgba(255,255,255,0.8)" }}>{text}</span>
+                    <span style={{ fontSize: 14, color: "rgba(255,255,255,0.8)" }}>{t(`landing.${key}`)}</span>
                   </div>
                 ))}
               </div>
@@ -444,14 +444,14 @@ export default function Landing() {
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
               {[
-                { n: "3×", label: "أسرع في الاستشارة", color: "#7ee8f5" },
-                { n: "98%", label: "رضا المرضى", color: "#a78bfa" },
-                { n: "0", label: "أوراق مطلوبة", color: "#6ee7b7" },
-                { n: "24/7", label: "وصول للملفات", color: "#fca5a5" },
-              ].map(({ n, label, color }) => (
-                <div key={label} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16, padding: "22px 18px", textAlign: "center" }}>
+                { n: "3×",    statKey: "for_doctors_stat1", color: "#7ee8f5" },
+                { n: "98%",   statKey: "for_doctors_stat2", color: "#a78bfa" },
+                { n: "0",     statKey: "for_doctors_stat3", color: "#6ee7b7" },
+                { n: "24/7",  statKey: "for_doctors_stat4", color: "#fca5a5" },
+              ].map(({ n, statKey, color }) => (
+                <div key={statKey} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16, padding: "22px 18px", textAlign: "center" }}>
                   <div style={{ fontSize: 32, fontWeight: 900, color, marginBottom: 6 }}>{n}</div>
-                  <div style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", fontWeight: 500 }}>{label}</div>
+                  <div style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", fontWeight: 500 }}>{t(`landing.${statKey}`)}</div>
                 </div>
               ))}
             </div>
