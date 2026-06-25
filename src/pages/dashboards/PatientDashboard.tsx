@@ -21,7 +21,7 @@ import {
   CalendarDays, Trash2, Search, Globe, Building2,
   Heart, Clock, Plus, Sparkles, CalendarPlus, CheckCircle, XCircle, X,
   MessageCircle, ArrowRight, AlertCircle, ClipboardList, ShieldAlert,
-  BarChart2, Bot, CalendarCheck,
+  BarChart2, Bot, CalendarCheck, Pill as PillIcon,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -101,6 +101,16 @@ export default function PatientDashboard() {
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState("");
 
+  // ── new widget state ──
+  const [profileData, setProfileData] = useState<Record<string, any>>({});
+  const [allergiesCount, setAllergiesCount] = useState(0);
+  const [takenMeds, setTakenMeds] = useState<Set<string>>(() => {
+    try {
+      const key = `taken_meds_${new Date().toDateString()}`;
+      return new Set(JSON.parse(localStorage.getItem(key) ?? "[]"));
+    } catch { return new Set(); }
+  });
+
   useEffect(() => {
     if (!user) return;
     const profile = user as PatientProfile;
@@ -123,10 +133,29 @@ export default function PatientDashboard() {
       if (permSnap.status === "fulfilled") setPermissions(permSnap.value.docs.map(d => ({ id: d.id, ...d.data() } as AccessPermission)));
       if (reqSnap.status === "fulfilled") setAccessRequests(reqSnap.value.docs.map(d => ({ id: d.id, ...d.data() } as { id: string; doctorId: string; doctorName: string; status: string; createdAt: string })).filter(r => r.status === "pending"));
       if (medSnap.status === "fulfilled") setMedications(medSnap.value.docs.map(d => d.data() as { name: string; dosage?: string; frequency?: string; reminderTimes?: string[] }));
+
+      // load profile for health summary
+      try {
+        const { getDoc: gd, doc: d2 } = await import("firebase/firestore");
+        const uDoc = await gd(d2(db, "users", uid));
+        if (uDoc.exists()) setProfileData(uDoc.data());
+        const aSnap = await getDocs(query(collection(db, "patient_allergies"), where("patientId", "==", uid)));
+        setAllergiesCount(aSnap.size);
+      } catch {}
+
       setLoading(false);
     }
     load();
   }, [user]);
+
+  const toggleMedTaken = (name: string) => {
+    setTakenMeds(prev => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name); else next.add(name);
+      localStorage.setItem(`taken_meds_${new Date().toDateString()}`, JSON.stringify([...next]));
+      return next;
+    });
+  };
 
   const approveRequest = async (req: { id: string; doctorId: string; doctorName: string }) => {
     if (!user) return;
@@ -317,6 +346,40 @@ export default function PatientDashboard() {
   const initials = `${user?.firstName?.[0] ?? ""}${user?.lastName?.[0] ?? ""}`.toUpperCase();
   const today = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 
+  // ── computed for widgets ──
+  const todayStr = new Date().toISOString().split("T")[0];
+  const nextAppt = appointments
+    .filter(a => a.status === "confirmed" && a.date >= todayStr)
+    .sort((a, b) => a.date.localeCompare(b.date))[0] ?? null;
+  const daysUntilAppt = nextAppt
+    ? Math.ceil((new Date(nextAppt.date).getTime() - Date.now()) / 86400000)
+    : null;
+
+  const HEALTH_TIPS = [
+    "اشرب 8 أكواب من الماء يومياً للحفاظ على صحة الكلى والجلد.",
+    "30 دقيقة من المشي يومياً تقلل خطر أمراض القلب بنسبة 35٪.",
+    "النوم 7-8 ساعات يقوي جهاز المناعة ويحسن التركيز.",
+    "تناول وجبة إفطار كاملة يُحسّن مستوى الطاقة طوال اليوم.",
+    "قلّل الملح في طعامك للحفاظ على ضغط الدم في المعدل الطبيعي.",
+    "الفحص الدوري مرة في السنة يكشف الأمراض مبكراً ويسهّل العلاج.",
+    "تجنب الجلوس لأكثر من ساعة متواصلة — قم وتحرك لدقيقتين.",
+  ];
+  const dailyTip = HEALTH_TIPS[new Date().getDate() % HEALTH_TIPS.length];
+
+  const CHRONIC_LABELS: Record<string, string> = {
+    cancer: "السرطان", hiv: "فيروس نقص المناعة", tuberculosis: "السل",
+    heart_disease: "أمراض القلب", kidney_disease: "أمراض الكلى",
+    liver_disease: "أمراض الكبد", epilepsy: "الصرع", diabetes: "السكري",
+    hypertension: "ضغط الدم", thyroid: "الغدة الدرقية",
+  };
+  const chronicList: string[] = (profileData.chronicConditions ?? []).filter((c: string) => c !== "pregnancy");
+
+  const recentActivity = [
+    ...records.slice(0, 3).map(r => ({ type: "record" as const, date: r.date ?? r.createdAt?.slice(0,10), label: r.title, sub: `د. ${r.doctorName}` })),
+    ...labResults.slice(0, 2).map(r => ({ type: "lab" as const, date: r.date ?? r.createdAt?.slice(0,10), label: r.testName, sub: r.labName })),
+    ...appointments.filter(a => a.status === "completed").slice(0, 2).map(a => ({ type: "appt" as const, date: a.date, label: `زيارة: د. ${a.doctorName}`, sub: a.reason ?? "" })),
+  ].sort((a, b) => (b.date ?? "").localeCompare(a.date ?? "")).slice(0, 5);
+
   return (
     <DashboardLayout navItems={navItems} title={t("dashboard.patient_dashboard")}>
 
@@ -386,6 +449,164 @@ export default function PatientDashboard() {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* ── QUICK ACTIONS ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 }}>
+        {[
+          { label: "حجز موعد", icon: CalendarPlus, grad: "linear-gradient(135deg,#2563eb,#06b6d4)", onClick: () => { setActiveSection("overview"); setActiveTab("appointments"); } },
+          { label: "مشاركة QR", icon: QrCode, grad: "linear-gradient(135deg,#7c3aed,#2563eb)", onClick: () => { setActiveSection("overview"); setActiveTab("share_qr"); } },
+          { label: "بطاقة الطوارئ", icon: ShieldAlert, grad: "linear-gradient(135deg,#dc2626,#ea580c)", onClick: () => { setActiveSection("overview"); setActiveTab("emergency"); } },
+          { label: "الملف الصحي", icon: Heart, grad: "linear-gradient(135deg,#0d9488,#16a34a)", onClick: () => { setActiveSection("overview"); setActiveTab("health_profile"); } },
+        ].map(({ label, icon: Icon, grad, onClick }) => (
+          <button key={label} onClick={onClick} style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 16px", background: "#fff", border: "1.5px solid #e2e8f0", borderRadius: 14, cursor: "pointer", transition: "all 0.15s", boxShadow: "0 1px 4px rgba(0,0,0,0.04)", textAlign: "left" }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = "#2563eb"; e.currentTarget.style.boxShadow = "0 4px 16px rgba(37,99,235,0.12)"; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = "#e2e8f0"; e.currentTarget.style.boxShadow = "0 1px 4px rgba(0,0,0,0.04)"; }}>
+            <div style={{ width: 38, height: 38, borderRadius: 10, background: grad, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <Icon size={18} style={{ color: "#fff" }} />
+            </div>
+            <span style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>{label}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* ── NEXT APPOINTMENT WIDGET ── */}
+      {nextAppt && (
+        <div style={{ background: "linear-gradient(135deg,#eff6ff,#e0f2fe)", border: "1.5px solid #93c5fd", borderRadius: 16, padding: "16px 20px", marginBottom: 20, display: "flex", alignItems: "center", gap: 16 }}>
+          <div style={{ width: 52, height: 52, borderRadius: 14, background: "linear-gradient(135deg,#2563eb,#06b6d4)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <CalendarDays size={24} style={{ color: "#fff" }} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <p style={{ fontSize: 11, fontWeight: 800, color: "#2563eb", letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 4px" }}>الموعد القادم</p>
+            <p style={{ fontSize: 16, fontWeight: 800, color: "#0f172a", margin: "0 0 2px" }}>Dr. {nextAppt.doctorName}</p>
+            <p style={{ fontSize: 13, color: "#64748b", margin: 0 }}>{nextAppt.date} · {nextAppt.time ?? ""} {nextAppt.reason ? `· ${nextAppt.reason}` : ""}</p>
+          </div>
+          <div style={{ textAlign: "center", flexShrink: 0 }}>
+            <div style={{ fontSize: 32, fontWeight: 900, color: "#2563eb", lineHeight: 1 }}>{daysUntilAppt === 0 ? "اليوم" : daysUntilAppt}</div>
+            {daysUntilAppt !== 0 && <div style={{ fontSize: 11, color: "#64748b", fontWeight: 600 }}>يوم</div>}
+          </div>
+        </div>
+      )}
+
+      {/* ── 3-COLUMN WIDGETS ── */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 24 }}>
+
+        {/* Health Summary */}
+        <div style={{ background: "#fff", border: "1.5px solid #e2e8f0", borderRadius: 16, padding: "18px 16px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 9, background: "linear-gradient(135deg,#dc2626,#ea580c)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Heart size={15} style={{ color: "#fff" }} />
+            </div>
+            <span style={{ fontSize: 13, fontWeight: 800, color: "#0f172a" }}>ملخص صحي</span>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 10px", background: "#fef2f2", borderRadius: 9 }}>
+              <span style={{ fontSize: 12, color: "#64748b", fontWeight: 600 }}>فصيلة الدم</span>
+              <span style={{ fontSize: 15, fontWeight: 900, color: "#dc2626" }}>{profileData.bloodType ?? "—"}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 10px", background: "#fef9c3", borderRadius: 9 }}>
+              <span style={{ fontSize: 12, color: "#64748b", fontWeight: 600 }}>الحساسيات</span>
+              <span style={{ fontSize: 15, fontWeight: 900, color: "#d97706" }}>{allergiesCount}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 10px", background: "#ede9fe", borderRadius: 9 }}>
+              <span style={{ fontSize: 12, color: "#64748b", fontWeight: 600 }}>الأمراض المزمنة</span>
+              <span style={{ fontSize: 15, fontWeight: 900, color: "#7c3aed" }}>{chronicList.length}</span>
+            </div>
+            {chronicList.length > 0 && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 2 }}>
+                {chronicList.slice(0, 3).map(c => (
+                  <span key={c} style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "#f3f4f6", color: "#374151" }}>
+                    {CHRONIC_LABELS[c] ?? c}
+                  </span>
+                ))}
+                {chronicList.length > 3 && <span style={{ fontSize: 10, color: "#94a3b8", padding: "2px 4px" }}>+{chronicList.length - 3}</span>}
+              </div>
+            )}
+          </div>
+          <button onClick={() => { setActiveSection("overview"); setActiveTab("health_profile"); }} style={{ marginTop: 12, width: "100%", padding: "7px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 9, fontSize: 12, fontWeight: 700, color: "#2563eb", cursor: "pointer" }}>
+            عرض الملف الكامل
+          </button>
+        </div>
+
+        {/* Daily Medications */}
+        <div style={{ background: "#fff", border: "1.5px solid #e2e8f0", borderRadius: 16, padding: "18px 16px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 9, background: "linear-gradient(135deg,#7c3aed,#2563eb)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <PillIcon size={15} style={{ color: "#fff" }} />
+            </div>
+            <span style={{ fontSize: 13, fontWeight: 800, color: "#0f172a" }}>أدوية اليوم</span>
+            {medications.length > 0 && (
+              <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 700, color: "#16a34a", background: "#dcfce7", padding: "2px 8px", borderRadius: 20 }}>
+                {takenMeds.size}/{medications.length}
+              </span>
+            )}
+          </div>
+          {medications.length === 0 ? (
+            <p style={{ fontSize: 13, color: "#94a3b8", textAlign: "center", padding: "16px 0" }}>لا توجد أدوية مسجلة</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, maxHeight: 180, overflowY: "auto" }}>
+              {medications.map((m, i) => {
+                const taken = takenMeds.has(m.name);
+                return (
+                  <div key={i} onClick={() => toggleMedTaken(m.name)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 9, cursor: "pointer", background: taken ? "#f0fdf4" : "#f8fafc", border: `1px solid ${taken ? "#bbf7d0" : "#e2e8f0"}`, transition: "all 0.15s" }}>
+                    <div style={{ width: 20, height: 20, borderRadius: 6, border: `2px solid ${taken ? "#16a34a" : "#d1d5db"}`, background: taken ? "#16a34a" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "all 0.15s" }}>
+                      {taken && <CheckCircle size={12} style={{ color: "#fff" }} />}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: 13, fontWeight: 700, color: taken ? "#16a34a" : "#0f172a", margin: 0, textDecoration: taken ? "line-through" : "none", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.name}</p>
+                      {m.dosage && <p style={{ fontSize: 11, color: "#94a3b8", margin: 0 }}>{m.dosage} · {m.frequency}</p>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {takenMeds.size > 0 && takenMeds.size === medications.length && (
+            <div style={{ marginTop: 10, padding: "7px 10px", background: "#dcfce7", borderRadius: 9, textAlign: "center" }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#16a34a" }}>✓ أخذت جميع أدويتك اليوم!</span>
+            </div>
+          )}
+        </div>
+
+        {/* Recent Activity */}
+        <div style={{ background: "#fff", border: "1.5px solid #e2e8f0", borderRadius: 16, padding: "18px 16px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 9, background: "linear-gradient(135deg,#0d9488,#16a34a)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Clock size={15} style={{ color: "#fff" }} />
+            </div>
+            <span style={{ fontSize: 13, fontWeight: 800, color: "#0f172a" }}>النشاط الأخير</span>
+          </div>
+          {recentActivity.length === 0 ? (
+            <p style={{ fontSize: 13, color: "#94a3b8", textAlign: "center", padding: "16px 0" }}>لا يوجد نشاط بعد</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+              {recentActivity.map((item, i) => {
+                const colors = { record: { bg: "#ede9fe", c: "#7c3aed", icon: FileText }, lab: { bg: "#ecfeff", c: "#0891b2", icon: FlaskConical }, appt: { bg: "#dcfce7", c: "#16a34a", icon: CalendarDays } };
+                const { bg, c, icon: Icon } = colors[item.type];
+                return (
+                  <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "8px 0", borderBottom: i < recentActivity.length - 1 ? "1px solid #f3f4f6" : "none" }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 8, background: bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 }}>
+                      <Icon size={13} style={{ color: c }} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: 12, fontWeight: 700, color: "#0f172a", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.label}</p>
+                      <p style={{ fontSize: 11, color: "#94a3b8", margin: "1px 0 0" }}>{item.sub} · {item.date}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── DAILY HEALTH TIP ── */}
+      <div style={{ background: "linear-gradient(135deg,#f0fdf4,#ecfeff)", border: "1.5px solid #a7f3d0", borderRadius: 14, padding: "12px 18px", marginBottom: 24, display: "flex", alignItems: "center", gap: 12 }}>
+        <span style={{ fontSize: 20, flexShrink: 0 }}>💡</span>
+        <div>
+          <p style={{ fontSize: 11, fontWeight: 800, color: "#0d9488", margin: "0 0 2px", letterSpacing: "0.08em" }}>نصيحة اليوم</p>
+          <p style={{ fontSize: 13, color: "#065f46", margin: 0, lineHeight: 1.5, direction: "rtl" }}>{dailyTip}</p>
+        </div>
       </div>
 
       {/* ── ACCESS CONTROL ── */}
