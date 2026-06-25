@@ -501,7 +501,7 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
             </div>
             <div style={{ padding: "16px 20px" }}>
               {emergencyContacts.length === 0 ? (
-                <p style={{ fontSize: 13, color: "#9ca3af", textAlign: "center", padding: "16px 0" }}>لا توجد جهات طوارئ مسجلة — أضفها في الملف الشخصي</p>
+                <p style={{ fontSize: 13, color: "#9ca3af", textAlign: "center", padding: "16px 0" }}>{t("hp.no_emergency_contacts")}</p>
               ) : (
                 emergencyContacts.map((c, i) => (
                   <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: i < emergencyContacts.length - 1 ? "1px solid #f3f4f6" : "none" }}>
@@ -517,14 +517,14 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
               )}
               {u.phone && (
                 <div style={{ marginTop: 12, padding: "10px 14px", background: "#f8fafc", borderRadius: 10, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <p style={{ fontSize: 13, color: "#64748b", margin: 0 }}>هاتف المريض</p>
+                  <p style={{ fontSize: 13, color: "#64748b", margin: 0 }}>{t("hp.patient_phone")}</p>
                   <a href={`tel:${u.phone}`} style={{ fontSize: 13, fontWeight: 700, color: "#2563eb", textDecoration: "none" }}>{u.phone}</a>
                 </div>
               )}
               {/* Chronic conditions summary */}
               {chronicConditions.filter(c => c !== "pregnancy").length > 0 && (
                 <div style={{ marginTop: 10, padding: "10px 14px", background: "#fef2f2", borderRadius: 10, border: "1px solid #fecaca" }}>
-                  <p style={{ fontSize: 11, fontWeight: 700, color: "#dc2626", margin: "0 0 4px" }}>أمراض مزمنة:</p>
+                  <p style={{ fontSize: 11, fontWeight: 700, color: "#dc2626", margin: "0 0 4px" }}>{t("hp.chronic_diseases_sos")}</p>
                   <p style={{ fontSize: 13, color: "#0f172a", margin: 0 }}>
                     {chronicConditions.filter(c => c !== "pregnancy").map(k => {
                       const c = CHRONIC_CONDITIONS.find(x => x.key === k);
@@ -536,7 +536,7 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
               {/* Life-threatening allergies */}
               {allergies.filter(a => a.severity === "life_threatening").length > 0 && (
                 <div style={{ marginTop: 10, padding: "10px 14px", background: "#fef2f2", borderRadius: 10, border: "1px solid #fca5a5" }}>
-                  <p style={{ fontSize: 11, fontWeight: 700, color: "#dc2626", margin: "0 0 4px" }}>⚠️ حساسية خطيرة:</p>
+                  <p style={{ fontSize: 11, fontWeight: 700, color: "#dc2626", margin: "0 0 4px" }}>{t("hp.critical_allergy_sos")}</p>
                   {allergies.filter(a => a.severity === "life_threatening").map(a => (
                     <p key={a.id} style={{ fontSize: 13, color: "#0f172a", margin: "2px 0 0", fontWeight: 600 }}>{a.allergenName}</p>
                   ))}
@@ -558,7 +558,7 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
       {/* ── Drug interaction warnings ── */}
       {interactionWarnings.length > 0 && (
         <div style={{ background: "#fffbeb", border: "1px solid #fcd34d", borderRadius: 8, padding: "10px 14px", marginBottom: 12 }}>
-          <p style={{ fontSize: 12, fontWeight: 700, color: "#92400e", margin: "0 0 4px" }}>⚠️ تفاعل محتمل بين الأدوية</p>
+          <p style={{ fontSize: 12, fontWeight: 700, color: "#92400e", margin: "0 0 4px" }}>{t("hp.drug_interaction_title")}</p>
           {interactionWarnings.map((w, i) => (
             <p key={i} style={{ fontSize: 12, color: "#78350f", margin: "2px 0 0" }}>• {w.warning}</p>
           ))}
@@ -568,7 +568,7 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
       {/* ── Profile Completeness ── */}
       <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 10, padding: "14px 16px", marginBottom: 12, boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>اكتمال البروفايل</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>{t("hp.profile_completeness_label")}</span>
           <span style={{ fontSize: 15, fontWeight: 800, color: completeness === 100 ? "#16a34a" : "#dc2626" }}>{completeness}%</span>
         </div>
         <div style={{ height: 7, background: "#f3f4f6", borderRadius: 99, overflow: "hidden", marginBottom: 12 }}>
@@ -595,7 +595,7 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
           {/* Share link */}
           <button onClick={() => setShowSharePanel(v => !v)}
             style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, height: 42, borderRadius: 10, border: "1px solid #bfdbfe", background: "#eff6ff", color: "#2563eb", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
-            <Link2 size={16} /> مشاركة
+            <Link2 size={16} /> {t("hp.share_btn")}
           </button>
           {/* PDF */}
           <button onClick={exportPdf}
@@ -608,28 +608,28 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
       {/* ── Share panel ── */}
       {showSharePanel && !readOnly && (
         <div className="no-print" style={{ background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: 10, padding: "14px 16px", marginBottom: 12 }}>
-          <p style={{ fontSize: 13, fontWeight: 600, color: "#0369a1", margin: "0 0 10px" }}>🔗 رابط مؤقت للطبيب (صالح 48 ساعة)</p>
+          <p style={{ fontSize: 13, fontWeight: 600, color: "#0369a1", margin: "0 0 10px" }}>🔗 {t("hp.share_link_header")}</p>
           {shareLink ? (
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <input readOnly value={shareLink} style={{ flex: 1, fontSize: 11, padding: "6px 10px", border: "1px solid #bae6fd", borderRadius: 6, background: "#fff", color: "#0369a1", direction: "ltr" }} />
               <button onClick={copyLink} style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 12px", background: linkCopied ? "#dcfce7" : "#2563eb", color: linkCopied ? "#16a34a" : "#fff", border: "none", borderRadius: 6, cursor: "pointer", fontSize: 12, fontWeight: 600 }}>
-                {linkCopied ? <Check size={14} /> : <Copy size={14} />} {linkCopied ? "تم" : "نسخ"}
+                {linkCopied ? <Check size={14} /> : <Copy size={14} />} {linkCopied ? t("hp.link_copied_btn") : t("hp.copy_link_btn")}
               </button>
             </div>
           ) : (
             <button onClick={generateShareLink} disabled={generatingLink}
               style={{ width: "100%", padding: "8px", background: "#2563eb", color: "#fff", border: "none", borderRadius: 8, cursor: generatingLink ? "wait" : "pointer", fontSize: 13, fontWeight: 600, opacity: generatingLink ? 0.7 : 1 }}>
-              {generatingLink ? "جارٍ الإنشاء..." : "إنشاء رابط"}
+              {generatingLink ? t("hp.generating_link") : t("hp.generate_link")}
             </button>
           )}
-          <p style={{ fontSize: 11, color: "#64748b", margin: "8px 0 0" }}>أرسل هذا الرابط للطبيب — يفتح ملفك الطبي كاملاً للقراءة فقط ولمدة 48 ساعة</p>
+          <p style={{ fontSize: 11, color: "#64748b", margin: "8px 0 0" }}>{t("hp.share_link_info")}</p>
         </div>
       )}
 
       {/* ── Chronic Conditions ── */}
       {!readOnly && (
         <div ref={conditionsRef} style={{ marginBottom: 12, position: "relative" }}>
-          <label style={{ fontSize: 13, fontWeight: 500, color: "#374151", display: "block", marginBottom: 6 }}>الأمراض المزمنة</label>
+          <label style={{ fontSize: 13, fontWeight: 500, color: "#374151", display: "block", marginBottom: 6 }}>{t("hp.chronic_conditions_label")}</label>
           <button type="button" onClick={() => setConditionsOpen(o => !o)}
             style={{ width: "100%", height: 40, padding: "0 12px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, cursor: "pointer", fontSize: 14, color: chronicConditions.length === 0 ? "#9ca3af" : "#0f172a", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
             <ChevronDown size={16} style={{ color: "#64748b", flexShrink: 0, transform: conditionsOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
@@ -655,7 +655,7 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
                 onMouseEnter={e => (e.currentTarget.style.background = "#f1f5f9")}
                 onMouseLeave={e => (e.currentTarget.style.background = "none")}>
                 {chronicConditions.length === 0 && <span style={{ position: "absolute", left: 8, color: "#2563eb", fontSize: 14, fontWeight: 700 }}>✓</span>}
-                لا أعاني من أي أمراض مزمنة
+                {t("hp.no_chronic_label")}
               </button>
               {CHRONIC_CONDITIONS.map(({ key, labelAr }) => {
                 const active = chronicConditions.includes(key);
@@ -670,7 +670,7 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
                     </button>
                     {key === "cancer" && active && (
                       <div style={{ background: "#fafafa", borderTop: "1px solid #f1f5f9", borderBottom: "1px solid #f1f5f9" }}>
-                        <p style={{ fontSize: 11, fontWeight: 600, color: "#94a3b8", margin: 0, padding: "6px 32px 4px 8px", textAlign: "right" }}>نوع السرطان:</p>
+                        <p style={{ fontSize: 11, fontWeight: 600, color: "#94a3b8", margin: 0, padding: "6px 32px 4px 8px", textAlign: "right" }}>{t("hp.cancer_type_label")}</p>
                         {CANCER_TYPES.map(({ key: ck, labelAr: cAr }) => {
                           const cActive = cancerTypes.includes(ck);
                           return (
@@ -781,16 +781,16 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
       </SectionCard>
 
       {/* ── Vaccinations ── */}
-      <SectionCard title="التطعيمات" icon={Syringe} iconColor="#0d9488" iconBg="#f0fdfa" addLabel={readOnly ? "" : "إضافة تطعيم"} onAdd={() => !readOnly && setShowVaccDialog(true)}>
+      <SectionCard title={t("hp.vaccinations")} icon={Syringe} iconColor="#0d9488" iconBg="#f0fdfa" addLabel={readOnly ? "" : t("hp.add_vaccination")} onAdd={() => !readOnly && setShowVaccDialog(true)}>
         {vaccinations.length === 0 ? (
-          <p style={{ fontSize: 13, color: "#9ca3af", textAlign: "center", padding: "16px 0" }}>لا توجد تطعيمات مسجلة</p>
+          <p style={{ fontSize: 13, color: "#9ca3af", textAlign: "center", padding: "16px 0" }}>{t("hp.no_vaccinations")}</p>
         ) : vaccinations.map(v => (
           <div key={v.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid #f3f4f6" }}>
             <div>
               <p style={{ fontSize: 13, fontWeight: 600, margin: 0 }}>{v.vaccineName}</p>
               <p style={{ fontSize: 11, color: "#9ca3af", margin: "2px 0 0" }}>
                 {v.vaccinedAt} {v.provider && `· ${v.provider}`}
-                {v.nextDoseAt && <span style={{ color: "#d97706", fontWeight: 600 }}> · جرعة تالية: {v.nextDoseAt}</span>}
+                {v.nextDoseAt && <span style={{ color: "#d97706", fontWeight: 600 }}> · {t("hp.next_dose_label")}: {v.nextDoseAt}</span>}
               </p>
             </div>
             {!readOnly && <button onClick={() => deleteItem("patient_vaccinations", v.id, setVaccinations)} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", padding: 4 }}><Trash2 size={14} /></button>}
@@ -799,9 +799,9 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
       </SectionCard>
 
       {/* ── Medical Visits ── */}
-      <SectionCard title="تاريخ الزيارات الطبية" icon={CalendarCheck} iconColor="#7c3aed" iconBg="#f5f3ff" addLabel={readOnly ? "" : "إضافة زيارة"} onAdd={() => !readOnly && setShowVisitDialog(true)} defaultOpen={false}>
+      <SectionCard title={t("hp.medical_visits")} icon={CalendarCheck} iconColor="#7c3aed" iconBg="#f5f3ff" addLabel={readOnly ? "" : t("hp.add_visit")} onAdd={() => !readOnly && setShowVisitDialog(true)} defaultOpen={false}>
         {visits.length === 0 ? (
-          <p style={{ fontSize: 13, color: "#9ca3af", textAlign: "center", padding: "16px 0" }}>لا توجد زيارات مسجلة</p>
+          <p style={{ fontSize: 13, color: "#9ca3af", textAlign: "center", padding: "16px 0" }}>{t("hp.no_visits")}</p>
         ) : visits.map(v => (
           <div key={v.id} style={{ padding: "10px 0", borderBottom: "1px solid #f3f4f6" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -815,8 +815,8 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
                 {!readOnly && <button onClick={() => deleteItem("patient_visits", v.id, setVisits)} style={{ background: "none", border: "none", cursor: "pointer", color: "#dc2626", padding: 4 }}><Trash2 size={13} /></button>}
               </div>
             </div>
-            {v.diagnosis && <p style={{ fontSize: 12, color: "#374151", margin: "4px 0 0 22px", fontWeight: 500 }}>التشخيص: {v.diagnosis}</p>}
-            {v.treatment && <p style={{ fontSize: 12, color: "#6b7280", margin: "2px 0 0 22px" }}>العلاج: {v.treatment}</p>}
+            {v.diagnosis && <p style={{ fontSize: 12, color: "#374151", margin: "4px 0 0 22px", fontWeight: 500 }}>{t("hp.diagnosis_label")}: {v.diagnosis}</p>}
+            {v.treatment && <p style={{ fontSize: 12, color: "#6b7280", margin: "2px 0 0 22px" }}>{t("hp.treatment_label")}: {v.treatment}</p>}
             {v.notes && <p style={{ fontSize: 11, color: "#9ca3af", margin: "2px 0 0 22px", fontStyle: "italic" }}>{v.notes}</p>}
           </div>
         ))}
@@ -1075,34 +1075,34 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
       {/* Vaccination */}
       <Dialog open={showVaccDialog} onOpenChange={setShowVaccDialog}>
         <DialogContent>
-          <DialogHeader><DialogTitle>إضافة تطعيم</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t("hp.add_vacc_title")}</DialogTitle></DialogHeader>
           <div className="space-y-3 py-2">
-            <div className="space-y-2"><Label>اسم التطعيم / اللقاح</Label><Input value={vaccForm.vaccineName} onChange={e => setVaccForm(f => ({ ...f, vaccineName: e.target.value }))} placeholder="مثال: كوفيد-19، حصبة..." /></div>
+            <div className="space-y-2"><Label>{t("hp.vacc_name_label")}</Label><Input value={vaccForm.vaccineName} onChange={e => setVaccForm(f => ({ ...f, vaccineName: e.target.value }))} placeholder={t("hp.vacc_name_placeholder")} /></div>
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2"><Label>تاريخ التطعيم</Label><Input type="date" value={vaccForm.vaccinedAt} onChange={e => setVaccForm(f => ({ ...f, vaccinedAt: e.target.value }))} /></div>
-              <div className="space-y-2"><Label>الجرعة التالية (اختياري)</Label><Input type="date" value={vaccForm.nextDoseAt} onChange={e => setVaccForm(f => ({ ...f, nextDoseAt: e.target.value }))} /></div>
+              <div className="space-y-2"><Label>{t("hp.vacc_date_label")}</Label><Input type="date" value={vaccForm.vaccinedAt} onChange={e => setVaccForm(f => ({ ...f, vaccinedAt: e.target.value }))} /></div>
+              <div className="space-y-2"><Label>{t("hp.next_dose_opt")}</Label><Input type="date" value={vaccForm.nextDoseAt} onChange={e => setVaccForm(f => ({ ...f, nextDoseAt: e.target.value }))} /></div>
             </div>
-            <div className="space-y-2"><Label>المركز الصحي / المستشفى</Label><Input value={vaccForm.provider} onChange={e => setVaccForm(f => ({ ...f, provider: e.target.value }))} placeholder="اختياري" /></div>
+            <div className="space-y-2"><Label>{t("hp.health_center_label")}</Label><Input value={vaccForm.provider} onChange={e => setVaccForm(f => ({ ...f, provider: e.target.value }))} placeholder={t("common.optional")} /></div>
           </div>
-          <DialogFooter><Button variant="outline" onClick={() => setShowVaccDialog(false)}>إلغاء</Button><Button onClick={addVaccination} disabled={saving}>حفظ</Button></DialogFooter>
+          <DialogFooter><Button variant="outline" onClick={() => setShowVaccDialog(false)}>{t("common.cancel")}</Button><Button onClick={addVaccination} disabled={saving}>{t("common.save")}</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Medical Visit */}
       <Dialog open={showVisitDialog} onOpenChange={setShowVisitDialog}>
         <DialogContent>
-          <DialogHeader><DialogTitle>تسجيل زيارة طبية</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t("hp.add_visit_title")}</DialogTitle></DialogHeader>
           <div className="space-y-3 py-2">
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2"><Label>اسم الطبيب</Label><Input value={visitForm.doctorName} onChange={e => setVisitForm(f => ({ ...f, doctorName: e.target.value }))} placeholder="د. محمد..." /></div>
-              <div className="space-y-2"><Label>التخصص</Label><Input value={visitForm.specialty} onChange={e => setVisitForm(f => ({ ...f, specialty: e.target.value }))} placeholder="قلبية، عامة..." /></div>
+              <div className="space-y-2"><Label>{t("hp.doctor_name_label")}</Label><Input value={visitForm.doctorName} onChange={e => setVisitForm(f => ({ ...f, doctorName: e.target.value }))} /></div>
+              <div className="space-y-2"><Label>{t("dashboard.specialty")}</Label><Input value={visitForm.specialty} onChange={e => setVisitForm(f => ({ ...f, specialty: e.target.value }))} /></div>
             </div>
-            <div className="space-y-2"><Label>تاريخ الزيارة</Label><Input type="date" value={visitForm.visitDate} onChange={e => setVisitForm(f => ({ ...f, visitDate: e.target.value }))} /></div>
-            <div className="space-y-2"><Label>التشخيص</Label><Input value={visitForm.diagnosis} onChange={e => setVisitForm(f => ({ ...f, diagnosis: e.target.value }))} placeholder="مثال: التهاب رئوي..." /></div>
-            <div className="space-y-2"><Label>العلاج المقرر</Label><Input value={visitForm.treatment} onChange={e => setVisitForm(f => ({ ...f, treatment: e.target.value }))} placeholder="مثال: أموكسيسيلين 500mg..." /></div>
-            <div className="space-y-2"><Label>ملاحظات (اختياري)</Label><Textarea value={visitForm.notes} onChange={e => setVisitForm(f => ({ ...f, notes: e.target.value }))} rows={2} /></div>
+            <div className="space-y-2"><Label>{t("hp.visit_date_label")}</Label><Input type="date" value={visitForm.visitDate} onChange={e => setVisitForm(f => ({ ...f, visitDate: e.target.value }))} /></div>
+            <div className="space-y-2"><Label>{t("hp.diagnosis_label")}</Label><Input value={visitForm.diagnosis} onChange={e => setVisitForm(f => ({ ...f, diagnosis: e.target.value }))} placeholder={t("hp.diagnosis_placeholder")} /></div>
+            <div className="space-y-2"><Label>{t("hp.treatment_label")}</Label><Input value={visitForm.treatment} onChange={e => setVisitForm(f => ({ ...f, treatment: e.target.value }))} placeholder={t("hp.treatment_placeholder")} /></div>
+            <div className="space-y-2"><Label>{t("hp.notes_optional")}</Label><Textarea value={visitForm.notes} onChange={e => setVisitForm(f => ({ ...f, notes: e.target.value }))} rows={2} /></div>
           </div>
-          <DialogFooter><Button variant="outline" onClick={() => setShowVisitDialog(false)}>إلغاء</Button><Button onClick={addVisit} disabled={saving}>حفظ</Button></DialogFooter>
+          <DialogFooter><Button variant="outline" onClick={() => setShowVisitDialog(false)}>{t("common.cancel")}</Button><Button onClick={addVisit} disabled={saving}>{t("common.save")}</Button></DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

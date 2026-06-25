@@ -294,7 +294,7 @@ export default function Landing() {
       <div style={{ background: "#f8fafc", borderTop: "1px solid #e5e7eb", borderBottom: "1px solid #e5e7eb", padding: "18px 0", overflow: "hidden" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
           <div style={{ flexShrink: 0, padding: "0 32px", borderRight: "1px solid #e5e7eb" }}>
-            <p style={{ fontSize: 11, fontWeight: 800, color: "#94a3b8", letterSpacing: "0.15em", textTransform: "uppercase", margin: 0, whiteSpace: "nowrap" }}>Partenaires</p>
+            <p style={{ fontSize: 11, fontWeight: 800, color: "#94a3b8", letterSpacing: "0.15em", textTransform: "uppercase", margin: 0, whiteSpace: "nowrap" }}>{t("landing.section_partners")}</p>
           </div>
           <div style={{ overflow: "hidden", flex: 1 }}>
             <div style={{ display: "flex", gap: 48, animation: "ticker 30s linear infinite", whiteSpace: "nowrap" }}>
@@ -337,8 +337,8 @@ export default function Landing() {
       <div style={{ background: "#f8fafc", padding: "72px 16px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 48 }}>
-            <p style={{ fontSize: 11, fontWeight: 800, color: "#0057B8", letterSpacing: "0.18em", textTransform: "uppercase", margin: "0 0 12px" }}>الفرق الحقيقي</p>
-            <h2 style={{ fontSize: 36, fontWeight: 900, color: "#0f172a", margin: 0 }}>مع SPITAR أم بدونه؟</h2>
+            <p style={{ fontSize: 11, fontWeight: 800, color: "#0057B8", letterSpacing: "0.18em", textTransform: "uppercase", margin: "0 0 12px" }}>{t("landing.section_difference")}</p>
+            <h2 style={{ fontSize: 36, fontWeight: 900, color: "#0f172a", margin: 0 }}>{t("landing.comparison_title")}</h2>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
             {/* Without */}
@@ -347,7 +347,7 @@ export default function Landing() {
                 <div style={{ width: 36, height: 36, borderRadius: 10, background: "#fef2f2", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <span style={{ fontSize: 18 }}>😓</span>
                 </div>
-                <span style={{ fontSize: 16, fontWeight: 800, color: "#dc2626" }}>بدون SPITAR</span>
+                <span style={{ fontSize: 16, fontWeight: 800, color: "#dc2626" }}>{t("landing.without_spitar")}</span>
               </div>
               {[
                 "أوراق متناثرة في كل مكان",
@@ -369,7 +369,7 @@ export default function Landing() {
                 <div style={{ width: 36, height: 36, borderRadius: 10, background: "#f0fdf4", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <span style={{ fontSize: 18 }}>🚀</span>
                 </div>
-                <span style={{ fontSize: 16, fontWeight: 800, color: "#16a34a" }}>مع SPITAR</span>
+                <span style={{ fontSize: 16, fontWeight: 800, color: "#16a34a" }}>{t("landing.with_spitar")}</span>
               </div>
               {[
                 "ملف طبي رقمي دائماً في جيبك",
@@ -401,9 +401,9 @@ export default function Landing() {
               { Icon: Lock,         title: t("landing.feat_consent_title"),  desc: t("landing.feat_consent_desc"),  color: "#0057B8", bg: "#eff6ff",  border: "#bfdbfe" },
               { Icon: FlaskConical, title: t("landing.feat_labs_title"),     desc: t("landing.feat_labs_desc"),     color: "#0891b2", bg: "#ecfeff",  border: "#a5f3fc" },
               { Icon: FileText,     title: t("landing.feat_records_title"),  desc: t("landing.feat_records_desc"), color: "#7c3aed", bg: "#f5f3ff",  border: "#ddd6fe" },
-              { Icon: Syringe,      title: "سجل التطعيمات",                  desc: "احفظ كل تطعيماتك وتواريخ الجرعات القادمة في مكان واحد آمن.", color: "#0d9488", bg: "#f0fdfa", border: "#99f6e4" },
-              { Icon: CalendarCheck,title: "تاريخ الزيارات الطبية",          desc: "سجّل كل زيارة وتشخيص وعلاج — تاريخك الطبي كاملاً في متناول يدك.", color: "#d97706", bg: "#fffbeb", border: "#fde68a" },
-              { Icon: QrCode,       title: "بطاقة الطوارئ الذكية",           desc: "رمز QR يمنح فريق الإسعاف وصولاً فورياً لمعلوماتك الحيوية عند الحاجة.", color: "#dc2626", bg: "#fef2f2", border: "#fecaca" },
+              { Icon: Syringe,      title: t("landing.feat_vaccinations_title"), desc: t("landing.feat_vaccinations_desc"), color: "#0d9488", bg: "#f0fdfa", border: "#99f6e4" },
+              { Icon: CalendarCheck,title: t("landing.feat_visits_title"),       desc: t("landing.feat_visits_desc"),       color: "#d97706", bg: "#fffbeb", border: "#fde68a" },
+              { Icon: QrCode,       title: t("landing.feat_emergency_title"),    desc: t("landing.feat_emergency_desc"),    color: "#dc2626", bg: "#fef2f2", border: "#fecaca" },
             ].map(({ Icon, title, desc, color, bg, border }) => (
               <div key={title} style={{ background: "#fff", border: `2px solid ${border}`, borderRadius: 20, padding: 28, transition: "box-shadow 0.2s" }}
                 onMouseEnter={e => (e.currentTarget.style.boxShadow = "0 12px 40px rgba(0,0,0,0.1)")}
@@ -426,11 +426,11 @@ export default function Landing() {
             <div>
               <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(0,180,200,0.15)", border: "1px solid rgba(0,180,200,0.3)", borderRadius: 999, padding: "6px 16px", marginBottom: 20 }}>
                 <Stethoscope size={13} color="#00B4C8" />
-                <span style={{ color: "#00B4C8", fontSize: 12, fontWeight: 700 }}>للأطباء والعيادات</span>
+                <span style={{ color: "#00B4C8", fontSize: 12, fontWeight: 700 }}>{t("landing.for_doctors_badge")}</span>
               </div>
               <h2 style={{ color: "#fff", fontSize: 36, fontWeight: 900, lineHeight: 1.15, margin: "0 0 20px" }}>
-                ارقَ بمستوى<br />
-                <span style={{ color: "#7ee8f5" }}>عيادتك الرقمية</span>
+                {t("landing.for_doctors_title_1")}<br />
+                <span style={{ color: "#7ee8f5" }}>{t("landing.for_doctors_title_2")}</span>
               </h2>
               <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 16, lineHeight: 1.7, margin: "0 0 32px" }}>
                 انضم لشبكة SPITAR وأدر مواعيدك ومرضاك بكفاءة عالية — وصول فوري للملفات الطبية، لوحة تحكم ذكية، وتواصل مباشر مع مرضاك.
@@ -452,7 +452,7 @@ export default function Landing() {
               </div>
               <Link to="/register">
                 <button style={{ height: 46, padding: "0 28px", background: "#00B4C8", color: "#fff", border: "none", borderRadius: 12, fontSize: 15, fontWeight: 700, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8 }}>
-                  انضم كطبيب <ArrowRight size={16} />
+                  {t("landing.join_as_doctor")} <ArrowRight size={16} />
                 </button>
               </Link>
             </div>
@@ -477,7 +477,7 @@ export default function Landing() {
       <div style={{ background: "#f8fafc", padding: "72px 16px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto", textAlign: "center" }}>
           <h2 style={{ fontSize: 38, fontWeight: 900, color: "#0f172a", margin: "0 0 12px" }}>{t("landing.how_it_works")}</h2>
-          <p style={{ fontSize: 17, color: "#64748b", marginBottom: 56 }}>Simple, secure, and patient-first.</p>
+          <p style={{ fontSize: 17, color: "#64748b", marginBottom: 56 }}>{t("landing.how_it_works_sub")}</p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 40 }}>
             {[
               { step: "01", Icon: Users, title: t("landing.step1"), desc: t("landing.step1_desc"), bg: "#0057B8" },
@@ -501,8 +501,8 @@ export default function Landing() {
       <div style={{ background: "#fff", padding: "72px 16px" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 56 }}>
-            <p style={{ fontSize: 11, fontWeight: 800, color: "#0057B8", letterSpacing: "0.18em", textTransform: "uppercase", margin: "0 0 12px" }}>آراء المستخدمين</p>
-            <h2 style={{ fontSize: 38, fontWeight: 900, color: "#0f172a", margin: 0 }}>ماذا يقولون عن SPITAR؟</h2>
+            <p style={{ fontSize: 11, fontWeight: 800, color: "#0057B8", letterSpacing: "0.18em", textTransform: "uppercase", margin: "0 0 12px" }}>{t("landing.section_testimonials")}</p>
+            <h2 style={{ fontSize: 38, fontWeight: 900, color: "#0f172a", margin: 0 }}>{t("landing.testimonials_title")}</h2>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 20 }}>
             {TESTIMONIALS.map((t) => (
@@ -534,9 +534,9 @@ export default function Landing() {
       <div style={{ background: "#f8fafc", padding: "72px 16px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 48 }}>
-            <p style={{ fontSize: 11, fontWeight: 800, color: "#0057B8", letterSpacing: "0.18em", textTransform: "uppercase", margin: "0 0 12px" }}>التغطية الجغرافية</p>
-            <h2 style={{ fontSize: 36, fontWeight: 900, color: "#0f172a", margin: "0 0 12px" }}>متاح في أكبر مدن المغرب</h2>
-            <p style={{ fontSize: 15, color: "#64748b", margin: 0 }}>وتوسعنا مستمر نحو المزيد من المدن</p>
+            <p style={{ fontSize: 11, fontWeight: 800, color: "#0057B8", letterSpacing: "0.18em", textTransform: "uppercase", margin: "0 0 12px" }}>{t("landing.section_coverage")}</p>
+            <h2 style={{ fontSize: 36, fontWeight: 900, color: "#0f172a", margin: "0 0 12px" }}>{t("landing.coverage_title")}</h2>
+            <p style={{ fontSize: 15, color: "#64748b", margin: 0 }}>{t("landing.coverage_subtitle")}</p>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))", gap: 14 }}>
             {SUPPORTED_CITIES.map(({ name, count }) => (
@@ -560,8 +560,8 @@ export default function Landing() {
       <div style={{ background: "#fff", padding: "72px 16px" }}>
         <div style={{ maxWidth: 720, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 48 }}>
-            <p style={{ fontSize: 11, fontWeight: 800, color: "#0057B8", letterSpacing: "0.18em", textTransform: "uppercase", margin: "0 0 12px" }}>الأسئلة الشائعة</p>
-            <h2 style={{ fontSize: 36, fontWeight: 900, color: "#0f172a", margin: 0 }}>لديك سؤال؟</h2>
+            <p style={{ fontSize: 11, fontWeight: 800, color: "#0057B8", letterSpacing: "0.18em", textTransform: "uppercase", margin: "0 0 12px" }}>{t("landing.section_faq")}</p>
+            <h2 style={{ fontSize: 36, fontWeight: 900, color: "#0f172a", margin: 0 }}>{t("landing.faq_title")}</h2>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {FAQS.map((faq, i) => (
@@ -587,7 +587,7 @@ export default function Landing() {
         <div style={{ position: "relative", maxWidth: 600, margin: "0 auto" }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 999, padding: "6px 16px", marginBottom: 24 }}>
             <Star size={13} color="#fbbf24" fill="#fbbf24" />
-            <span style={{ color: "#fff", fontSize: 13, fontWeight: 600 }}>Trusted by thousands across Morocco</span>
+            <span style={{ color: "#fff", fontSize: 13, fontWeight: 600 }}>{t("landing.trusted_badge")}</span>
           </div>
           <h2 style={{ color: "#fff", fontSize: 40, fontWeight: 900, margin: "0 0 16px", lineHeight: 1.1 }}>{t("landing.cta_banner_title")}</h2>
           <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 17, marginBottom: 40 }}>{t("landing.cta_banner_subtitle")}</p>
@@ -599,7 +599,7 @@ export default function Landing() {
             </Link>
             <Link to="/register">
               <button style={{ height: 52, padding: "0 32px", background: "rgba(255,255,255,0.12)", color: "#fff", border: "1.5px solid rgba(255,255,255,0.3)", borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: "pointer", backdropFilter: "blur(4px)" }}>
-                انضم كطبيب
+                {t("landing.join_as_doctor")}
               </button>
             </Link>
           </div>
