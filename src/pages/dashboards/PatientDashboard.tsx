@@ -485,42 +485,132 @@ export default function PatientDashboard() {
 
       {/* MY TEAM */}
       {activeSection === "my_team" && (
-        <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <button onClick={() => setActiveSection("overview")} style={{ fontSize: 13, color: "#2563eb", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>
               ← {t("nav.dashboard")}
             </button>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {permissions.length === 0 ? (
-              <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e2e8f0" }}>
+
+          {/* Access toggles */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            <div style={{ background: universalAccess ? "linear-gradient(135deg, #eff6ff, #dbeafe)" : "#fff", border: `1.5px solid ${universalAccess ? "#93c5fd" : "#e2e8f0"}`, borderRadius: 16, padding: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg, #2563eb, #06b6d4)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Globe size={16} style={{ color: "#fff" }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", margin: 0 }}>{t("dashboard.universal_doctor_access_title")}</p>
+                </div>
+                <span style={{ fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 20, background: universalAccess ? "#dcfce7" : "#f1f5f9", color: universalAccess ? "#16a34a" : "#94a3b8" }}>
+                  {universalAccess ? "ON" : "OFF"}
+                </span>
+              </div>
+              <p style={{ fontSize: 12, color: "#64748b", margin: "0 0 14px", lineHeight: 1.6 }}>
+                {universalAccess ? t("dashboard.universal_doctor_access_on") : t("dashboard.universal_doctor_access_off")}
+              </p>
+              {universalAccess ? (
+                <button onClick={() => toggleUniversalAccess(false)} style={{ padding: "7px 16px", borderRadius: 10, background: "#fee2e2", color: "#dc2626", border: "none", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                  {t("common.disable")}
+                </button>
+              ) : (
+                <button onClick={() => setShowUniversalDialog(true)} style={{ padding: "7px 16px", borderRadius: 10, background: "linear-gradient(135deg, #2563eb, #06b6d4)", color: "#fff", border: "none", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                  {t("common.enable")}
+                </button>
+              )}
+            </div>
+
+            <div style={{ background: hospitalAccess ? "linear-gradient(135deg, #f0fdf4, #dcfce7)" : "#fff", border: `1.5px solid ${hospitalAccess ? "#86efac" : "#e2e8f0"}`, borderRadius: 16, padding: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg, #0d9488, #16a34a)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Building2 size={16} style={{ color: "#fff" }} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", margin: 0 }}>{t("dashboard.hospital_open_access_title")}</p>
+                </div>
+                <span style={{ fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 20, background: hospitalAccess ? "#dcfce7" : "#f1f5f9", color: hospitalAccess ? "#16a34a" : "#94a3b8" }}>
+                  {hospitalAccess ? "ON" : "OFF"}
+                </span>
+              </div>
+              <p style={{ fontSize: 12, color: "#64748b", margin: "0 0 14px", lineHeight: 1.6 }}>
+                {hospitalAccess ? t("dashboard.hospital_open_access_on") : t("dashboard.hospital_open_access_off")}
+              </p>
+              <button
+                onClick={async () => { if (!user) return; await updateDoc(doc(db, "users", user.uid), { hospitalOpenAccess: !hospitalAccess }); setHospitalAccess(v => !v); }}
+                style={{ padding: "7px 16px", borderRadius: 10, background: hospitalAccess ? "#fee2e2" : "linear-gradient(135deg, #0d9488, #16a34a)", color: hospitalAccess ? "#dc2626" : "#fff", border: "none", fontSize: 13, fontWeight: 700, cursor: "pointer" }}
+              >
+                {hospitalAccess ? t("common.disable") : t("common.enable")}
+              </button>
+            </div>
+          </div>
+
+          {/* Pending Requests */}
+          {accessRequests.length > 0 && (
+            <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 16, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+              <div style={{ padding: "14px 20px", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", gap: 8 }}>
+                <Clock size={15} style={{ color: "#d97706" }} />
+                <span style={{ fontSize: 14, fontWeight: 700, color: "#0f172a" }}>{t("dashboard.pending_requests")} ({accessRequests.length})</span>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: 16 }}>
+                {accessRequests.map(req => (
+                  <div key={req.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 16px", borderRadius: 12, border: "1.5px solid #fde68a", background: "#fffbeb" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <div style={{ width: 40, height: 40, borderRadius: 10, background: "linear-gradient(135deg, #fbbf2433, #f59e0b33)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <Clock size={18} style={{ color: "#d97706" }} />
+                      </div>
+                      <div>
+                        <p style={{ fontSize: 14, fontWeight: 700, color: "#0f172a", margin: 0 }}>{req.doctorName}</p>
+                        <p style={{ fontSize: 12, color: "#64748b", margin: "2px 0 0" }}>{t("dashboard.access_request_desc")}</p>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button onClick={() => rejectRequest(req)} style={{ padding: "7px 14px", borderRadius: 10, background: "#fee2e2", color: "#dc2626", border: "none", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                        {t("common.reject")}
+                      </button>
+                      <button onClick={() => approveRequest(req)} style={{ padding: "7px 14px", borderRadius: 10, background: "linear-gradient(135deg, #16a34a, #0d9488)", color: "#fff", border: "none", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                        {t("common.approve")}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Team members list */}
+          <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 16, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+            <div style={{ padding: "14px 20px", borderBottom: "1px solid #f1f5f9" }}>
+              <span style={{ fontSize: 14, fontWeight: 700, color: "#0f172a" }}>{t("dashboard.active_permissions")}</span>
+            </div>
+            <div style={{ padding: "0 20px" }}>
+              {permissions.length === 0 ? (
                 <EmptyState icon={Users} text={t("dashboard.no_active_permissions")} />
-              </div>
-            ) : permissions.map(p => (
-              <div key={p.id} style={{ background: "#fff", borderRadius: 16, border: "1px solid #e2e8f0", padding: "14px 20px", boxShadow: "0 1px 4px rgba(0,0,0,0.03)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{ width: 42, height: 42, borderRadius: 12, background: p.granteeRole === "doctor" ? "linear-gradient(135deg, #7c3aed, #2563eb)" : "linear-gradient(135deg, #0d9488, #16a34a)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <span style={{ color: "#fff", fontSize: 16, fontWeight: 800 }}>{p.granteeName[0]}</span>
+              ) : permissions.map(p => (
+                <div key={p.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 0", borderBottom: "1px solid #f8fafc" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <div style={{ width: 42, height: 42, borderRadius: 12, background: p.granteeRole === "doctor" ? "linear-gradient(135deg, #7c3aed, #2563eb)" : "linear-gradient(135deg, #0d9488, #16a34a)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <span style={{ color: "#fff", fontSize: 16, fontWeight: 800 }}>{p.granteeName[0]}</span>
+                    </div>
+                    <div>
+                      <p style={{ fontSize: 14, fontWeight: 700, margin: 0, color: "#0f172a" }}>{p.granteeName}</p>
+                      <p style={{ fontSize: 12, color: "#64748b", margin: "2px 0 0", textTransform: "capitalize" }}>{p.granteeRole} · {t("dashboard.since")} {new Date(p.grantedAt).toLocaleDateString()}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p style={{ fontSize: 14, fontWeight: 700, margin: 0, color: "#0f172a" }}>{p.granteeName}</p>
-                    <p style={{ fontSize: 12, color: "#64748b", margin: "2px 0 0", textTransform: "capitalize" }}>{p.granteeRole} · {t("dashboard.since")} {new Date(p.grantedAt).toLocaleDateString()}</p>
-                  </div>
-                </div>
-                <div style={{ display: "flex", gap: 8 }}>
-                  {p.granteeRole === "doctor" && (
-                    <button
-                      onClick={() => { setApptDialog({ open: true, doctorId: p.granteeId, doctorName: p.granteeName }); setApptForm({ date: "", time: "", reason: "" }); }}
-                      style={{ background: "linear-gradient(135deg, #2563eb, #06b6d4)", border: "none", borderRadius: 10, cursor: "pointer", color: "#fff", padding: "6px 14px", fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", gap: 5 }}>
-                      <CalendarPlus size={13} /> {t("appointments.request_appointment")}
+                  <div style={{ display: "flex", gap: 8 }}>
+                    {p.granteeRole === "doctor" && (
+                      <button
+                        onClick={() => { setApptDialog({ open: true, doctorId: p.granteeId, doctorName: p.granteeName }); setApptForm({ date: "", time: "", reason: "" }); }}
+                        style={{ background: "linear-gradient(135deg, #2563eb, #06b6d4)", border: "none", borderRadius: 10, cursor: "pointer", color: "#fff", padding: "6px 14px", fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", gap: 5 }}>
+                        <CalendarPlus size={13} /> {t("appointments.request_appointment")}
+                      </button>
+                    )}
+                    <button onClick={() => revokeAccess(p.id)} style={{ background: "#fee2e2", border: "none", borderRadius: 10, cursor: "pointer", color: "#dc2626", padding: "6px 14px", fontSize: 12, fontWeight: 700 }}>
+                      Revoke
                     </button>
-                  )}
-                  <button onClick={() => revokeAccess(p.id)} style={{ background: "#fee2e2", border: "none", borderRadius: 10, cursor: "pointer", color: "#dc2626", padding: "6px 14px", fontSize: 12, fontWeight: 700 }}>
-                    Revoke
-                  </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       )}
