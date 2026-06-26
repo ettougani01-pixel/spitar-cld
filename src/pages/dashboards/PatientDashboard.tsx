@@ -40,7 +40,7 @@ import { PatientTreatmentPlan } from "@/components/TreatmentPlan";
 import { HealthReport } from "@/components/HealthReport";
 
 type Tab = "records" | "health_profile" | "labs" | "my_team" | "appointments" | "share_qr" | "pending_requests" | "teleconsult" | "referrals" | "summaries" | "emergency" | "report" | "chat" | "treatment";
-type Section = "overview" | "access";
+type Section = "overview" | "access" | "emergency";
 
 const STATUS = {
   normal:    { bg: "#dcfce7", color: "#16a34a" },
@@ -306,7 +306,7 @@ export default function PatientDashboard() {
   const navItems = [
     { label: t("nav.dashboard"), href: "/dashboard", icon: Sparkles, onClick: () => { setActiveSection("overview"); setActiveTab("records"); }, active: activeSection === "overview" },
     { label: t("dashboard.authorized_providers"), href: "/dashboard", icon: ShieldCheck, onClick: () => setActiveSection("access"), active: activeSection === "access" },
-    { label: t("dashboard.emergency_card_quick"), href: "/dashboard", icon: ShieldAlert, onClick: () => { setActiveSection("overview"); setActiveTab("emergency"); }, active: activeSection === "overview" && activeTab === "emergency" },
+    { label: t("dashboard.emergency_card_quick"), href: "/dashboard", icon: ShieldAlert, onClick: () => setActiveSection("emergency"), active: activeSection === "emergency" },
   ];
 
   const TABS: { key: Tab; label: string; icon: React.ElementType }[] = [
@@ -380,6 +380,19 @@ export default function PatientDashboard() {
     <DashboardLayout navItems={navItems} title={t("dashboard.patient_dashboard")}>
 
       {/* ── HERO BANNER ── */}
+      {/* ── EMERGENCY CARD SECTION ── */}
+      {activeSection === "emergency" && (
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+            <button onClick={() => setActiveSection("overview")} style={{ fontSize: 13, color: "#2563eb", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>
+              ← {t("nav.dashboard")}
+            </button>
+          </div>
+          <EmergencyCardManager />
+        </div>
+      )}
+
+      {activeSection !== "emergency" && <>
       <div style={{
         borderRadius: 20, overflow: "hidden", marginBottom: 24, position: "relative",
         background: "linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #06b6d4 100%)",
@@ -1109,6 +1122,7 @@ export default function PatientDashboard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      </>}
     </DashboardLayout>
   );
 }
