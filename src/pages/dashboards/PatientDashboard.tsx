@@ -577,6 +577,34 @@ export default function PatientDashboard() {
             </div>
           )}
 
+          {/* Add provider */}
+          <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 16, padding: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+            <p style={{ fontSize: 15, fontWeight: 700, color: "#0f172a", margin: "0 0 14px" }}>{t("dashboard.add_by_id")}</p>
+            <div style={{ display: "flex", gap: 10 }}>
+              <input
+                style={{ flex: 1, height: 44, padding: "0 14px", border: "1.5px solid #e2e8f0", borderRadius: 12, fontSize: 14, outline: "none", background: "#f8fafc", color: "#0f172a", boxSizing: "border-box", transition: "border-color 0.15s" }}
+                placeholder={t("dashboard.search_placeholder")} value={spitarIdSearch}
+                onChange={e => setSpitarIdSearch(e.target.value)} onKeyDown={e => e.key === "Enter" && searchProvider()}
+                onFocus={e => (e.target.style.borderColor = "#2563eb")} onBlur={e => (e.target.style.borderColor = "#e2e8f0")}
+              />
+              <button onClick={searchProvider} disabled={searchLoading} style={{ padding: "0 20px", height: 44, borderRadius: 12, background: "linear-gradient(135deg, #2563eb, #06b6d4)", color: "#fff", border: "none", fontSize: 14, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                <Search size={15} /> {t("common.search")}
+              </button>
+            </div>
+            {searchError && <p style={{ fontSize: 13, color: "#dc2626", margin: "8px 0 0" }}>{searchError}</p>}
+            {searchResult && (
+              <div style={{ marginTop: 12, padding: "12px 16px", background: "#f0f9ff", border: "1.5px solid #bae6fd", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div>
+                  <p style={{ fontSize: 14, fontWeight: 700, margin: 0, color: "#0f172a" }}>{searchResult.name}</p>
+                  <p style={{ fontSize: 12, color: "#64748b", margin: "2px 0 0", textTransform: "capitalize" }}>{searchResult.role} · {searchResult.spitarId}</p>
+                </div>
+                <button onClick={grantAccess} style={{ padding: "7px 16px", borderRadius: 10, background: "linear-gradient(135deg, #2563eb, #06b6d4)", color: "#fff", border: "none", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}>
+                  <Plus size={13} /> {t("dashboard.authorize_access")}
+                </button>
+              </div>
+            )}
+          </div>
+
           {/* Team members list */}
           <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 16, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
             <div style={{ padding: "14px 20px", borderBottom: "1px solid #f1f5f9" }}>
