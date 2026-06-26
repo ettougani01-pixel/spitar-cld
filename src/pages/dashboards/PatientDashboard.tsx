@@ -317,11 +317,9 @@ export default function PatientDashboard() {
     { key: "health_profile", label: t("nav.health_profile"), icon: Heart },
     { key: "labs", label: t("records.lab_results"), icon: FlaskConical },
     { key: "summaries", label: "Visit Summaries", icon: ClipboardList },
-    { key: "teleconsult", label: "Teleconsultation", icon: MessageCircle },
     { key: "referrals", label: "Referrals", icon: ArrowRight },
     { key: "report", label: "Health Report", icon: BarChart2 },
     { key: "treatment", label: "Treatment Plan", icon: CalendarCheck },
-    { key: "chat", label: "Health Assistant", icon: Bot },
   ];
 
   // Browser appointment reminders
@@ -380,7 +378,16 @@ export default function PatientDashboard() {
   ].sort((a, b) => (b.date ?? "").localeCompare(a.date ?? "")).slice(0, 5);
 
   return (
-    <DashboardLayout navItems={navItems} title={t("dashboard.patient_dashboard")}>
+    <DashboardLayout navItems={navItems} title={t("dashboard.patient_dashboard")} headerActions={
+      <>
+        <button onClick={() => { setActiveSection("overview"); setActiveTab("teleconsult"); }} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 10, background: activeTab === "teleconsult" && activeSection === "overview" ? "linear-gradient(135deg, #2563eb, #06b6d4)" : "#f1f5f9", color: activeTab === "teleconsult" && activeSection === "overview" ? "#fff" : "#475569", border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+          <MessageCircle size={15} /> Teleconsultation
+        </button>
+        <button onClick={() => { setActiveSection("overview"); setActiveTab("chat"); }} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 10, background: activeTab === "chat" && activeSection === "overview" ? "linear-gradient(135deg, #7c3aed, #2563eb)" : "#f1f5f9", color: activeTab === "chat" && activeSection === "overview" ? "#fff" : "#475569", border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+          <Bot size={15} /> Health Assistant
+        </button>
+      </>
+    }>
 
       {/* ── HERO BANNER ── */}
       {/* ── EMERGENCY CARD SECTION ── */}

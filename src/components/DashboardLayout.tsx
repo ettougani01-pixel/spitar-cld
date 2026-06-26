@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { NotificationBell } from "./NotificationBell";
 import { SpitarLogoMark } from "./SpitarLogoMark";
-import { LogOut, Menu, X, User, ChevronRight, Sparkles } from "lucide-react";
+import { LogOut, Menu, X, User, ChevronRight, Sparkles, MessageCircle, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface NavItem {
@@ -20,6 +20,7 @@ interface DashboardLayoutProps {
   children: React.ReactNode;
   navItems: NavItem[];
   title?: string;
+  headerActions?: React.ReactNode;
 }
 
 const ROLE_GRAD: Record<string, string> = {
@@ -30,7 +31,7 @@ const ROLE_GRAD: Record<string, string> = {
   admin:    "linear-gradient(135deg, #dc2626, #ea580c)",
 };
 
-export function DashboardLayout({ children, navItems, title }: DashboardLayoutProps) {
+export function DashboardLayout({ children, navItems, title, headerActions }: DashboardLayoutProps) {
   const { t } = useTranslation();
   const { user, logout } = useAuth();
   const location = useLocation();
@@ -179,6 +180,7 @@ export function DashboardLayout({ children, navItems, title }: DashboardLayoutPr
             <h1 style={{ fontSize: 15, fontWeight: 700, color: "#0f172a", margin: 0 }}>{title ?? t("nav.dashboard")}</h1>
           </div>
           <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
+            {headerActions}
             <NotificationBell />
             <LanguageSwitcher />
           </div>
