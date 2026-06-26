@@ -40,7 +40,7 @@ import { PatientTreatmentPlan } from "@/components/TreatmentPlan";
 import { HealthReport } from "@/components/HealthReport";
 
 type Tab = "records" | "health_profile" | "labs" | "my_team" | "appointments" | "share_qr" | "pending_requests" | "teleconsult" | "referrals" | "summaries" | "emergency" | "report" | "chat" | "treatment";
-type Section = "overview" | "access" | "emergency" | "health_profile" | "appointments" | "my_team";
+type Section = "overview" | "access" | "emergency" | "health_profile" | "appointments" | "my_team" | "teleconsult" | "chat";
 
 const STATUS = {
   normal:    { bg: "#dcfce7", color: "#16a34a" },
@@ -380,10 +380,10 @@ export default function PatientDashboard() {
   return (
     <DashboardLayout navItems={navItems} title={t("dashboard.patient_dashboard")} headerActions={
       <>
-        <button onClick={() => { setActiveSection("overview"); setActiveTab("teleconsult"); }} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 10, background: activeTab === "teleconsult" && activeSection === "overview" ? "linear-gradient(135deg, #2563eb, #06b6d4)" : "#f1f5f9", color: activeTab === "teleconsult" && activeSection === "overview" ? "#fff" : "#475569", border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+        <button onClick={() => setActiveSection("teleconsult")} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 10, background: activeSection === "teleconsult" ? "linear-gradient(135deg, #2563eb, #06b6d4)" : "#f1f5f9", color: activeSection === "teleconsult" ? "#fff" : "#475569", border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
           <MessageCircle size={15} /> Teleconsultation
         </button>
-        <button onClick={() => { setActiveSection("overview"); setActiveTab("chat"); }} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 10, background: activeTab === "chat" && activeSection === "overview" ? "linear-gradient(135deg, #7c3aed, #2563eb)" : "#f1f5f9", color: activeTab === "chat" && activeSection === "overview" ? "#fff" : "#475569", border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+        <button onClick={() => setActiveSection("chat")} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 10, background: activeSection === "chat" ? "linear-gradient(135deg, #7c3aed, #2563eb)" : "#f1f5f9", color: activeSection === "chat" ? "#fff" : "#475569", border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
           <Bot size={15} /> Health Assistant
         </button>
       </>
@@ -650,7 +650,31 @@ export default function PatientDashboard() {
         </div>
       )}
 
-      {activeSection !== "emergency" && activeSection !== "health_profile" && activeSection !== "appointments" && activeSection !== "my_team" && <>
+      {/* TELECONSULTATION */}
+      {activeSection === "teleconsult" && (
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+            <button onClick={() => setActiveSection("overview")} style={{ fontSize: 13, color: "#2563eb", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>
+              ← {t("nav.dashboard")}
+            </button>
+          </div>
+          <PatientTeleconsultation permissions={permissions} />
+        </div>
+      )}
+
+      {/* HEALTH ASSISTANT */}
+      {activeSection === "chat" && (
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+            <button onClick={() => setActiveSection("overview")} style={{ fontSize: 13, color: "#2563eb", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>
+              ← {t("nav.dashboard")}
+            </button>
+          </div>
+          <AiHealthChat />
+        </div>
+      )}
+
+      {activeSection !== "emergency" && activeSection !== "health_profile" && activeSection !== "appointments" && activeSection !== "my_team" && activeSection !== "teleconsult" && activeSection !== "chat" && <>
       <div style={{
         borderRadius: 20, overflow: "hidden", marginBottom: 24, position: "relative",
         background: "linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #06b6d4 100%)",
