@@ -398,13 +398,31 @@ export default function PatientDashboard() {
       {/* ── APPOINTMENTS SECTION ── */}
       {activeSection === "appointments" && (
         <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
             <button onClick={() => setActiveSection("overview")} style={{ fontSize: 13, color: "#2563eb", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>
               ← {t("nav.dashboard")}
             </button>
+            {permissions.length > 0 ? (
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <select
+                  onChange={e => {
+                    const p = permissions.find(p => p.granteeId === e.target.value);
+                    if (p) { setApptDialog({ open: true, doctorId: p.granteeId, doctorName: p.granteeName }); setApptForm({ date: "", time: "", reason: "" }); }
+                    e.target.value = "";
+                  }}
+                  defaultValue=""
+                  style={{ height: 38, padding: "0 12px", border: "1.5px solid #2563eb", borderRadius: 10, fontSize: 13, color: "#2563eb", background: "#eff6ff", cursor: "pointer", outline: "none" }}
+                >
+                  <option value="" disabled>+ {t("appointments.request_appointment")}</option>
+                  {permissions.filter(p => p.granteeRole === "doctor").map(p => (
+                    <option key={p.granteeId} value={p.granteeId}>{p.granteeName}</option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <span style={{ fontSize: 12, color: "#94a3b8" }}>{t("dashboard.no_active_permissions")}</span>
+            )}
           </div>
-          {/* reuse appointments tab content */}
-          {(() => { const saved = activeTab; return null; })()}
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {appointments.length === 0 ? (
               <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e2e8f0" }}>
