@@ -40,7 +40,7 @@ import { PatientTreatmentPlan } from "@/components/TreatmentPlan";
 import { HealthReport } from "@/components/HealthReport";
 
 type Tab = "records" | "health_profile" | "labs" | "my_team" | "appointments" | "share_qr" | "pending_requests" | "teleconsult" | "referrals" | "summaries" | "emergency" | "report" | "chat" | "treatment";
-type Section = "overview" | "access" | "emergency" | "health_profile" | "appointments";
+type Section = "overview" | "access" | "emergency" | "health_profile" | "appointments" | "my_team";
 
 const STATUS = {
   normal:    { bg: "#dcfce7", color: "#16a34a" },
@@ -306,6 +306,7 @@ export default function PatientDashboard() {
   const navItems = [
     { label: t("nav.dashboard"), href: "/dashboard", icon: Sparkles, onClick: () => { setActiveSection("overview"); setActiveTab("records"); }, active: activeSection === "overview" },
     { label: t("dashboard.authorized_providers"), href: "/dashboard", icon: ShieldCheck, onClick: () => setActiveSection("access"), active: activeSection === "access" },
+    { label: t("nav.my_team") || "My Medical Team", href: "/dashboard", icon: Users, onClick: () => setActiveSection("my_team"), active: activeSection === "my_team" },
     { label: t("dashboard.emergency_card_quick"), href: "/dashboard", icon: ShieldAlert, onClick: () => setActiveSection("emergency"), active: activeSection === "emergency" },
     { label: t("dashboard.book_appointment_btn"), href: "/dashboard", icon: CalendarPlus, onClick: () => setActiveSection("appointments"), active: activeSection === "appointments" },
     { label: t("dashboard.share_qr_quick"), href: "/dashboard", icon: QrCode, onClick: () => { setActiveSection("overview"); setActiveTab("share_qr"); }, active: activeSection === "overview" && activeTab === "share_qr" },
@@ -483,7 +484,49 @@ export default function PatientDashboard() {
         </div>
       )}
 
-      {activeSection !== "emergency" && activeSection !== "health_profile" && activeSection !== "appointments" && <>
+      {/* MY TEAM */}
+      {activeSection === "my_team" && (
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+            <button onClick={() => setActiveSection("overview")} style={{ fontSize: 13, color: "#2563eb", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>
+              ← {t("nav.dashboard")}
+            </button>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {permissions.length === 0 ? (
+              <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e2e8f0" }}>
+                <EmptyState icon={Users} text={t("dashboard.no_active_permissions")} />
+              </div>
+            ) : permissions.map(p => (
+              <div key={p.id} style={{ background: "#fff", borderRadius: 16, border: "1px solid #e2e8f0", padding: "14px 20px", boxShadow: "0 1px 4px rgba(0,0,0,0.03)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{ width: 42, height: 42, borderRadius: 12, background: p.granteeRole === "doctor" ? "linear-gradient(135deg, #7c3aed, #2563eb)" : "linear-gradient(135deg, #0d9488, #16a34a)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <span style={{ color: "#fff", fontSize: 16, fontWeight: 800 }}>{p.granteeName[0]}</span>
+                  </div>
+                  <div>
+                    <p style={{ fontSize: 14, fontWeight: 700, margin: 0, color: "#0f172a" }}>{p.granteeName}</p>
+                    <p style={{ fontSize: 12, color: "#64748b", margin: "2px 0 0", textTransform: "capitalize" }}>{p.granteeRole} · {t("dashboard.since")} {new Date(p.grantedAt).toLocaleDateString()}</p>
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  {p.granteeRole === "doctor" && (
+                    <button
+                      onClick={() => { setApptDialog({ open: true, doctorId: p.granteeId, doctorName: p.granteeName }); setApptForm({ date: "", time: "", reason: "" }); }}
+                      style={{ background: "linear-gradient(135deg, #2563eb, #06b6d4)", border: "none", borderRadius: 10, cursor: "pointer", color: "#fff", padding: "6px 14px", fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", gap: 5 }}>
+                      <CalendarPlus size={13} /> {t("appointments.request_appointment")}
+                    </button>
+                  )}
+                  <button onClick={() => revokeAccess(p.id)} style={{ background: "#fee2e2", border: "none", borderRadius: 10, cursor: "pointer", color: "#dc2626", padding: "6px 14px", fontSize: 12, fontWeight: 700 }}>
+                    Revoke
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {activeSection !== "emergency" && activeSection !== "health_profile" && activeSection !== "appointments" && activeSection !== "my_team" && <>
       <div style={{
         borderRadius: 20, overflow: "hidden", marginBottom: 24, position: "relative",
         background: "linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #06b6d4 100%)",
