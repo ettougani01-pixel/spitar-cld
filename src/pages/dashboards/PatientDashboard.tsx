@@ -40,7 +40,7 @@ import { PatientTreatmentPlan } from "@/components/TreatmentPlan";
 import { HealthReport } from "@/components/HealthReport";
 
 type Tab = "records" | "health_profile" | "labs" | "my_team" | "appointments" | "share_qr" | "pending_requests" | "teleconsult" | "referrals" | "summaries" | "emergency" | "report" | "chat" | "treatment";
-type Section = "overview" | "access" | "emergency" | "health_profile";
+type Section = "overview" | "access" | "emergency" | "health_profile" | "appointments";
 
 const STATUS = {
   normal:    { bg: "#dcfce7", color: "#16a34a" },
@@ -307,7 +307,7 @@ export default function PatientDashboard() {
     { label: t("nav.dashboard"), href: "/dashboard", icon: Sparkles, onClick: () => { setActiveSection("overview"); setActiveTab("records"); }, active: activeSection === "overview" },
     { label: t("dashboard.authorized_providers"), href: "/dashboard", icon: ShieldCheck, onClick: () => setActiveSection("access"), active: activeSection === "access" },
     { label: t("dashboard.emergency_card_quick"), href: "/dashboard", icon: ShieldAlert, onClick: () => setActiveSection("emergency"), active: activeSection === "emergency" },
-    { label: t("dashboard.book_appointment_btn"), href: "/dashboard", icon: CalendarPlus, onClick: () => { setActiveSection("overview"); setActiveTab("appointments"); }, active: activeSection === "overview" && activeTab === "appointments" },
+    { label: t("dashboard.book_appointment_btn"), href: "/dashboard", icon: CalendarPlus, onClick: () => setActiveSection("appointments"), active: activeSection === "appointments" },
     { label: t("dashboard.share_qr_quick"), href: "/dashboard", icon: QrCode, onClick: () => { setActiveSection("overview"); setActiveTab("share_qr"); }, active: activeSection === "overview" && activeTab === "share_qr" },
     { label: t("dashboard.health_profile_quick"), href: "/dashboard", icon: Heart, onClick: () => setActiveSection("health_profile"), active: activeSection === "health_profile" },
   ];
@@ -395,6 +395,62 @@ export default function PatientDashboard() {
         </div>
       )}
 
+      {/* ── APPOINTMENTS SECTION ── */}
+      {activeSection === "appointments" && (
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+            <button onClick={() => setActiveSection("overview")} style={{ fontSize: 13, color: "#2563eb", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>
+              ← {t("nav.dashboard")}
+            </button>
+          </div>
+          {/* reuse appointments tab content */}
+          {(() => { const saved = activeTab; return null; })()}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {appointments.length === 0 ? (
+              <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e2e8f0" }}>
+                <EmptyState icon={CalendarDays} text={t("appointments.no_appointments")} />
+              </div>
+            ) : appointments.map(a => {
+              const isReschedule = a.status === "pending" && a.rescheduleDate;
+              return (
+                <div key={a.id} style={{ background: "#fff", borderRadius: 16, border: "1px solid #e2e8f0", padding: "16px 20px", boxShadow: "0 1px 4px rgba(0,0,0,0.03)" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <Pill status={a.status} label={t(`appointments.status_${a.status}`)} />
+                      <span style={{ fontSize: 14, fontWeight: 700, color: "#0f172a" }}>Dr. {a.doctorName}</span>
+                    </div>
+                    <button onClick={() => deleteAppointment(a.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#94a3b8", padding: 4 }}><Trash2 size={15} /></button>
+                  </div>
+                  <p style={{ fontSize: 12, color: "#94a3b8", margin: "0 0 6px" }}>{a.date} · {a.time ?? ""}</p>
+                  {a.reason && <p style={{ fontSize: 13, color: "#64748b", margin: 0 }}>{a.reason}</p>}
+                  {isReschedule && (
+                    <div style={{ marginTop: 10, padding: "10px 14px", background: "#fef3c7", borderRadius: 10, border: "1px solid #fbbf24" }}>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: "#92400e", margin: "0 0 8px" }}>
+                        {t("appointments.reschedule_proposed")}: {a.rescheduleDate} · {a.rescheduleTime}
+                      </p>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <button onClick={() => acceptReschedule(a)} style={{ padding: "5px 14px", background: "#16a34a", color: "#fff", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
+                          <CheckCircle size={13} /> {t("common.accept")}
+                        </button>
+                        <button onClick={() => declineReschedule(a)} style={{ padding: "5px 14px", background: "#fee2e2", color: "#dc2626", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
+                          <XCircle size={13} /> {t("common.decline")}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  {a.status === "completed" && !a.rating && (
+                    <button onClick={() => setRatingDialog({ open: true, appointmentId: a.id, doctorId: a.doctorId, doctorName: a.doctorName })}
+                      style={{ marginTop: 8, padding: "5px 14px", background: "#fef3c7", border: "1px solid #fbbf24", borderRadius: 8, fontSize: 12, fontWeight: 600, color: "#92400e", cursor: "pointer" }}>
+                      ⭐ {t("appointments.rate_doctor")}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* ── HEALTH PROFILE SECTION ── */}
       {activeSection === "health_profile" && (
         <div>
@@ -409,7 +465,7 @@ export default function PatientDashboard() {
         </div>
       )}
 
-      {activeSection !== "emergency" && activeSection !== "health_profile" && <>
+      {activeSection !== "emergency" && activeSection !== "health_profile" && activeSection !== "appointments" && <>
       <div style={{
         borderRadius: 20, overflow: "hidden", marginBottom: 24, position: "relative",
         background: "linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #06b6d4 100%)",
