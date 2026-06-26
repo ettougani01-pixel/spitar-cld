@@ -315,7 +315,6 @@ export default function PatientDashboard() {
     { key: "summaries", label: "Visit Summaries", icon: ClipboardList },
     { key: "teleconsult", label: "Teleconsultation", icon: MessageCircle },
     { key: "referrals", label: "Referrals", icon: ArrowRight },
-    { key: "emergency", label: "Emergency Card", icon: ShieldAlert },
     { key: "report", label: "Health Report", icon: BarChart2 },
     { key: "treatment", label: "Treatment Plan", icon: CalendarCheck },
     { key: "chat", label: "Health Assistant", icon: Bot },
