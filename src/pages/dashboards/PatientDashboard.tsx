@@ -306,7 +306,6 @@ export default function PatientDashboard() {
   const navItems = [
     { label: t("nav.dashboard"), href: "/dashboard", icon: Sparkles, onClick: () => { setActiveSection("overview"); setActiveTab("records"); }, active: activeSection === "overview" },
     { label: t("nav.my_team"), href: "/dashboard", icon: Users, onClick: () => setActiveSection("my_team"), active: activeSection === "my_team" },
-    { label: t("nav.my_team"), href: "/dashboard", icon: Users, onClick: () => setActiveSection("my_team"), active: activeSection === "my_team" },
     { label: t("dashboard.emergency_card_quick"), href: "/dashboard", icon: ShieldAlert, onClick: () => setActiveSection("emergency"), active: activeSection === "emergency" },
     { label: t("dashboard.book_appointment_btn"), href: "/dashboard", icon: CalendarPlus, onClick: () => setActiveSection("appointments"), active: activeSection === "appointments" },
     { label: t("dashboard.share_qr_quick"), href: "/dashboard", icon: QrCode, onClick: () => { setActiveSection("overview"); setActiveTab("share_qr"); }, active: activeSection === "overview" && activeTab === "share_qr" },
@@ -338,6 +337,7 @@ export default function PatientDashboard() {
   const STATS = [
     { label: t("records.medical_records"), value: records.length, icon: FileText, grad: "linear-gradient(135deg, #2563eb, #06b6d4)", onClick: (() => { setActiveSection("overview"); setActiveTab("records"); }) as (() => void) | undefined },
     { label: t("records.lab_results"), value: labResults.length, icon: FlaskConical, grad: "linear-gradient(135deg, #0891b2, #16a34a)", onClick: () => { setActiveSection("overview"); setActiveTab("labs"); } },
+    { label: t("nav.my_team"), value: permissions.length, icon: Users, grad: "linear-gradient(135deg, #7c3aed, #2563eb)", onClick: () => setActiveSection("my_team") },
     { label: t("dashboard.pending_requests"), value: accessRequests.length, icon: Clock, grad: "linear-gradient(135deg, #d97706, #f59e0b)", onClick: accessRequests.length > 0 ? () => { setActiveSection("overview"); setActiveTab("pending_requests"); } : undefined },
     { label: t("appointments.title"), value: appointments.length, icon: CalendarDays, grad: "linear-gradient(135deg, #0d9488, #16a34a)", onClick: () => { setActiveSection("overview"); setActiveTab("appointments"); } },
   ];
