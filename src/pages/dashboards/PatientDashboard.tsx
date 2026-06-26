@@ -447,11 +447,10 @@ export default function PatientDashboard() {
       </div>
 
       {/* ── QUICK ACTIONS ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 24 }}>
         {[
           { label: t("dashboard.book_appointment_btn"), icon: CalendarPlus, grad: "linear-gradient(135deg,#2563eb,#06b6d4)", onClick: () => { setActiveSection("overview"); setActiveTab("appointments"); } },
           { label: t("dashboard.share_qr_quick"), icon: QrCode, grad: "linear-gradient(135deg,#7c3aed,#2563eb)", onClick: () => { setActiveSection("overview"); setActiveTab("share_qr"); } },
-          { label: t("dashboard.emergency_card_quick"), icon: ShieldAlert, grad: "linear-gradient(135deg,#dc2626,#ea580c)", onClick: () => { setActiveSection("overview"); setActiveTab("emergency"); } },
           { label: t("dashboard.health_profile_quick"), icon: Heart, grad: "linear-gradient(135deg,#0d9488,#16a34a)", onClick: () => { setActiveSection("overview"); setActiveTab("health_profile"); } },
         ].map(({ label, icon: Icon, grad, onClick }) => (
           <button key={label} onClick={onClick} style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 16px", background: "#fff", border: "1.5px solid #e2e8f0", borderRadius: 14, cursor: "pointer", transition: "all 0.15s", boxShadow: "0 1px 4px rgba(0,0,0,0.04)", textAlign: "left" }}
