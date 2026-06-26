@@ -40,7 +40,7 @@ import { PatientTreatmentPlan } from "@/components/TreatmentPlan";
 import { HealthReport } from "@/components/HealthReport";
 
 type Tab = "records" | "health_profile" | "labs" | "my_team" | "appointments" | "share_qr" | "pending_requests" | "teleconsult" | "referrals" | "summaries" | "emergency" | "report" | "chat" | "treatment";
-type Section = "overview" | "access" | "emergency";
+type Section = "overview" | "access" | "emergency" | "health_profile";
 
 const STATUS = {
   normal:    { bg: "#dcfce7", color: "#16a34a" },
@@ -309,7 +309,7 @@ export default function PatientDashboard() {
     { label: t("dashboard.emergency_card_quick"), href: "/dashboard", icon: ShieldAlert, onClick: () => setActiveSection("emergency"), active: activeSection === "emergency" },
     { label: t("dashboard.book_appointment_btn"), href: "/dashboard", icon: CalendarPlus, onClick: () => { setActiveSection("overview"); setActiveTab("appointments"); }, active: activeSection === "overview" && activeTab === "appointments" },
     { label: t("dashboard.share_qr_quick"), href: "/dashboard", icon: QrCode, onClick: () => { setActiveSection("overview"); setActiveTab("share_qr"); }, active: activeSection === "overview" && activeTab === "share_qr" },
-    { label: t("dashboard.health_profile_quick"), href: "/dashboard", icon: Heart, onClick: () => { setActiveSection("overview"); setActiveTab("health_profile"); }, active: activeSection === "overview" && activeTab === "health_profile" },
+    { label: t("dashboard.health_profile_quick"), href: "/dashboard", icon: Heart, onClick: () => setActiveSection("health_profile"), active: activeSection === "health_profile" },
   ];
 
   const TABS: { key: Tab; label: string; icon: React.ElementType }[] = [
@@ -395,7 +395,21 @@ export default function PatientDashboard() {
         </div>
       )}
 
-      {activeSection !== "emergency" && <>
+      {/* ── HEALTH PROFILE SECTION ── */}
+      {activeSection === "health_profile" && (
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+            <button onClick={() => setActiveSection("overview")} style={{ fontSize: 13, color: "#2563eb", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>
+              ← {t("nav.dashboard")}
+            </button>
+          </div>
+          <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e2e8f0", padding: 20 }}>
+            <HealthProfileContent />
+          </div>
+        </div>
+      )}
+
+      {activeSection !== "emergency" && activeSection !== "health_profile" && <>
       <div style={{
         borderRadius: 20, overflow: "hidden", marginBottom: 24, position: "relative",
         background: "linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #06b6d4 100%)",
