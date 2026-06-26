@@ -307,6 +307,9 @@ export default function PatientDashboard() {
     { label: t("nav.dashboard"), href: "/dashboard", icon: Sparkles, onClick: () => { setActiveSection("overview"); setActiveTab("records"); }, active: activeSection === "overview" },
     { label: t("dashboard.authorized_providers"), href: "/dashboard", icon: ShieldCheck, onClick: () => setActiveSection("access"), active: activeSection === "access" },
     { label: t("dashboard.emergency_card_quick"), href: "/dashboard", icon: ShieldAlert, onClick: () => setActiveSection("emergency"), active: activeSection === "emergency" },
+    { label: t("dashboard.book_appointment_btn"), href: "/dashboard", icon: CalendarPlus, onClick: () => { setActiveSection("overview"); setActiveTab("appointments"); }, active: activeSection === "overview" && activeTab === "appointments" },
+    { label: t("dashboard.share_qr_quick"), href: "/dashboard", icon: QrCode, onClick: () => { setActiveSection("overview"); setActiveTab("share_qr"); }, active: activeSection === "overview" && activeTab === "share_qr" },
+    { label: t("dashboard.health_profile_quick"), href: "/dashboard", icon: Heart, onClick: () => { setActiveSection("overview"); setActiveTab("health_profile"); }, active: activeSection === "overview" && activeTab === "health_profile" },
   ];
 
   const TABS: { key: Tab; label: string; icon: React.ElementType }[] = [
