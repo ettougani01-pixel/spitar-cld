@@ -40,7 +40,7 @@ import { PatientTreatmentPlan } from "@/components/TreatmentPlan";
 import { HealthReport } from "@/components/HealthReport";
 
 type Tab = "records" | "health_profile" | "labs" | "my_team" | "appointments" | "share_qr" | "pending_requests" | "teleconsult" | "referrals" | "summaries" | "emergency" | "report" | "chat" | "treatment";
-type Section = "overview" | "access" | "emergency" | "health_profile" | "appointments" | "my_team" | "teleconsult" | "chat";
+type Section = "overview" | "access" | "emergency" | "health_profile" | "appointments" | "my_team" | "teleconsult" | "chat" | "labs";
 
 const STATUS = {
   normal:    { bg: "#dcfce7", color: "#16a34a" },
@@ -310,11 +310,11 @@ export default function PatientDashboard() {
     { label: t("dashboard.book_appointment_btn"), href: "/dashboard", icon: CalendarPlus, onClick: () => setActiveSection("appointments"), active: activeSection === "appointments" },
     { label: t("dashboard.share_qr_quick"), href: "/dashboard", icon: QrCode, onClick: () => { setActiveSection("overview"); setActiveTab("share_qr"); }, active: activeSection === "overview" && activeTab === "share_qr" },
     { label: t("dashboard.health_profile_quick"), href: "/dashboard", icon: Heart, onClick: () => setActiveSection("health_profile"), active: activeSection === "health_profile" },
+    { label: t("records.lab_results"), href: "/dashboard", icon: FlaskConical, onClick: () => setActiveSection("labs"), active: activeSection === "labs" },
   ];
 
   const TABS: { key: Tab; label: string; icon: React.ElementType }[] = [
     { key: "records", label: t("records.medical_records"), icon: FileText },
-    { key: "labs", label: t("records.lab_results"), icon: FlaskConical },
     { key: "summaries", label: "Visit Summaries", icon: ClipboardList },
     { key: "referrals", label: "Referrals", icon: ArrowRight },
     { key: "report", label: "Health Report", icon: BarChart2 },
@@ -649,6 +649,34 @@ export default function PatientDashboard() {
         </div>
       )}
 
+      {/* LAB RESULTS */}
+      {activeSection === "labs" && (
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+            <button onClick={() => setActiveSection("overview")} style={{ fontSize: 13, color: "#2563eb", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>
+              ← {t("nav.dashboard")}
+            </button>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <LabTrendChart labResults={labResults} />
+            {labResults.length === 0 ? (
+              <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e2e8f0" }}>
+                <EmptyState icon={FlaskConical} text={t("records.lab_no_results")} />
+              </div>
+            ) : labResults.map(r => (
+              <div key={r.id} style={{ background: "#fff", borderRadius: 16, border: "1px solid #e2e8f0", padding: "16px 20px", boxShadow: "0 1px 4px rgba(0,0,0,0.03)", display: "flex", gap: 14, alignItems: "flex-start" }}>
+                <Pill status={r.status} label={t(`records.${r.status}`)} />
+                <div>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: "#0f172a", margin: "0 0 4px" }}>{r.testName}</p>
+                  <p style={{ fontSize: 12, color: "#94a3b8", margin: "0 0 6px" }}>{r.labName} · {r.date}</p>
+                  <p style={{ fontSize: 13, color: "#64748b", margin: 0 }}>{r.result}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* TELECONSULTATION */}
       {activeSection === "teleconsult" && (
         <div>
@@ -673,7 +701,7 @@ export default function PatientDashboard() {
         </div>
       )}
 
-      {activeSection !== "emergency" && activeSection !== "health_profile" && activeSection !== "appointments" && activeSection !== "my_team" && activeSection !== "teleconsult" && activeSection !== "chat" && <>
+      {activeSection !== "emergency" && activeSection !== "health_profile" && activeSection !== "appointments" && activeSection !== "my_team" && activeSection !== "teleconsult" && activeSection !== "chat" && activeSection !== "labs" && <>
       <div style={{
         borderRadius: 20, overflow: "hidden", marginBottom: 24, position: "relative",
         background: "linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #06b6d4 100%)",
