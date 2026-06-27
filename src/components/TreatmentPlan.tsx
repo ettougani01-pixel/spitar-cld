@@ -150,11 +150,10 @@ export function PatientTreatmentPlan({ patientId }: { patientId: string }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!patientId) return;
+    if (!patientId) { setLoading(false); return; }
     getDocs(query(collection(db, "treatment_plans"), where("patientId", "==", patientId))).then(snap => {
       setItems(snap.docs.map(d => ({ id: d.id, ...d.data() } as PlanItem)));
-      setLoading(false);
-    });
+    }).catch(() => {}).finally(() => setLoading(false));
   }, [patientId]);
 
   const byDay = DAYS.reduce<Record<string, PlanItem[]>>((acc, d) => {
