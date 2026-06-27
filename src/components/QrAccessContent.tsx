@@ -19,12 +19,14 @@ export function QrAccessContent() {
   const [token, setToken] = useState<QrToken | null>(null);
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [generating, setGenerating] = useState(false);
+  const [genError, setGenError] = useState("");
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const qrRef = useRef<HTMLDivElement>(null);
 
   const generateToken = async () => {
     if (!user) return;
     setGenerating(true);
+    setGenError("");
     try {
       const expiresAt = Date.now() + QR_DURATION_MS;
       const ref = await addDoc(collection(db, "qr_access_tokens"), {
@@ -37,6 +39,8 @@ export function QrAccessContent() {
       });
       setToken({ id: ref.id, patientId: user.uid, expiresAt, used: false });
       setSecondsLeft(Math.floor(QR_DURATION_MS / 1000));
+    } catch (e: unknown) {
+      setGenError(e instanceof Error ? e.message : "Failed to generate QR code. Please try again.");
     } finally {
       setGenerating(false);
     }
@@ -114,8 +118,9 @@ export function QrAccessContent() {
             </div>
             <Button onClick={generateToken} disabled={generating} className="w-full gap-2">
               <QrCode className="w-4 h-4" />
-              Generate QR Code
+              {generating ? "Generating..." : "Generate QR Code"}
             </Button>
+            {genError && <p style={{ fontSize: 13, color: "#dc2626", marginTop: 8, textAlign: "center" }}>{genError}</p>}
           </CardContent>
         </Card>
       ) : (

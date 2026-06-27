@@ -148,6 +148,25 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == doctorId;
     }
 
+    // ── QR Access Tokens ──────────────────────────────────────────────────
+    match /qr_access_tokens/{tokenId} {
+      allow create: if request.auth != null && request.resource.data.patientId == request.auth.uid;
+      allow read: if true;
+      allow update: if request.auth != null;
+      allow delete: if request.auth != null && resource.data.patientId == request.auth.uid;
+    }
+
+    // ── Treatment Plans ────────────────────────────────────────────────────
+    match /treatment_plans/{planId} {
+      allow read: if request.auth != null && (
+        resource.data.patientId == request.auth.uid ||
+        resource.data.doctorId == request.auth.uid
+      );
+      allow create: if request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'doctor';
+      allow delete: if request.auth != null && resource.data.doctorId == request.auth.uid;
+    }
+
     // ── Helper function ────────────────────────────────────────────────────
     function isAuthorizedForPatient(patientId) {
       let patient = get(/databases/$(database)/documents/users/$(patientId));
