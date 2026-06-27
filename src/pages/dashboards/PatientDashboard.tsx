@@ -40,7 +40,7 @@ import { PatientTreatmentPlan } from "@/components/TreatmentPlan";
 import { HealthReport } from "@/components/HealthReport";
 
 type Tab = "records" | "health_profile" | "labs" | "my_team" | "appointments" | "share_qr" | "pending_requests" | "teleconsult" | "referrals" | "summaries" | "emergency" | "report" | "chat" | "treatment";
-type Section = "overview" | "access" | "emergency" | "health_profile" | "appointments" | "my_team" | "teleconsult" | "chat" | "labs";
+type Section = "overview" | "access" | "emergency" | "health_profile" | "appointments" | "my_team" | "teleconsult" | "chat" | "labs" | "report";
 
 const STATUS = {
   normal:    { bg: "#dcfce7", color: "#16a34a" },
@@ -311,13 +311,13 @@ export default function PatientDashboard() {
     { label: t("dashboard.share_qr_quick"), href: "/dashboard", icon: QrCode, onClick: () => { setActiveSection("overview"); setActiveTab("share_qr"); }, active: activeSection === "overview" && activeTab === "share_qr" },
     { label: t("dashboard.health_profile_quick"), href: "/dashboard", icon: Heart, onClick: () => setActiveSection("health_profile"), active: activeSection === "health_profile" },
     { label: t("records.lab_results"), href: "/dashboard", icon: FlaskConical, onClick: () => setActiveSection("labs"), active: activeSection === "labs" },
+    { label: "Health Report", href: "/dashboard", icon: BarChart2, onClick: () => setActiveSection("report"), active: activeSection === "report" },
   ];
 
   const TABS: { key: Tab; label: string; icon: React.ElementType }[] = [
     { key: "records", label: t("records.medical_records"), icon: FileText },
     { key: "summaries", label: "Visit Summaries", icon: ClipboardList },
     { key: "referrals", label: "Referrals", icon: ArrowRight },
-    { key: "report", label: "Health Report", icon: BarChart2 },
     { key: "treatment", label: "Treatment Plan", icon: CalendarCheck },
   ];
 
@@ -649,6 +649,23 @@ export default function PatientDashboard() {
         </div>
       )}
 
+      {/* HEALTH REPORT */}
+      {activeSection === "report" && (
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+            <button onClick={() => setActiveSection("overview")} style={{ fontSize: 13, color: "#2563eb", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>
+              ← {t("nav.dashboard")}
+            </button>
+          </div>
+          <HealthReport
+            records={records}
+            labResults={labResults}
+            appointments={appointments}
+            patientName={user ? `${user.firstName} ${user.lastName}` : undefined}
+          />
+        </div>
+      )}
+
       {/* LAB RESULTS */}
       {activeSection === "labs" && (
         <div>
@@ -701,7 +718,7 @@ export default function PatientDashboard() {
         </div>
       )}
 
-      {activeSection !== "emergency" && activeSection !== "health_profile" && activeSection !== "appointments" && activeSection !== "my_team" && activeSection !== "teleconsult" && activeSection !== "chat" && activeSection !== "labs" && <>
+      {activeSection !== "emergency" && activeSection !== "health_profile" && activeSection !== "appointments" && activeSection !== "my_team" && activeSection !== "teleconsult" && activeSection !== "chat" && activeSection !== "labs" && activeSection !== "report" && <>
       <div style={{
         borderRadius: 20, overflow: "hidden", marginBottom: 24, position: "relative",
         background: "linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #06b6d4 100%)",
