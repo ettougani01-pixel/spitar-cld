@@ -169,12 +169,10 @@ service cloud.firestore {
 
     // ── Helper function ────────────────────────────────────────────────────
     function isAuthorizedForPatient(patientId) {
-      let patient = get(/databases/$(database)/documents/users/$(patientId));
-      if (patient.data.universalDoctorAccess == true &&
-          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'doctor') {
-        return true;
-      }
-      return exists(/databases/$(database)/documents/access_permissions/$(patientId + '_' + request.auth.uid));
+      return (
+        get(/databases/$(database)/documents/users/$(patientId)).data.universalDoctorAccess == true &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'doctor'
+      ) || exists(/databases/$(database)/documents/access_permissions/$(patientId + '_' + request.auth.uid));
     }
   }
 }
