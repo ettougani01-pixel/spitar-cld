@@ -727,5 +727,24 @@
     "unblock": "Retirer",
     "blocked_added": "Date bloquée",
     "blocked_removed": "Date débloquée"
+  },
+  "profile": {
+    "field_full_name": "Nom complet",
+    "field_email": "E-mail",
+    "field_phone": "Numéro de téléphone",
+    "field_city": "Ville",
+    "field_dob": "Date de naissance",
+    "field_blood_type": "Groupe sanguin",
+    "field_gender": "Genre",
+    "field_address": "Adresse",
+    "field_emergency_contact": "Contact d'urgence",
+    "field_allergies": "Allergies",
+    "field_medications": "Médicaments",
+    "field_family_history": "Antécédents familiaux",
+    "field_side_effects": "Effets secondaires",
+    "field_chronic": "Maladies chroniques",
+    "field_vaccinations": "Vaccinations",
+    "field_visits": "Visites médicales",
+    "field_pregnancy": "Grossesse"
   }
 }

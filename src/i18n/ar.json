@@ -728,5 +728,24 @@
     "unblock": "إزالة",
     "blocked_added": "تم حجب التاريخ",
     "blocked_removed": "تم إزالة الحجب"
+  },
+  "profile": {
+    "field_full_name": "الاسم الكامل",
+    "field_email": "البريد الإلكتروني",
+    "field_phone": "رقم الهاتف",
+    "field_city": "المدينة",
+    "field_dob": "تاريخ الميلاد",
+    "field_blood_type": "فصيلة الدم",
+    "field_gender": "الجنس",
+    "field_address": "العنوان",
+    "field_emergency_contact": "جهة الاتصال للطوارئ",
+    "field_allergies": "الحساسيات",
+    "field_medications": "الأدوية والمكملات",
+    "field_family_history": "التاريخ العائلي",
+    "field_side_effects": "الآثار الجانبية",
+    "field_chronic": "الأمراض المزمنة",
+    "field_vaccinations": "التطعيمات",
+    "field_visits": "الزيارات الطبية",
+    "field_pregnancy": "الحمل"
   }
 }

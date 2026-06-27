@@ -449,23 +449,23 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
   // ── completion tracking ──
   const u = userProfileData;
   const completionFields = [
-    { labelAr: "الاسم الكامل",         done: !!(u.firstName && u.lastName) },
-    { labelAr: "البريد الإلكتروني",    done: !!(u.email) },
-    { labelAr: "رقم الهاتف",          done: !!(u.phone) },
-    { labelAr: "المدينة",              done: !!(u.city) },
-    { labelAr: "تاريخ الميلاد",        done: !!(u.dateOfBirth) },
-    { labelAr: "فصيلة الدم",          done: !!(u.bloodType) },
-    { labelAr: "الجنس",               done: !!(u.gender) },
-    { labelAr: "العنوان",              done: !!(u.address) },
-    { labelAr: "جهة الاتصال للطوارئ", done: emergencyContacts.length > 0 },
-    { labelAr: "الحساسيات",            done: allergies.length > 0 },
-    { labelAr: "الأدوية والمكملات",    done: medications.length > 0 },
-    { labelAr: "التاريخ العائلي",      done: familyHistory.length > 0 },
-    { labelAr: "الآثار الجانبية",      done: sideEffects.length > 0 },
-    { labelAr: "الأمراض المزمنة",      done: chronicConditions.filter(c => c !== "pregnancy").length > 0 },
-    { labelAr: "التطعيمات",            done: vaccinations.length > 0 },
-    { labelAr: "الزيارات الطبية",      done: visits.length > 0 },
-    ...(isFemale ? [{ labelAr: "الحمل", done: chronicConditions.includes("pregnancy") }] : []),
+    { label: t("profile.field_full_name"),        done: !!(u.firstName && u.lastName) },
+    { label: t("profile.field_email"),            done: !!(u.email) },
+    { label: t("profile.field_phone"),            done: !!(u.phone) },
+    { label: t("profile.field_city"),             done: !!(u.city) },
+    { label: t("profile.field_dob"),              done: !!(u.dateOfBirth) },
+    { label: t("profile.field_blood_type"),       done: !!(u.bloodType) },
+    { label: t("profile.field_gender"),           done: !!(u.gender) },
+    { label: t("profile.field_address"),          done: !!(u.address) },
+    { label: t("profile.field_emergency_contact"),done: emergencyContacts.length > 0 },
+    { label: t("profile.field_allergies"),        done: allergies.length > 0 },
+    { label: t("profile.field_medications"),      done: medications.length > 0 },
+    { label: t("profile.field_family_history"),   done: familyHistory.length > 0 },
+    { label: t("profile.field_side_effects"),     done: sideEffects.length > 0 },
+    { label: t("profile.field_chronic"),          done: chronicConditions.filter(c => c !== "pregnancy").length > 0 },
+    { label: t("profile.field_vaccinations"),     done: vaccinations.length > 0 },
+    { label: t("profile.field_visits"),           done: visits.length > 0 },
+    ...(isFemale ? [{ label: t("profile.field_pregnancy"), done: chronicConditions.includes("pregnancy") }] : []),
   ];
   const completeness = Math.round((completionFields.filter(f => f.done).length / completionFields.length) * 100);
   const hasCritical = allergies.some(a => a.severity === "life_threatening" || a.severity === "severe");
@@ -575,10 +575,10 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
           <div style={{ height: "100%", width: `${completeness}%`, background: completeness === 100 ? "#16a34a" : "#ef4444", borderRadius: 99, transition: "width 0.5s" }} />
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "5px 16px" }}>
-          {completionFields.map(({ labelAr, done }) => (
-            <div key={labelAr} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: done ? "#16a34a" : "#9ca3af" }}>
+          {completionFields.map(({ label, done }) => (
+            <div key={label} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: done ? "#16a34a" : "#9ca3af" }}>
               <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 16, height: 16, borderRadius: "50%", background: done ? "#dcfce7" : "#f3f4f6", color: done ? "#16a34a" : "#9ca3af", fontSize: 10, fontWeight: 700, flexShrink: 0 }}>{done ? "✓" : "○"}</span>
-              <span style={{ direction: "rtl", textAlign: "right" }}>{labelAr}</span>
+              <span>{label}</span>
             </div>
           ))}
         </div>
