@@ -40,7 +40,7 @@ import { PatientTreatmentPlan } from "@/components/TreatmentPlan";
 import { HealthReport } from "@/components/HealthReport";
 
 type Tab = "records" | "health_profile" | "labs" | "my_team" | "appointments" | "share_qr" | "pending_requests" | "teleconsult" | "referrals" | "summaries" | "emergency" | "report" | "chat" | "treatment";
-type Section = "overview" | "access" | "emergency" | "health_profile" | "appointments" | "my_team" | "teleconsult" | "chat" | "labs" | "report";
+type Section = "overview" | "access" | "emergency" | "health_profile" | "appointments" | "my_team" | "teleconsult" | "chat" | "labs" | "report" | "share_qr";
 
 const STATUS = {
   normal:    { bg: "#dcfce7", color: "#16a34a" },
@@ -308,7 +308,7 @@ export default function PatientDashboard() {
     { label: t("nav.my_team"), href: "/dashboard", icon: Users, onClick: () => setActiveSection("my_team"), active: activeSection === "my_team" },
     { label: t("dashboard.emergency_card_quick"), href: "/dashboard", icon: ShieldAlert, onClick: () => setActiveSection("emergency"), active: activeSection === "emergency" },
     { label: t("dashboard.book_appointment_btn"), href: "/dashboard", icon: CalendarPlus, onClick: () => setActiveSection("appointments"), active: activeSection === "appointments" },
-    { label: t("dashboard.share_qr_quick"), href: "/dashboard", icon: QrCode, onClick: () => { setActiveSection("overview"); setActiveTab("share_qr"); }, active: activeSection === "overview" && activeTab === "share_qr" },
+    { label: t("dashboard.share_qr_quick"), href: "/dashboard", icon: QrCode, onClick: () => setActiveSection("share_qr"), active: activeSection === "share_qr" },
     { label: t("dashboard.health_profile_quick"), href: "/dashboard", icon: Heart, onClick: () => setActiveSection("health_profile"), active: activeSection === "health_profile" },
     { label: t("records.lab_results"), href: "/dashboard", icon: FlaskConical, onClick: () => setActiveSection("labs"), active: activeSection === "labs" },
     { label: "Health Report", href: "/dashboard", icon: BarChart2, onClick: () => setActiveSection("report"), active: activeSection === "report" },
@@ -649,6 +649,20 @@ export default function PatientDashboard() {
         </div>
       )}
 
+      {/* SHARE QR */}
+      {activeSection === "share_qr" && (
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+            <button onClick={() => setActiveSection("overview")} style={{ fontSize: 13, color: "#2563eb", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>
+              ← {t("nav.dashboard")}
+            </button>
+          </div>
+          <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e2e8f0", padding: 20 }}>
+            <QrAccessContent />
+          </div>
+        </div>
+      )}
+
       {/* HEALTH REPORT */}
       {activeSection === "report" && (
         <div>
@@ -718,7 +732,7 @@ export default function PatientDashboard() {
         </div>
       )}
 
-      {activeSection !== "emergency" && activeSection !== "health_profile" && activeSection !== "appointments" && activeSection !== "my_team" && activeSection !== "teleconsult" && activeSection !== "chat" && activeSection !== "labs" && activeSection !== "report" && <>
+      {activeSection !== "emergency" && activeSection !== "health_profile" && activeSection !== "appointments" && activeSection !== "my_team" && activeSection !== "teleconsult" && activeSection !== "chat" && activeSection !== "labs" && activeSection !== "report" && activeSection !== "share_qr" && <>
       <div style={{
         borderRadius: 20, overflow: "hidden", marginBottom: 24, position: "relative",
         background: "linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #06b6d4 100%)",
