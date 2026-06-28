@@ -746,6 +746,6 @@
     "field_vaccinations": "Vaccinations",
     "field_visits": "Medical Visits",
     "field_pregnancy": "Pregnancy",
-    "select_placeholder": "Select..."
+    "select_placeholder": "No chronic conditions"
   }
 }

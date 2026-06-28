@@ -747,6 +747,6 @@
     "field_vaccinations": "التطعيمات",
     "field_visits": "الزيارات الطبية",
     "field_pregnancy": "الحمل",
-    "select_placeholder": "اختر..."
+    "select_placeholder": "لا توجد أمراض مزمنة"
   }
 }

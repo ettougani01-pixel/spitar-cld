@@ -635,7 +635,7 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
             style={{ width: "100%", height: 40, padding: "0 12px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, cursor: "pointer", fontSize: 14, color: chronicConditions.length === 0 ? "#9ca3af" : "#0f172a", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
             <ChevronDown size={16} style={{ color: "#64748b", flexShrink: 0, transform: conditionsOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
             <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, textAlign: isAr ? "right" : "left", direction: isAr ? "rtl" : "ltr" }}>
-              {chronicConditions.length === 0 ? t("hp.select_placeholder") : chronicConditions.map(k => {
+              {chronicConditions.length === 0 ? t("profile.select_placeholder") : chronicConditions.map(k => {
                 const c = CHRONIC_CONDITIONS.find(x => x.key === k);
                 return c ? (isAr ? c.labelAr : c.label) : k === "pregnancy" ? t("profile.field_pregnancy") : k;
               }).join(isAr ? "، " : ", ")}
