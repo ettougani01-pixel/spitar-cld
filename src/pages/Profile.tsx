@@ -324,6 +324,15 @@ export default function Profile() {
                   </SelectContent>
                 </Select>
               </div>
+              {user.role === "patient" && (
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <FieldLabel>{t("profile.field_address")}</FieldLabel>
+                  <InputWrap icon={Home} color={meta.accentColor}>
+                    <input style={inp} value={address} onChange={e => setAddress(e.target.value)} placeholder={t("profile.address_placeholder")}
+                      onFocus={e => (e.target.style.borderColor = meta.accentColor)} onBlur={e => (e.target.style.borderColor = "#e2e8f0")} />
+                  </InputWrap>
+                </div>
+              )}
             </div>
           </CardSection>
 
@@ -361,13 +370,6 @@ export default function Profile() {
                         <SelectItem value="female">{t("profile.female")}</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-                  <div>
-                    <FieldLabel>{t("profile.field_address")}</FieldLabel>
-                    <InputWrap icon={Home} color="#ef4444">
-                      <input style={inp} value={address} onChange={e => setAddress(e.target.value)} placeholder={t("profile.address_placeholder")}
-                        onFocus={e => (e.target.style.borderColor = "#ef4444")} onBlur={e => (e.target.style.borderColor = "#e2e8f0")} />
-                    </InputWrap>
                   </div>
                 </div>
               </CardSection>
