@@ -75,7 +75,7 @@ function EmptyState({ icon: Icon, text }: { icon: React.ElementType; text: strin
 export default function PatientDashboard() {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<Tab>("records");
+  const [activeTab, setActiveTab] = useState<Tab>("treatment");
   const [activeSection, setActiveSection] = useState<Section>("overview");
 
   const [records, setRecords] = useState<MedicalRecord[]>([]);
