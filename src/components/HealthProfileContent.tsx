@@ -200,7 +200,7 @@ function SectionCard({ title, icon: Icon, iconColor, iconBg, children, addLabel,
   );
 }
 
-export function HealthProfileContent({ patientId: patientIdProp, readOnly = false, hideDocumentsAndIncidents = false, hideVitals = false }: { patientId?: string; readOnly?: boolean; hideDocumentsAndIncidents?: boolean; hideVitals?: boolean } = {}) {
+export function HealthProfileContent({ patientId: patientIdProp, readOnly = false, hideDocumentsAndIncidents = false, hideVitals = false, hideCompleteness = false }: { patientId?: string; readOnly?: boolean; hideDocumentsAndIncidents?: boolean; hideVitals?: boolean; hideCompleteness?: boolean } = {}) {
   const { t, i18n } = useTranslation();
   const isAr = i18n.language === "ar";
   const { user } = useAuth();
@@ -658,7 +658,7 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
       )}
 
       {/* ── Profile Completeness ── */}
-      <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 10, padding: "14px 16px", marginBottom: 12, boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+      {!hideCompleteness && <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 10, padding: "14px 16px", marginBottom: 12, boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
           <span style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>{t("hp.profile_completeness_label")}</span>
           <span style={{ fontSize: 15, fontWeight: 800, color: completeness === 100 ? "#16a34a" : "#dc2626" }}>{completeness}%</span>
@@ -674,7 +674,7 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
             </div>
           ))}
         </div>
-      </div>
+      </div>}
 
       {/* ── Action bar: SOS / Share / PDF ── */}
       {!readOnly && (

@@ -485,7 +485,7 @@ export default function Profile() {
         {/* Health sections */}
         {user.role === "patient" && (
           <div style={{ marginTop: 20 }}>
-            <HealthProfileContent hideDocumentsAndIncidents hideVitals />
+            <HealthProfileContent hideDocumentsAndIncidents hideVitals hideCompleteness />
           </div>
         )}
       </div>
