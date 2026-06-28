@@ -761,7 +761,7 @@ export default function PatientDashboard() {
         </div>
       )}
 
-      {activeSection !== "emergency" && activeSection !== "health_profile" && activeSection !== "appointments" && activeSection !== "my_team" && activeSection !== "teleconsult" && activeSection !== "chat" && activeSection !== "labs" && activeSection !== "report" && activeSection !== "share_qr" && <>
+      {activeSection !== "emergency" && activeSection !== "health_profile" && activeSection !== "appointments" && activeSection !== "my_team" && activeSection !== "teleconsult" && activeSection !== "chat" && activeSection !== "labs" && activeSection !== "report" && activeSection !== "share_qr" && activeSection !== "medical_records" && <>
       <div style={{
         borderRadius: 20, overflow: "hidden", marginBottom: 24, position: "relative",
         background: "linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #06b6d4 100%)",
