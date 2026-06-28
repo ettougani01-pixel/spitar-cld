@@ -332,7 +332,7 @@ export default function PatientDashboard() {
   const showCheckupBanner = !loading && (!lastRecord || new Date(lastRecord.createdAt) < sixMonthsAgo);
 
   const STATS = [
-    { label: t("records.medical_records"), value: records.length, icon: FileText, grad: "linear-gradient(135deg, #2563eb, #06b6d4)", onClick: (() => { setActiveSection("overview"); setActiveTab("records"); }) as (() => void) | undefined },
+    { label: t("records.medical_records"), value: records.length, icon: FileText, grad: "linear-gradient(135deg, #2563eb, #06b6d4)", onClick: (() => setActiveSection("medical_records")) as (() => void) | undefined },
     { label: t("records.lab_results"), value: labResults.length, icon: FlaskConical, grad: "linear-gradient(135deg, #0891b2, #16a34a)", onClick: () => { setActiveSection("overview"); setActiveTab("labs"); } },
     { label: t("nav.my_team"), value: permissions.length, icon: Users, grad: "linear-gradient(135deg, #7c3aed, #2563eb)", onClick: () => setActiveSection("my_team") },
     { label: t("dashboard.pending_requests"), value: accessRequests.length, icon: Clock, grad: "linear-gradient(135deg, #d97706, #f59e0b)", onClick: accessRequests.length > 0 ? () => { setActiveSection("overview"); setActiveTab("pending_requests"); } : undefined },
