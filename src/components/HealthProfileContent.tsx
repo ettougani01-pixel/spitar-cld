@@ -55,6 +55,89 @@ const CANCER_TYPES = [
   { key: "other_cancer",      label: "Other Cancer",         labelAr: "نوع آخر من السرطان" },
 ];
 
+const MOROCCO_VACCINES: { group: string; groupAr: string; vaccines: { name: string; nameAr: string }[] }[] = [
+  {
+    group: "First 24 hours",
+    groupAr: "الـ 24 ساعة الأولى",
+    vaccines: [
+      { name: "BCG (Tuberculosis)", nameAr: "BCG — لقاح السل" },
+      { name: "Hepatitis B — Dose 1", nameAr: "التهاب الكبد B — الجرعة 1" },
+      { name: "OPV — Dose 1", nameAr: "شلل الأطفال (فموي) — الجرعة 1" },
+    ],
+  },
+  {
+    group: "Month 2",
+    groupAr: "الشهر الثاني",
+    vaccines: [
+      { name: "Pentavalent — Dose 1", nameAr: "الخماسي — الجرعة 1" },
+      { name: "OPV — Dose 2", nameAr: "شلل الأطفال (فموي) — الجرعة 2" },
+      { name: "Pneumococcal — Dose 1", nameAr: "المكورات الرئوية — الجرعة 1" },
+      { name: "Rotavirus — Dose 1", nameAr: "فيروس الروتا — الجرعة 1" },
+    ],
+  },
+  {
+    group: "Month 3",
+    groupAr: "الشهر الثالث",
+    vaccines: [
+      { name: "Pentavalent — Dose 2", nameAr: "الخماسي — الجرعة 2" },
+      { name: "OPV — Dose 3", nameAr: "شلل الأطفال (فموي) — الجرعة 3" },
+      { name: "Rotavirus — Dose 2", nameAr: "فيروس الروتا — الجرعة 2" },
+    ],
+  },
+  {
+    group: "Month 4",
+    groupAr: "الشهر الرابع",
+    vaccines: [
+      { name: "Pentavalent — Dose 3", nameAr: "الخماسي — الجرعة 3" },
+      { name: "OPV — Dose 4", nameAr: "شلل الأطفال (فموي) — الجرعة 4" },
+      { name: "Pneumococcal — Dose 2", nameAr: "المكورات الرئوية — الجرعة 2" },
+    ],
+  },
+  {
+    group: "Month 9",
+    groupAr: "الشهر التاسع",
+    vaccines: [
+      { name: "MMR — Dose 1 (Measles/Rubella)", nameAr: "الحصبة والحميراء — الجرعة 1" },
+    ],
+  },
+  {
+    group: "Month 12",
+    groupAr: "الشهر الثاني عشر",
+    vaccines: [
+      { name: "Pneumococcal — Dose 3 (Booster)", nameAr: "المكورات الرئوية — الجرعة 3 (تذكير)" },
+    ],
+  },
+  {
+    group: "Month 18",
+    groupAr: "الشهر الثامن عشر",
+    vaccines: [
+      { name: "MMR — Dose 2 (Measles/Rubella)", nameAr: "الحصبة والحميراء — الجرعة 2" },
+      { name: "DTC-OPV Booster 1", nameAr: "الجرعة التذكيرية 1 (الخناق، الكزاز، السعال الديكي، شلل الأطفال)" },
+    ],
+  },
+  {
+    group: "Age 5",
+    groupAr: "سن 5 سنوات",
+    vaccines: [
+      { name: "DTC-OPV Booster 2", nameAr: "الجرعة التذكيرية 2 (الخناق، الكزاز، السعال الديكي، شلل الأطفال)" },
+    ],
+  },
+  {
+    group: "School Age (Girls)",
+    groupAr: "سن التمدرس (الفتيات)",
+    vaccines: [
+      { name: "HPV (Cervical Cancer Prevention)", nameAr: "HPV — لقاح سرطان عنق الرحم" },
+    ],
+  },
+  {
+    group: "Pregnant / Women",
+    groupAr: "الحوامل / النساء",
+    vaccines: [
+      { name: "Tetanus Toxoid", nameAr: "لقاح الكزاز" },
+    ],
+  },
+];
+
 // Drug interaction pairs (key1 + key2 → warning)
 const DRUG_INTERACTIONS: { a: string; b: string; warning: string }[] = [
   { a: "warfarin",    b: "aspirin",     warning: "خطر نزيف شديد — راجع طبيبك" },
@@ -1132,10 +1215,50 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
 
       {/* Vaccination */}
       <Dialog open={showVaccDialog} onOpenChange={setShowVaccDialog}>
-        <DialogContent>
+        <DialogContent style={{ maxWidth: 480 }}>
           <DialogHeader><DialogTitle>{t("hp.add_vacc_title")}</DialogTitle></DialogHeader>
           <div className="space-y-3 py-2">
-            <div className="space-y-2"><Label>{t("hp.vacc_name_label")}</Label><Input value={vaccForm.vaccineName} onChange={e => setVaccForm(f => ({ ...f, vaccineName: e.target.value }))} placeholder={t("hp.vacc_name_placeholder")} /></div>
+            {/* Moroccan schedule quick-select */}
+            <div>
+              <p style={{ fontSize: 12, fontWeight: 600, color: "#64748b", marginBottom: 8 }}>
+                {isAr ? "🇲🇦 الجدول الوطني للتلقيح — اختر سريعاً:" : "🇲🇦 National Schedule — Quick select:"}
+              </p>
+              <div style={{ maxHeight: 200, overflowY: "auto", border: "1px solid #e5e7eb", borderRadius: 8, padding: "6px 8px", background: "#f9fafb" }}>
+                {MOROCCO_VACCINES.map(group => (
+                  <div key={group.group} style={{ marginBottom: 8 }}>
+                    <p style={{ fontSize: 10, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", margin: "4px 0 4px", paddingLeft: 2 }}>
+                      {isAr ? group.groupAr : group.group}
+                    </p>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                      {group.vaccines.map(v => {
+                        const displayName = isAr ? v.nameAr : v.name;
+                        const isSelected = vaccForm.vaccineName === displayName;
+                        return (
+                          <button
+                            key={v.name}
+                            type="button"
+                            onClick={() => setVaccForm(f => ({ ...f, vaccineName: isSelected ? "" : displayName }))}
+                            style={{
+                              fontSize: 11, fontWeight: 500, padding: "3px 9px", borderRadius: 20, cursor: "pointer",
+                              border: `1px solid ${isSelected ? "#2563eb" : "#d1d5db"}`,
+                              background: isSelected ? "#eff6ff" : "#fff",
+                              color: isSelected ? "#2563eb" : "#374151",
+                              transition: "all 0.1s",
+                            }}
+                          >
+                            {isSelected && "✓ "}{displayName}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>{t("hp.vacc_name_label")}</Label>
+              <Input value={vaccForm.vaccineName} onChange={e => setVaccForm(f => ({ ...f, vaccineName: e.target.value }))} placeholder={t("hp.vacc_name_placeholder")} />
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2"><Label>{t("hp.vacc_date_label")}</Label><Input type="date" value={vaccForm.vaccinedAt} onChange={e => setVaccForm(f => ({ ...f, vaccinedAt: e.target.value }))} /></div>
               <div className="space-y-2"><Label>{t("hp.next_dose_opt")}</Label><Input type="date" value={vaccForm.nextDoseAt} onChange={e => setVaccForm(f => ({ ...f, nextDoseAt: e.target.value }))} /></div>
