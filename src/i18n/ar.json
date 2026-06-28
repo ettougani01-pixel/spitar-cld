@@ -746,6 +746,7 @@
     "field_chronic": "الأمراض المزمنة",
     "field_vaccinations": "التطعيمات",
     "field_visits": "الزيارات الطبية",
-    "field_pregnancy": "الحمل"
+    "field_pregnancy": "الحمل",
+    "select_placeholder": "اختر..."
   }
 }

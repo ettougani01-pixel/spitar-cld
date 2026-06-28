@@ -34,25 +34,25 @@ const CHRONIC_CONDITIONS: { key: ChronicCondition; label: string; labelAr: strin
 ];
 
 const CANCER_TYPES = [
-  { key: "breast_cancer",     labelAr: "سرطان الثدي" },
-  { key: "lung_cancer",       labelAr: "سرطان الرئة" },
-  { key: "prostate_cancer",   labelAr: "سرطان البروستاتا" },
-  { key: "colorectal_cancer", labelAr: "سرطان القولون والمستقيم" },
-  { key: "leukemia",          labelAr: "سرطان الدم (اللوكيميا)" },
-  { key: "lymphoma",          labelAr: "سرطان الغدد الليمفاوية" },
-  { key: "liver_cancer",      labelAr: "سرطان الكبد" },
-  { key: "cervical_cancer",   labelAr: "سرطان عنق الرحم" },
-  { key: "brain_cancer",      labelAr: "سرطان الدماغ" },
-  { key: "stomach_cancer",    labelAr: "سرطان المعدة" },
-  { key: "pancreatic_cancer", labelAr: "سرطان البنكرياس" },
-  { key: "skin_cancer",       labelAr: "سرطان الجلد" },
-  { key: "kidney_cancer",     labelAr: "سرطان الكلى" },
-  { key: "thyroid_cancer",    labelAr: "سرطان الغدة الدرقية" },
-  { key: "bladder_cancer",    labelAr: "سرطان المثانة" },
-  { key: "bone_cancer",       labelAr: "سرطان العظام" },
-  { key: "ovarian_cancer",    labelAr: "سرطان المبيض" },
-  { key: "uterine_cancer",    labelAr: "سرطان الرحم" },
-  { key: "other_cancer",      labelAr: "نوع آخر من السرطان" },
+  { key: "breast_cancer",     label: "Breast Cancer",        labelAr: "سرطان الثدي" },
+  { key: "lung_cancer",       label: "Lung Cancer",          labelAr: "سرطان الرئة" },
+  { key: "prostate_cancer",   label: "Prostate Cancer",      labelAr: "سرطان البروستاتا" },
+  { key: "colorectal_cancer", label: "Colorectal Cancer",    labelAr: "سرطان القولون والمستقيم" },
+  { key: "leukemia",          label: "Leukemia",             labelAr: "سرطان الدم (اللوكيميا)" },
+  { key: "lymphoma",          label: "Lymphoma",             labelAr: "سرطان الغدد الليمفاوية" },
+  { key: "liver_cancer",      label: "Liver Cancer",         labelAr: "سرطان الكبد" },
+  { key: "cervical_cancer",   label: "Cervical Cancer",      labelAr: "سرطان عنق الرحم" },
+  { key: "brain_cancer",      label: "Brain Cancer",         labelAr: "سرطان الدماغ" },
+  { key: "stomach_cancer",    label: "Stomach Cancer",       labelAr: "سرطان المعدة" },
+  { key: "pancreatic_cancer", label: "Pancreatic Cancer",    labelAr: "سرطان البنكرياس" },
+  { key: "skin_cancer",       label: "Skin Cancer",          labelAr: "سرطان الجلد" },
+  { key: "kidney_cancer",     label: "Kidney Cancer",        labelAr: "سرطان الكلى" },
+  { key: "thyroid_cancer",    label: "Thyroid Cancer",       labelAr: "سرطان الغدة الدرقية" },
+  { key: "bladder_cancer",    label: "Bladder Cancer",       labelAr: "سرطان المثانة" },
+  { key: "bone_cancer",       label: "Bone Cancer",          labelAr: "سرطان العظام" },
+  { key: "ovarian_cancer",    label: "Ovarian Cancer",       labelAr: "سرطان المبيض" },
+  { key: "uterine_cancer",    label: "Uterine Cancer",       labelAr: "سرطان الرحم" },
+  { key: "other_cancer",      label: "Other Cancer",         labelAr: "نوع آخر من السرطان" },
 ];
 
 // Drug interaction pairs (key1 + key2 → warning)
@@ -118,7 +118,8 @@ function SectionCard({ title, icon: Icon, iconColor, iconBg, children, addLabel,
 }
 
 export function HealthProfileContent({ patientId: patientIdProp, readOnly = false, hideDocumentsAndIncidents = false, hideVitals = false }: { patientId?: string; readOnly?: boolean; hideDocumentsAndIncidents?: boolean; hideVitals?: boolean } = {}) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isAr = i18n.language === "ar";
   const { user } = useAuth();
 
   // ── existing state ──
@@ -528,8 +529,8 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
                   <p style={{ fontSize: 13, color: "#0f172a", margin: 0 }}>
                     {chronicConditions.filter(c => c !== "pregnancy").map(k => {
                       const c = CHRONIC_CONDITIONS.find(x => x.key === k);
-                      return c ? c.labelAr : k;
-                    }).join("، ")}
+                      return c ? (isAr ? c.labelAr : c.label) : k;
+                    }).join(isAr ? "، " : ", ")}
                   </p>
                 </div>
               )}
@@ -633,11 +634,11 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
           <button type="button" onClick={() => setConditionsOpen(o => !o)}
             style={{ width: "100%", height: 40, padding: "0 12px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, cursor: "pointer", fontSize: 14, color: chronicConditions.length === 0 ? "#9ca3af" : "#0f172a", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
             <ChevronDown size={16} style={{ color: "#64748b", flexShrink: 0, transform: conditionsOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
-            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, textAlign: "right", direction: "rtl" }}>
-              {chronicConditions.length === 0 ? "اختر..." : chronicConditions.map(k => {
+            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, textAlign: isAr ? "right" : "left", direction: isAr ? "rtl" : "ltr" }}>
+              {chronicConditions.length === 0 ? t("hp.select_placeholder") : chronicConditions.map(k => {
                 const c = CHRONIC_CONDITIONS.find(x => x.key === k);
-                return c ? c.labelAr : k === "pregnancy" ? "الحمل" : k;
-              }).join("، ")}
+                return c ? (isAr ? c.labelAr : c.label) : k === "pregnancy" ? t("profile.field_pregnancy") : k;
+              }).join(isAr ? "، " : ", ")}
             </span>
           </button>
 
@@ -657,29 +658,30 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
                 {chronicConditions.length === 0 && <span style={{ position: "absolute", left: 8, color: "#2563eb", fontSize: 14, fontWeight: 700 }}>✓</span>}
                 {t("hp.no_chronic_label")}
               </button>
-              {CHRONIC_CONDITIONS.map(({ key, labelAr }) => {
+              {CHRONIC_CONDITIONS.map(({ key, label, labelAr }) => {
                 const active = chronicConditions.includes(key);
+                const displayLabel = isAr ? labelAr : label;
                 return (
                   <div key={key}>
                     <button type="button" onClick={() => toggleCondition(key)} disabled={savingConditions}
-                      style={{ width: "100%", padding: "8px 32px 8px 8px", display: "flex", alignItems: "center", justifyContent: "flex-end", background: "none", border: "none", cursor: "pointer", fontSize: 14, color: "#0f172a", position: "relative", borderRadius: 4 }}
+                      style={{ width: "100%", padding: "8px 32px 8px 8px", display: "flex", alignItems: "center", justifyContent: isAr ? "flex-end" : "flex-start", background: "none", border: "none", cursor: "pointer", fontSize: 14, color: "#0f172a", position: "relative", borderRadius: 4 }}
                       onMouseEnter={e => (e.currentTarget.style.background = "#f1f5f9")}
                       onMouseLeave={e => (e.currentTarget.style.background = "none")}>
-                      {active && <span style={{ position: "absolute", left: 8, color: "#2563eb", fontSize: 14, fontWeight: 700 }}>✓</span>}
-                      {labelAr}
+                      {active && <span style={{ position: "absolute", [isAr ? "left" : "right"]: 8, color: "#2563eb", fontSize: 14, fontWeight: 700 }}>✓</span>}
+                      {displayLabel}
                     </button>
                     {key === "cancer" && active && (
                       <div style={{ background: "#fafafa", borderTop: "1px solid #f1f5f9", borderBottom: "1px solid #f1f5f9" }}>
-                        <p style={{ fontSize: 11, fontWeight: 600, color: "#94a3b8", margin: 0, padding: "6px 32px 4px 8px", textAlign: "right" }}>{t("hp.cancer_type_label")}</p>
-                        {CANCER_TYPES.map(({ key: ck, labelAr: cAr }) => {
+                        <p style={{ fontSize: 11, fontWeight: 600, color: "#94a3b8", margin: 0, padding: "6px 32px 4px 8px", textAlign: isAr ? "right" : "left" }}>{t("hp.cancer_type_label")}</p>
+                        {CANCER_TYPES.map(({ key: ck, label: cLabel, labelAr: cAr }) => {
                           const cActive = cancerTypes.includes(ck);
                           return (
                             <button key={ck} type="button" onClick={() => toggleCancerType(ck)} disabled={savingConditions}
-                              style={{ width: "100%", padding: "6px 48px 6px 8px", display: "flex", justifyContent: "flex-end", background: "none", border: "none", cursor: "pointer", fontSize: 13, color: "#374151", position: "relative", borderRadius: 4 }}
+                              style={{ width: "100%", padding: "6px 48px 6px 8px", display: "flex", justifyContent: isAr ? "flex-end" : "flex-start", background: "none", border: "none", cursor: "pointer", fontSize: 13, color: "#374151", position: "relative", borderRadius: 4 }}
                               onMouseEnter={e => (e.currentTarget.style.background = "#f1f5f9")}
                               onMouseLeave={e => (e.currentTarget.style.background = "none")}>
-                              {cActive && <span style={{ position: "absolute", left: 8, color: "#2563eb", fontSize: 13, fontWeight: 700 }}>✓</span>}
-                              {cAr}
+                              {cActive && <span style={{ position: "absolute", [isAr ? "left" : "right"]: 8, color: "#2563eb", fontSize: 13, fontWeight: 700 }}>✓</span>}
+                              {isAr ? cAr : cLabel}
                             </button>
                           );
                         })}

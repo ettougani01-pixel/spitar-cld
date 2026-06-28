@@ -745,6 +745,7 @@
     "field_chronic": "Maladies chroniques",
     "field_vaccinations": "Vaccinations",
     "field_visits": "Visites médicales",
-    "field_pregnancy": "Grossesse"
+    "field_pregnancy": "Grossesse",
+    "select_placeholder": "Sélectionner..."
   }
 }
