@@ -625,6 +625,8 @@
     "stroke": "Stroke",
     "side_effects_journal": "Side Effects Journal",
     "no_side_effects": "No side effects logged",
+    "no_side_effects_confirm": "I have no side effects",
+    "undo_no_side_effects": "Undo — I may have side effects",
     "log_side_effect": "Log Side Effect",
     "side_effect_added": "Side effect logged",
     "treatment_name": "Treatment / Medication name",

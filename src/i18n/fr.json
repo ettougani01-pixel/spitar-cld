@@ -625,6 +625,8 @@
     "stroke": "AVC",
     "side_effects_journal": "Journal des Effets Secondaires",
     "no_side_effects": "Aucun effet secondaire enregistré",
+    "no_side_effects_confirm": "Je n'ai aucun effet secondaire",
+    "undo_no_side_effects": "Annuler — j'ai peut-être des effets secondaires",
     "log_side_effect": "Enregistrer un Effet Secondaire",
     "side_effect_added": "Effet secondaire enregistré",
     "treatment_name": "Nom du Traitement / Médicament",

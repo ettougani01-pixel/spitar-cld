@@ -626,6 +626,8 @@
     "stroke": "السكتة الدماغية",
     "side_effects_journal": "مذكرة الآثار الجانبية",
     "no_side_effects": "لا توجد آثار جانبية مسجلة",
+    "no_side_effects_confirm": "لا أعاني من أي آثار جانبية",
+    "undo_no_side_effects": "إلغاء — قد تكون لدي آثار جانبية",
     "log_side_effect": "تسجيل أثر جانبي",
     "side_effect_added": "تم تسجيل الأثر الجانبي",
     "treatment_name": "اسم العلاج / الدواء",

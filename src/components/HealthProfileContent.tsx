@@ -129,6 +129,7 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
   const [familyHistory,  setFamilyHistory]  = useState<FamilyHistory[]>([]);
   const [familyHistoryAnswered, setFamilyHistoryAnswered] = useState(false);
   const [sideEffects,    setSideEffects]    = useState<SideEffect[]>([]);
+  const [sideEffectsAnswered, setSideEffectsAnswered] = useState(false);
   const [vitals,         setVitals]         = useState<Vital[]>([]);
   const [documents,      setDocuments]      = useState<PatientDocument[]>([]);
   const [activeVitalTab, setActiveVitalTab] = useState("blood_pressure");
@@ -240,6 +241,7 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
           setChronicConditionsAnswered(!!data.chronicConditionsAnswered);
           setAllergiesAnswered(!!data.allergiesAnswered);
           setFamilyHistoryAnswered(!!data.familyHistoryAnswered);
+          setSideEffectsAnswered(!!data.sideEffectsAnswered);
         }
         if (vacRes.status === "fulfilled") setVaccinations(vacRes.value.docs.map(d => ({ id: d.id, ...d.data() } as Vaccination)).sort((a, b) => b.vaccinedAt.localeCompare(a.vaccinedAt)));
         if (visRes.status === "fulfilled") setVisits(visRes.value.docs.map(d => ({ id: d.id, ...d.data() } as MedicalVisit)).sort((a, b) => b.visitDate.localeCompare(a.visitDate)));
@@ -468,7 +470,7 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
     { label: t("profile.field_allergies"),        done: allergies.length > 0 || allergiesAnswered },
     { label: t("profile.field_medications"),      done: medications.length > 0 },
     { label: t("profile.field_family_history"),   done: familyHistory.length > 0 || familyHistoryAnswered },
-    { label: t("profile.field_side_effects"),     done: sideEffects.length > 0 },
+    { label: t("profile.field_side_effects"),     done: sideEffects.length > 0 || sideEffectsAnswered },
     { label: t("profile.field_chronic"),          done: chronicConditions.filter(c => c !== "pregnancy").length > 0 || chronicConditionsAnswered },
     { label: t("profile.field_vaccinations"),     done: vaccinations.length > 0 },
     { label: t("profile.field_visits"),           done: visits.length > 0 },
@@ -808,7 +810,23 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
       {/* ── Side Effects ── */}
       <SectionCard title={t("hp.side_effects_journal")} icon={Zap} iconColor="#d97706" iconBg="#fffbeb" addLabel={readOnly ? "" : t("hp.log_side_effect")} onAdd={() => !readOnly && setShowSideEffectDialog(true)}>
         {sideEffects.length === 0 ? (
-          <p style={{ fontSize: 13, color: "#9ca3af", textAlign: "center", padding: "16px 0" }}>{t("hp.no_side_effects")}</p>
+          <div style={{ textAlign: "center", padding: "12px 0" }}>
+            <p style={{ fontSize: 13, color: "#9ca3af", margin: "0 0 10px" }}>{t("hp.no_side_effects")}</p>
+            {!readOnly && (
+              <button
+                onClick={async () => {
+                  const uid = patientIdProp ?? user?.uid;
+                  if (!uid) return;
+                  const val = !sideEffectsAnswered;
+                  await updateDoc(doc(db, "users", uid), { sideEffectsAnswered: val });
+                  setSideEffectsAnswered(val);
+                }}
+                style={{ fontSize: 12, fontWeight: 600, color: sideEffectsAnswered ? "#dc2626" : "#16a34a", background: sideEffectsAnswered ? "#fee2e2" : "#dcfce7", border: `1px solid ${sideEffectsAnswered ? "#fca5a5" : "#bbf7d0"}`, borderRadius: 8, padding: "6px 14px", cursor: "pointer" }}
+              >
+                {sideEffectsAnswered ? `✕ ${t("hp.undo_no_side_effects")}` : `✓ ${t("hp.no_side_effects_confirm")}`}
+              </button>
+            )}
+          </div>
         ) : sideEffects.map(s => (
           <div key={s.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid #f3f4f6" }}>
             <div>
