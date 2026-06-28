@@ -304,7 +304,8 @@ export default function PatientDashboard() {
   };
 
   const navItems = [
-    { label: t("nav.dashboard"), href: "/dashboard", icon: Sparkles, onClick: () => { setActiveSection("overview"); setActiveTab("records"); }, active: activeSection === "overview" },
+    { label: t("nav.dashboard"), href: "/dashboard", icon: Sparkles, onClick: () => { setActiveSection("overview"); setActiveTab("records"); }, active: activeSection === "overview" && activeTab !== "records" },
+    { label: t("records.medical_records"), href: "/dashboard", icon: FileText, onClick: () => { setActiveSection("overview"); setActiveTab("records"); }, active: activeSection === "overview" && activeTab === "records" },
     { label: t("nav.my_team"), href: "/dashboard", icon: Users, onClick: () => setActiveSection("my_team"), active: activeSection === "my_team" },
     { label: t("dashboard.emergency_card_quick"), href: "/dashboard", icon: ShieldAlert, onClick: () => setActiveSection("emergency"), active: activeSection === "emergency" },
     { label: t("dashboard.book_appointment_btn"), href: "/dashboard", icon: CalendarPlus, onClick: () => setActiveSection("appointments"), active: activeSection === "appointments" },
