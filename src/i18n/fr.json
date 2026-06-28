@@ -574,6 +574,8 @@
     "high_alert_warning": "ALERTE HAUTE — Allergies sévères ou mortelles détectées. Vérifiez avant de prescrire.",
     "allergies": "Allergies",
     "no_allergies": "Aucune allergie enregistrée",
+    "no_allergies_confirm": "Je n'ai aucune allergie",
+    "no_allergies_confirmed": "Aucune allergie confirmée",
     "add_allergy": "Ajouter une Allergie",
     "allergy_added": "Allergie ajoutée",
     "allergen_name": "Nom de l'allergène",

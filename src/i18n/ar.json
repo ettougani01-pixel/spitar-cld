@@ -575,6 +575,8 @@
     "high_alert_warning": "تنبيه عالي — حساسيات خطيرة أو مهددة للحياة. تحقق قبل الوصف.",
     "allergies": "الحساسيات",
     "no_allergies": "لا توجد حساسيات مسجلة",
+    "no_allergies_confirm": "ليس لدي حساسية",
+    "no_allergies_confirmed": "تم تأكيد: لا توجد حساسيات",
     "add_allergy": "إضافة حساسية",
     "allergy_added": "تم إضافة الحساسية",
     "allergen_name": "اسم المادة المسببة",

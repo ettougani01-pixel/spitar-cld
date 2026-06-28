@@ -574,6 +574,8 @@
     "high_alert_warning": "HIGH ALERT — Severe or life-threatening allergies on file. Verify before prescribing.",
     "allergies": "Allergies",
     "no_allergies": "No allergies recorded",
+    "no_allergies_confirm": "I have no allergies",
+    "no_allergies_confirmed": "No allergies confirmed",
     "add_allergy": "Add Allergy",
     "allergy_added": "Allergy added",
     "allergen_name": "Allergen name",
