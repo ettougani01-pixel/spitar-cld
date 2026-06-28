@@ -95,25 +95,29 @@ export default function Profile() {
     return [{ name: "", phone: "", relation: "Other" }];
   });
 
-  const [healthCounts, setHealthCounts] = useState({ allergies: 0, medications: 0, familyHistory: 0, sideEffects: 0 });
+  const [healthCounts, setHealthCounts] = useState({ allergies: 0, medications: 0, familyHistory: 0, sideEffects: 0, vaccinations: 0, visits: 0 });
   const [firestoreProfile, setFirestoreProfile] = useState<Record<string, any>>({});
 
   useEffect(() => {
     if (!user || user.role !== "patient") return;
     const uid = user.uid;
     async function load() {
-      const [aR, mR, fR, sR, uR] = await Promise.allSettled([
+      const [aR, mR, fR, sR, uR, vacR, visR] = await Promise.allSettled([
         getDocs(query(collection(db, "patient_allergies"),     where("patientId", "==", uid))),
         getDocs(query(collection(db, "patient_medications"),   where("patientId", "==", uid))),
         getDocs(query(collection(db, "patient_family_history"),where("patientId", "==", uid))),
         getDocs(query(collection(db, "patient_side_effects"),  where("patientId", "==", uid))),
         getDoc(doc(db, "users", uid)),
+        getDocs(query(collection(db, "patient_vaccinations"),  where("patientId", "==", uid))),
+        getDocs(query(collection(db, "patient_visits"),        where("patientId", "==", uid))),
       ]);
       setHealthCounts({
         allergies:     aR.status === "fulfilled" ? aR.value.size : 0,
         medications:   mR.status === "fulfilled" ? mR.value.size : 0,
         familyHistory: fR.status === "fulfilled" ? fR.value.size : 0,
         sideEffects:   sR.status === "fulfilled" ? sR.value.size : 0,
+        vaccinations:  vacR.status === "fulfilled" ? vacR.value.size : 0,
+        visits:        visR.status === "fulfilled" ? visR.value.size : 0,
       });
       if (uR.status === "fulfilled" && uR.value.exists()) {
         const d = uR.value.data();
@@ -148,11 +152,13 @@ export default function Profile() {
     { label: "الجنس",                 done: !!(gender) },
     { label: "العنوان",               done: !!(address) },
     { label: "جهة الاتصال للطوارئ",   done: hasEmergencyContact },
-    { label: "الحساسيات",             done: healthCounts.allergies > 0 },
+    { label: "الحساسيات",             done: healthCounts.allergies > 0 || !!(firestoreProfile.allergiesAnswered) },
     { label: "الأدوية والمكملات",     done: healthCounts.medications > 0 },
-    { label: "التاريخ العائلي الطبي", done: healthCounts.familyHistory > 0 },
-    { label: "مذكرة الآثار الجانبية", done: healthCounts.sideEffects > 0 },
-    { label: "الأمراض المزمنة",       done: chronicConditions.filter(c => c !== "pregnancy").length > 0 },
+    { label: "التاريخ العائلي الطبي", done: healthCounts.familyHistory > 0 || !!(firestoreProfile.familyHistoryAnswered) },
+    { label: "مذكرة الآثار الجانبية", done: healthCounts.sideEffects > 0 || !!(firestoreProfile.sideEffectsAnswered) },
+    { label: "الأمراض المزمنة",       done: chronicConditions.filter(c => c !== "pregnancy").length > 0 || !!(firestoreProfile.chronicConditionsAnswered) },
+    { label: "التلقيحات",             done: healthCounts.vaccinations > 0 },
+    { label: "الزيارات الطبية",       done: healthCounts.visits > 0 },
     ...(isFemale ? [{ label: "الحمل", done: chronicConditions.includes("pregnancy") }] : []),
   ] : [];
   const doneCnt = completionFields.filter(f => f.done).length;
