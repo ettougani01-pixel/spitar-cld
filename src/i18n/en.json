@@ -607,6 +607,8 @@
     "prescription_med": "Prescription",
     "family_history": "Family Medical History",
     "no_family_history": "No family history recorded",
+    "no_family_history_confirm": "I have no family medical history",
+    "no_family_history_confirmed": "No family history confirmed",
     "add_family_entry": "Add Family Entry",
     "family_added": "Family entry added",
     "relation": "Relation",

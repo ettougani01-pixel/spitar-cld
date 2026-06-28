@@ -127,6 +127,7 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
   const [allergiesAnswered, setAllergiesAnswered] = useState(false);
   const [medications,    setMedications]    = useState<Medication[]>([]);
   const [familyHistory,  setFamilyHistory]  = useState<FamilyHistory[]>([]);
+  const [familyHistoryAnswered, setFamilyHistoryAnswered] = useState(false);
   const [sideEffects,    setSideEffects]    = useState<SideEffect[]>([]);
   const [vitals,         setVitals]         = useState<Vital[]>([]);
   const [documents,      setDocuments]      = useState<PatientDocument[]>([]);
@@ -238,6 +239,7 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
           setCancerTypes((data.cancerTypes ?? []) as string[]);
           setChronicConditionsAnswered(!!data.chronicConditionsAnswered);
           setAllergiesAnswered(!!data.allergiesAnswered);
+          setFamilyHistoryAnswered(!!data.familyHistoryAnswered);
         }
         if (vacRes.status === "fulfilled") setVaccinations(vacRes.value.docs.map(d => ({ id: d.id, ...d.data() } as Vaccination)).sort((a, b) => b.vaccinedAt.localeCompare(a.vaccinedAt)));
         if (visRes.status === "fulfilled") setVisits(visRes.value.docs.map(d => ({ id: d.id, ...d.data() } as MedicalVisit)).sort((a, b) => b.visitDate.localeCompare(a.visitDate)));
@@ -465,7 +467,7 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
     { label: t("profile.field_emergency_contact"),done: emergencyContacts.length > 0 },
     { label: t("profile.field_allergies"),        done: allergies.length > 0 || allergiesAnswered },
     { label: t("profile.field_medications"),      done: medications.length > 0 },
-    { label: t("profile.field_family_history"),   done: familyHistory.length > 0 },
+    { label: t("profile.field_family_history"),   done: familyHistory.length > 0 || familyHistoryAnswered },
     { label: t("profile.field_side_effects"),     done: sideEffects.length > 0 },
     { label: t("profile.field_chronic"),          done: chronicConditions.filter(c => c !== "pregnancy").length > 0 || chronicConditionsAnswered },
     { label: t("profile.field_vaccinations"),     done: vaccinations.length > 0 },
@@ -774,7 +776,23 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
       {/* ── Family History ── */}
       <SectionCard title={t("hp.family_history")} icon={Users} iconColor="#0891b2" iconBg="#ecfeff" addLabel={readOnly ? "" : t("hp.add_family_entry")} onAdd={() => !readOnly && setShowFamilyDialog(true)}>
         {familyHistory.length === 0 ? (
-          <p style={{ fontSize: 13, color: "#9ca3af", textAlign: "center", padding: "16px 0" }}>{t("hp.no_family_history")}</p>
+          <div style={{ textAlign: "center", padding: "12px 0" }}>
+            <p style={{ fontSize: 13, color: "#9ca3af", margin: "0 0 10px" }}>{t("hp.no_family_history")}</p>
+            {!readOnly && !familyHistoryAnswered && (
+              <button
+                onClick={async () => {
+                  const uid = patientIdProp ?? user?.uid;
+                  if (!uid) return;
+                  await updateDoc(doc(db, "users", uid), { familyHistoryAnswered: true });
+                  setFamilyHistoryAnswered(true);
+                }}
+                style={{ fontSize: 12, fontWeight: 600, color: "#16a34a", background: "#dcfce7", border: "1px solid #bbf7d0", borderRadius: 8, padding: "6px 14px", cursor: "pointer" }}
+              >
+                ✓ {t("hp.no_family_history_confirm")}
+              </button>
+            )}
+            {familyHistoryAnswered && <p style={{ fontSize: 12, color: "#16a34a", margin: 0 }}>✓ {t("hp.no_family_history_confirmed")}</p>}
+          </div>
         ) : familyHistory.map(f => (
           <div key={f.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid #f3f4f6" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>

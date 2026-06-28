@@ -607,6 +607,8 @@
     "prescription_med": "Sur ordonnance",
     "family_history": "Antécédents Familiaux",
     "no_family_history": "Aucun antécédent familial enregistré",
+    "no_family_history_confirm": "Je n'ai pas d'antécédents familiaux",
+    "no_family_history_confirmed": "Aucun antécédent familial confirmé",
     "add_family_entry": "Ajouter un Antécédent",
     "family_added": "Antécédent ajouté",
     "relation": "Relation",
