@@ -143,23 +143,23 @@ export default function Profile() {
     || !!(firestoreProfile.emergencyContactName || firestoreProfile.emergencyContactPhone);
 
   const completionFields = user.role === "patient" ? [
-    { label: "الاسم الكامل",          done: !!(firstName && lastName) },
-    { label: "البريد الإلكتروني",      done: !!(user.email) },
-    { label: "رقم الهاتف",            done: !!(phone) },
-    { label: "المدينة",               done: !!(city) },
-    { label: "تاريخ الميلاد",          done: !!(dateOfBirth) },
-    { label: "فصيلة الدم",            done: !!(bloodType) },
-    { label: "الجنس",                 done: !!(gender) },
-    { label: "العنوان",               done: !!(address) },
-    { label: "جهة الاتصال للطوارئ",   done: hasEmergencyContact },
-    { label: "الحساسيات",             done: healthCounts.allergies > 0 || !!(firestoreProfile.allergiesAnswered) },
-    { label: "الأدوية والمكملات",     done: healthCounts.medications > 0 },
-    { label: "التاريخ العائلي الطبي", done: healthCounts.familyHistory > 0 || !!(firestoreProfile.familyHistoryAnswered) },
-    { label: "مذكرة الآثار الجانبية", done: healthCounts.sideEffects > 0 || !!(firestoreProfile.sideEffectsAnswered) },
-    { label: "الأمراض المزمنة",       done: chronicConditions.filter(c => c !== "pregnancy").length > 0 || !!(firestoreProfile.chronicConditionsAnswered) },
-    { label: "التلقيحات",             done: healthCounts.vaccinations > 0 },
-    { label: "الزيارات الطبية",       done: healthCounts.visits > 0 },
-    ...(isFemale ? [{ label: "الحمل", done: chronicConditions.includes("pregnancy") }] : []),
+    { label: t("profile.field_full_name"),         done: !!(firstName && lastName) },
+    { label: t("profile.field_email"),             done: !!(user.email) },
+    { label: t("profile.field_phone"),             done: !!(phone) },
+    { label: t("profile.field_city"),              done: !!(city) },
+    { label: t("profile.field_dob"),               done: !!(dateOfBirth) },
+    { label: t("profile.field_blood_type"),        done: !!(bloodType) },
+    { label: t("profile.field_gender"),            done: !!(gender) },
+    { label: t("profile.field_address"),           done: !!(address) },
+    { label: t("profile.field_emergency_contact"), done: hasEmergencyContact },
+    { label: t("profile.field_allergies"),         done: healthCounts.allergies > 0 || !!(firestoreProfile.allergiesAnswered) },
+    { label: t("profile.field_medications"),       done: healthCounts.medications > 0 },
+    { label: t("profile.field_family_history"),    done: healthCounts.familyHistory > 0 || !!(firestoreProfile.familyHistoryAnswered) },
+    { label: t("profile.field_side_effects"),      done: healthCounts.sideEffects > 0 || !!(firestoreProfile.sideEffectsAnswered) },
+    { label: t("profile.field_chronic"),           done: chronicConditions.filter(c => c !== "pregnancy").length > 0 || !!(firestoreProfile.chronicConditionsAnswered) },
+    { label: t("profile.field_vaccinations"),      done: healthCounts.vaccinations > 0 },
+    { label: t("profile.field_visits"),            done: healthCounts.visits > 0 },
+    ...(isFemale ? [{ label: t("profile.field_pregnancy"), done: chronicConditions.includes("pregnancy") }] : []),
   ] : [];
   const doneCnt = completionFields.filter(f => f.done).length;
   const completeness = completionFields.length > 0 ? Math.round((doneCnt / completionFields.length) * 100) : 0;
@@ -246,7 +246,7 @@ export default function Profile() {
                     <span style={{ fontSize: 13, fontWeight: 800, color: isComplete ? "#16a34a" : "#ef4444" }}>{completeness}%</span>
                   </div>
                 </div>
-                <p style={{ fontSize: 10, fontWeight: 600, color: "#94a3b8", margin: "6px 0 0", textAlign: "center" }}>اكتمال</p>
+                <p style={{ fontSize: 10, fontWeight: 600, color: "#94a3b8", margin: "6px 0 0", textAlign: "center" }}>{t("profile.completion_label")}</p>
               </div>
             )}
           </div>
@@ -255,8 +255,8 @@ export default function Profile() {
           {user.role === "patient" && (
             <div style={{ marginTop: 20, paddingTop: 18, borderTop: "1px solid #f1f5f9" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em" }}>اكتمال البروفايل</span>
-                <span style={{ fontSize: 12, fontWeight: 700, color: isComplete ? "#16a34a" : "#ef4444" }}>{doneCnt}/{completionFields.length} حقل</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em" }}>{t("profile.profile_completeness")}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: isComplete ? "#16a34a" : "#ef4444" }}>{t("profile.fields_done", { done: doneCnt, total: completionFields.length })}</span>
               </div>
               {/* Progress bar */}
               <div style={{ height: 6, background: "#f1f5f9", borderRadius: 99, overflow: "hidden", marginBottom: 14 }}>
@@ -284,40 +284,40 @@ export default function Profile() {
         <form onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
           {/* Basic Information */}
-          <CardSection title="المعلومات الأساسية" icon={User} accent={meta.accentColor}>
+          <CardSection title={t("profile.basic_info")} icon={User} accent={meta.accentColor}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
               <div>
-                <FieldLabel>الاسم الأول</FieldLabel>
+                <FieldLabel>{t("profile.first_name")}</FieldLabel>
                 <InputWrap icon={User} color={meta.accentColor}>
                   <input style={inp} value={firstName} onChange={e => setFirstName(e.target.value)} required
                     onFocus={e => (e.target.style.borderColor = meta.accentColor)} onBlur={e => (e.target.style.borderColor = "#e2e8f0")} />
                 </InputWrap>
               </div>
               <div>
-                <FieldLabel>الاسم الأخير</FieldLabel>
+                <FieldLabel>{t("profile.last_name")}</FieldLabel>
                 <InputWrap icon={User} color={meta.accentColor}>
                   <input style={inp} value={lastName} onChange={e => setLastName(e.target.value)} required
                     onFocus={e => (e.target.style.borderColor = meta.accentColor)} onBlur={e => (e.target.style.borderColor = "#e2e8f0")} />
                 </InputWrap>
               </div>
               <div style={{ gridColumn: "1 / -1" }}>
-                <FieldLabel>البريد الإلكتروني</FieldLabel>
+                <FieldLabel>{t("profile.field_email")}</FieldLabel>
                 <InputWrap icon={Mail}>
                   <input style={disabledInp} value={user.email} disabled />
                 </InputWrap>
               </div>
               <div>
-                <FieldLabel>رقم الهاتف</FieldLabel>
+                <FieldLabel>{t("profile.field_phone")}</FieldLabel>
                 <InputWrap icon={Phone} color={meta.accentColor}>
                   <input style={inp} type="tel" value={phone} onChange={e => setPhone(e.target.value)}
                     onFocus={e => (e.target.style.borderColor = meta.accentColor)} onBlur={e => (e.target.style.borderColor = "#e2e8f0")} />
                 </InputWrap>
               </div>
               <div>
-                <FieldLabel>المدينة</FieldLabel>
+                <FieldLabel>{t("profile.field_city")}</FieldLabel>
                 <Select value={city} onValueChange={setCity}>
                   <SelectTrigger style={{ height: 46, borderRadius: 12, border: "1.5px solid #e2e8f0", background: "#fff", fontSize: 14 }}>
-                    <SelectValue placeholder="اختر المدينة" />
+                    <SelectValue placeholder={t("profile.select_city")} />
                   </SelectTrigger>
                   <SelectContent>
                     {CITIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
@@ -330,20 +330,20 @@ export default function Profile() {
           {/* Patient: Health Info */}
           {user.role === "patient" && (
             <>
-              <CardSection title="المعلومات الصحية" icon={Heart} accent="#ef4444">
+              <CardSection title={t("profile.health_info")} icon={Heart} accent="#ef4444">
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
                   <div>
-                    <FieldLabel>تاريخ الميلاد</FieldLabel>
+                    <FieldLabel>{t("profile.field_dob")}</FieldLabel>
                     <InputWrap icon={Calendar} color="#ef4444">
                       <input style={inp} type="date" value={dateOfBirth} onChange={e => setDateOfBirth(e.target.value)}
                         onFocus={e => (e.target.style.borderColor = "#ef4444")} onBlur={e => (e.target.style.borderColor = "#e2e8f0")} />
                     </InputWrap>
                   </div>
                   <div>
-                    <FieldLabel>فصيلة الدم</FieldLabel>
+                    <FieldLabel>{t("profile.field_blood_type")}</FieldLabel>
                     <Select value={bloodType} onValueChange={setBloodType}>
                       <SelectTrigger style={{ height: 46, borderRadius: 12, border: "1.5px solid #e2e8f0", background: "#fff", fontSize: 14 }}>
-                        <SelectValue placeholder="اختر" />
+                        <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         {BLOOD_TYPES.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
@@ -351,21 +351,21 @@ export default function Profile() {
                     </Select>
                   </div>
                   <div>
-                    <FieldLabel>الجنس</FieldLabel>
+                    <FieldLabel>{t("profile.field_gender")}</FieldLabel>
                     <Select value={gender} onValueChange={setGender}>
                       <SelectTrigger style={{ height: 46, borderRadius: 12, border: "1.5px solid #e2e8f0", background: "#fff", fontSize: 14 }}>
-                        <SelectValue placeholder="اختر" />
+                        <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="male">ذكر — Male</SelectItem>
-                        <SelectItem value="female">أنثى — Female</SelectItem>
+                        <SelectItem value="male">{t("profile.male")}</SelectItem>
+                        <SelectItem value="female">{t("profile.female")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <FieldLabel>العنوان</FieldLabel>
+                    <FieldLabel>{t("profile.field_address")}</FieldLabel>
                     <InputWrap icon={Home} color="#ef4444">
-                      <input style={inp} value={address} onChange={e => setAddress(e.target.value)} placeholder="العنوان الكامل"
+                      <input style={inp} value={address} onChange={e => setAddress(e.target.value)} placeholder={t("profile.address_placeholder")}
                         onFocus={e => (e.target.style.borderColor = "#ef4444")} onBlur={e => (e.target.style.borderColor = "#e2e8f0")} />
                     </InputWrap>
                   </div>
@@ -373,14 +373,14 @@ export default function Profile() {
               </CardSection>
 
               {/* Emergency Contacts */}
-              <CardSection title="جهات الاتصال للطوارئ" icon={AlertCircle} accent="#f97316">
+              <CardSection title={t("profile.emergency_contacts")} icon={AlertCircle} accent="#f97316">
                 <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 14 }}>
                   <button
                     type="button"
                     onClick={() => setEmergencyContacts(p => [...p, { name: "", phone: "", relation: "Other" }])}
                     style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 10, background: "#fff7ed", border: "1.5px solid #fed7aa", color: "#f97316", fontSize: 13, fontWeight: 700, cursor: "pointer" }}
                   >
-                    <Plus size={14} /> إضافة شخص
+                    <Plus size={14} /> {t("profile.add_contact")}
                   </button>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -391,7 +391,7 @@ export default function Profile() {
                           <div style={{ width: 26, height: 26, borderRadius: 8, background: "#fed7aa", display: "flex", alignItems: "center", justifyContent: "center" }}>
                             <UserCheck size={13} style={{ color: "#f97316" }} />
                           </div>
-                          <span style={{ fontSize: 13, fontWeight: 700, color: "#ea580c" }}>جهة الاتصال {i + 1}</span>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: "#ea580c" }}>{t("profile.contact_number", { n: i + 1 })}</span>
                         </div>
                         {emergencyContacts.length > 1 && (
                           <button type="button" onClick={() => setEmergencyContacts(p => p.filter((_, idx) => idx !== i))}
@@ -402,7 +402,7 @@ export default function Profile() {
                       </div>
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                         <div>
-                          <FieldLabel>الاسم الكامل</FieldLabel>
+                          <FieldLabel>{t("profile.field_full_name")}</FieldLabel>
                           <InputWrap icon={User} color="#f97316">
                             <input style={inp} value={ec.name}
                               onChange={e => setEmergencyContacts(p => p.map((c, idx) => idx === i ? { ...c, name: e.target.value } : c))}
@@ -411,7 +411,7 @@ export default function Profile() {
                           </InputWrap>
                         </div>
                         <div>
-                          <FieldLabel>رقم الهاتف</FieldLabel>
+                          <FieldLabel>{t("profile.field_phone")}</FieldLabel>
                           <InputWrap icon={Phone} color="#f97316">
                             <input style={inp} type="tel" value={ec.phone}
                               onChange={e => setEmergencyContacts(p => p.map((c, idx) => idx === i ? { ...c, phone: e.target.value } : c))}
@@ -420,7 +420,7 @@ export default function Profile() {
                           </InputWrap>
                         </div>
                         <div style={{ gridColumn: "1 / -1" }}>
-                          <FieldLabel>العلاقة</FieldLabel>
+                          <FieldLabel>{t("profile.relation")}</FieldLabel>
                           <Select value={ec.relation} onValueChange={val => setEmergencyContacts(p => p.map((c, idx) => idx === i ? { ...c, relation: val } : c))}>
                             <SelectTrigger style={{ height: 46, borderRadius: 12, border: "1.5px solid #e2e8f0", background: "#fff", fontSize: 14 }}>
                               <SelectValue />
@@ -440,24 +440,24 @@ export default function Profile() {
 
           {/* Doctor: Professional */}
           {user.role === "doctor" && (
-            <CardSection title="التفاصيل المهنية" icon={Briefcase} accent="#7c3aed">
+            <CardSection title={t("profile.professional_details")} icon={Briefcase} accent="#7c3aed">
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 <div>
-                  <FieldLabel>التخصص</FieldLabel>
+                  <FieldLabel>{t("dashboard.specialty")}</FieldLabel>
                   <input style={{ ...disabledInp, paddingLeft: 14 }} value={(user as DoctorProfile).specialty ?? ""} disabled />
-                  <p style={{ fontSize: 11, color: "#94a3b8", margin: "4px 0 0" }}>تواصل مع المسؤول لتغيير تخصصك</p>
+                  <p style={{ fontSize: 11, color: "#94a3b8", margin: "4px 0 0" }}>{t("profile.specialty_change_hint")}</p>
                 </div>
                 <div>
-                  <FieldLabel>نبذة تعريفية</FieldLabel>
+                  <FieldLabel>{t("profile.bio")}</FieldLabel>
                   <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3}
-                    placeholder="وصف مختصر عن ممارستك الطبية..."
+                    placeholder={t("profile.bio_placeholder")}
                     style={{ ...inpNoIcon, height: "auto", padding: "12px 14px", resize: "none", lineHeight: 1.7 }}
                     onFocus={e => (e.target.style.borderColor = "#7c3aed")} onBlur={e => (e.target.style.borderColor = "#e2e8f0")} />
                 </div>
                 <div>
-                  <FieldLabel>رسوم الاستشارة (درهم)</FieldLabel>
+                  <FieldLabel>{t("profile.consultation_fee")}</FieldLabel>
                   <input style={inpNoIcon} type="number" value={consultationFee} onChange={e => setConsultationFee(e.target.value)}
-                    placeholder="مثال: 300"
+                    placeholder={t("profile.fee_placeholder")}
                     onFocus={e => (e.target.style.borderColor = "#7c3aed")} onBlur={e => (e.target.style.borderColor = "#e2e8f0")} />
                 </div>
               </div>
@@ -474,10 +474,10 @@ export default function Profile() {
             transition: "all 0.25s", boxShadow: `0 6px 20px ${meta.accentColor}40`,
           }}>
             {saving
-              ? <><Loader2 size={18} style={{ animation: "spin 1s linear infinite" }} /> جارٍ الحفظ...</>
+              ? <><Loader2 size={18} style={{ animation: "spin 1s linear infinite" }} /> {t("profile.saving")}</>
               : saved
-              ? <><CheckCircle2 size={18} /> تم الحفظ بنجاح!</>
-              : "حفظ التغييرات"
+              ? <><CheckCircle2 size={18} /> {t("profile.saved_success")}</>
+              : t("profile.save_changes")
             }
           </button>
         </form>
