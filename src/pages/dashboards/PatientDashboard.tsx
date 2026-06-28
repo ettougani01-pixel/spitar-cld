@@ -316,7 +316,6 @@ export default function PatientDashboard() {
   ];
 
   const TABS: { key: Tab; label: string; icon: React.ElementType }[] = [
-    { key: "records", label: t("records.medical_records"), icon: FileText },
     { key: "summaries", label: "Visit Summaries", icon: ClipboardList },
     { key: "referrals", label: "Referrals", icon: ArrowRight },
     { key: "treatment", label: "Treatment Plan", icon: CalendarCheck },
