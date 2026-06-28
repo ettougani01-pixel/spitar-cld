@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { QRCodeSVG } from "qrcode.react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { collection, query, where, getDocs, limit, getCountFromServer } from "firebase/firestore";
@@ -71,6 +73,8 @@ const SUPPORTED_CITIES = [
 
 export default function Landing() {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const permanentQrUrl = user ? `${window.location.origin}/emergency/${user.uid}` : null;
   const statsRef = useRef<HTMLDivElement>(null);
   const [statsStarted, setStatsStarted] = useState(false);
   const [tab, setTab] = useState<Tab>("doctors");
@@ -148,19 +152,23 @@ export default function Landing() {
 
           {/* Emergency Card Visual */}
           <div style={{ display: "flex", justifyContent: "center", marginBottom: 32 }}>
-            <div style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 20, padding: "16px 24px", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", gap: 16, maxWidth: 400, textAlign: "left" }}>
-              <div style={{ width: 52, height: 52, borderRadius: 12, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <QrCode size={26} color="#7ee8f5" />
+            <div style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 20, padding: "16px 24px", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", gap: 16, maxWidth: 420, textAlign: "left" }}>
+              {/* QR box */}
+              <div style={{ width: 72, height: 72, borderRadius: 14, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, padding: 4 }}>
+                {permanentQrUrl ? (
+                  <QRCodeSVG value={permanentQrUrl} size={64} level="H" />
+                ) : (
+                  <QrCode size={32} color="#2563eb" />
+                )}
               </div>
-              <div>
-                <p style={{ color: "#7ee8f5", fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", margin: 0 }}>EMERGENCY CARD</p>
-                <p style={{ color: "#fff", fontSize: 14, fontWeight: 700, margin: "3px 0 2px" }}>Partagez votre dossier médical</p>
-                <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 12, margin: 0 }}>QR · Lien 48h · Accès instantané</p>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 4, flexShrink: 0 }}>
-                {["A+","Diabète","Aspirine ⚠️"].map(tag => (
-                  <span key={tag} style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: "rgba(255,255,255,0.15)", color: "#fff", whiteSpace: "nowrap" }}>{tag}</span>
-                ))}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ color: "#7ee8f5", fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", margin: 0 }}>{t("landing.emergency_card_label") || "EMERGENCY CARD"}</p>
+                <p style={{ color: "#fff", fontSize: 14, fontWeight: 700, margin: "3px 0 2px" }}>
+                  {user ? `${user.firstName} ${user.lastName}` : t("landing.emergency_card_title")}
+                </p>
+                <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 12, margin: 0 }}>
+                  {permanentQrUrl ? t("landing.emergency_card_sub_auth") || "Permanent QR · Instant Access" : t("landing.emergency_card_sub")}
+                </p>
               </div>
             </div>
           </div>
