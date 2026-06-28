@@ -715,20 +715,20 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
         {allergies.length === 0 ? (
           <div style={{ textAlign: "center", padding: "12px 0" }}>
             <p style={{ fontSize: 13, color: "#9ca3af", margin: "0 0 10px" }}>{t("hp.no_allergies")}</p>
-            {!readOnly && !allergiesAnswered && (
+            {!readOnly && (
               <button
                 onClick={async () => {
                   const uid = patientIdProp ?? user?.uid;
                   if (!uid) return;
-                  await updateDoc(doc(db, "users", uid), { allergiesAnswered: true });
-                  setAllergiesAnswered(true);
+                  const val = !allergiesAnswered;
+                  await updateDoc(doc(db, "users", uid), { allergiesAnswered: val });
+                  setAllergiesAnswered(val);
                 }}
-                style={{ fontSize: 12, fontWeight: 600, color: "#16a34a", background: "#dcfce7", border: "1px solid #bbf7d0", borderRadius: 8, padding: "6px 14px", cursor: "pointer" }}
+                style={{ fontSize: 12, fontWeight: 600, color: allergiesAnswered ? "#dc2626" : "#16a34a", background: allergiesAnswered ? "#fee2e2" : "#dcfce7", border: `1px solid ${allergiesAnswered ? "#fca5a5" : "#bbf7d0"}`, borderRadius: 8, padding: "6px 14px", cursor: "pointer" }}
               >
-                ✓ {t("hp.no_allergies_confirm")}
+                {allergiesAnswered ? `✕ ${t("hp.undo_no_allergies")}` : `✓ ${t("hp.no_allergies_confirm")}`}
               </button>
             )}
-            {allergiesAnswered && <p style={{ fontSize: 12, color: "#16a34a", margin: 0 }}>✓ {t("hp.no_allergies_confirmed")}</p>}
           </div>
         ) : allergies.map(a => {
           const sev = SEVERITY_COLORS[a.severity as SeverityLevel] || { bg: "#f3f4f6", color: "#6b7280" };
@@ -778,20 +778,20 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
         {familyHistory.length === 0 ? (
           <div style={{ textAlign: "center", padding: "12px 0" }}>
             <p style={{ fontSize: 13, color: "#9ca3af", margin: "0 0 10px" }}>{t("hp.no_family_history")}</p>
-            {!readOnly && !familyHistoryAnswered && (
+            {!readOnly && (
               <button
                 onClick={async () => {
                   const uid = patientIdProp ?? user?.uid;
                   if (!uid) return;
-                  await updateDoc(doc(db, "users", uid), { familyHistoryAnswered: true });
-                  setFamilyHistoryAnswered(true);
+                  const val = !familyHistoryAnswered;
+                  await updateDoc(doc(db, "users", uid), { familyHistoryAnswered: val });
+                  setFamilyHistoryAnswered(val);
                 }}
-                style={{ fontSize: 12, fontWeight: 600, color: "#16a34a", background: "#dcfce7", border: "1px solid #bbf7d0", borderRadius: 8, padding: "6px 14px", cursor: "pointer" }}
+                style={{ fontSize: 12, fontWeight: 600, color: familyHistoryAnswered ? "#dc2626" : "#16a34a", background: familyHistoryAnswered ? "#fee2e2" : "#dcfce7", border: `1px solid ${familyHistoryAnswered ? "#fca5a5" : "#bbf7d0"}`, borderRadius: 8, padding: "6px 14px", cursor: "pointer" }}
               >
-                ✓ {t("hp.no_family_history_confirm")}
+                {familyHistoryAnswered ? `✕ ${t("hp.undo_no_family_history")}` : `✓ ${t("hp.no_family_history_confirm")}`}
               </button>
             )}
-            {familyHistoryAnswered && <p style={{ fontSize: 12, color: "#16a34a", margin: 0 }}>✓ {t("hp.no_family_history_confirmed")}</p>}
           </div>
         ) : familyHistory.map(f => (
           <div key={f.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid #f3f4f6" }}>
