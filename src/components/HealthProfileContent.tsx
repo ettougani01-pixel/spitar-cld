@@ -133,6 +133,7 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
   const [loading,        setLoading]        = useState(true);
   const [userProfileData,setUserProfileData]= useState<Record<string, any>>({});
   const [chronicConditions, setChronicConditions] = useState<ChronicCondition[]>([]);
+  const [chronicConditionsAnswered, setChronicConditionsAnswered] = useState(false);
   const [cancerTypes,    setCancerTypes]    = useState<string[]>([]);
   const [savingConditions, setSavingConditions] = useState(false);
   const [conditionsOpen, setConditionsOpen] = useState(false);
@@ -234,6 +235,7 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
           setUserProfileData(data);
           setChronicConditions((data.chronicConditions ?? []) as ChronicCondition[]);
           setCancerTypes((data.cancerTypes ?? []) as string[]);
+          setChronicConditionsAnswered(!!data.chronicConditionsAnswered);
         }
         if (vacRes.status === "fulfilled") setVaccinations(vacRes.value.docs.map(d => ({ id: d.id, ...d.data() } as Vaccination)).sort((a, b) => b.vaccinedAt.localeCompare(a.vaccinedAt)));
         if (visRes.status === "fulfilled") setVisits(visRes.value.docs.map(d => ({ id: d.id, ...d.data() } as MedicalVisit)).sort((a, b) => b.visitDate.localeCompare(a.visitDate)));
@@ -257,7 +259,7 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
     if (!uid || readOnly) return;
     setSavingConditions(true);
     const updated = chronicConditions.includes(key) ? chronicConditions.filter(c => c !== key) : [...chronicConditions, key];
-    try { await updateDoc(doc(db, "users", uid), { chronicConditions: updated }); setChronicConditions(updated); }
+    try { await updateDoc(doc(db, "users", uid), { chronicConditions: updated, chronicConditionsAnswered: true }); setChronicConditions(updated); setChronicConditionsAnswered(true); }
     finally { setSavingConditions(false); }
   };
 
@@ -463,7 +465,7 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
     { label: t("profile.field_medications"),      done: medications.length > 0 },
     { label: t("profile.field_family_history"),   done: familyHistory.length > 0 },
     { label: t("profile.field_side_effects"),     done: sideEffects.length > 0 },
-    { label: t("profile.field_chronic"),          done: chronicConditions.filter(c => c !== "pregnancy").length > 0 },
+    { label: t("profile.field_chronic"),          done: chronicConditions.filter(c => c !== "pregnancy").length > 0 || chronicConditionsAnswered },
     { label: t("profile.field_vaccinations"),     done: vaccinations.length > 0 },
     { label: t("profile.field_visits"),           done: visits.length > 0 },
     ...(isFemale ? [{ label: t("profile.field_pregnancy"), done: chronicConditions.includes("pregnancy") }] : []),
@@ -649,7 +651,7 @@ export function HealthProfileContent({ patientId: patientIdProp, readOnly = fals
                   const uid = patientIdProp ?? user?.uid;
                   if (!uid || savingConditions) return;
                   setSavingConditions(true);
-                  try { await updateDoc(doc(db, "users", uid), { chronicConditions: [], cancerTypes: [] }); setChronicConditions([]); setCancerTypes([]); }
+                  try { await updateDoc(doc(db, "users", uid), { chronicConditions: [], cancerTypes: [], chronicConditionsAnswered: true }); setChronicConditions([]); setCancerTypes([]); setChronicConditionsAnswered(true); }
                   finally { setSavingConditions(false); }
                 }}
                 style={{ width: "100%", padding: "8px 32px 8px 8px", display: "flex", alignItems: "center", justifyContent: "flex-end", background: "none", border: "none", cursor: "pointer", fontSize: 14, color: "#0f172a", position: "relative", borderRadius: 4 }}
