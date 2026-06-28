@@ -305,7 +305,7 @@ export default function PatientDashboard() {
 
   const navItems = [
     { label: t("nav.dashboard"), href: "/dashboard", icon: Sparkles, onClick: () => { setActiveSection("overview"); setActiveTab("records"); }, active: activeSection === "overview" && activeTab !== "records" },
-    { label: t("records.medical_records"), href: "/dashboard", icon: FileText, onClick: () => { setActiveSection("overview"); setActiveTab("records"); }, active: activeSection === "overview" && activeTab === "records" },
+    { label: t("records.medical_records"), href: "/dashboard", icon: FileText, onClick: () => setActiveSection("medical_records"), active: activeSection === "medical_records" },
     { label: t("nav.my_team"), href: "/dashboard", icon: Users, onClick: () => setActiveSection("my_team"), active: activeSection === "my_team" },
     { label: t("dashboard.emergency_card_quick"), href: "/dashboard", icon: ShieldAlert, onClick: () => setActiveSection("emergency"), active: activeSection === "emergency" },
     { label: t("dashboard.book_appointment_btn"), href: "/dashboard", icon: CalendarPlus, onClick: () => setActiveSection("appointments"), active: activeSection === "appointments" },
@@ -399,6 +399,34 @@ export default function PatientDashboard() {
             </button>
           </div>
           <EmergencyCardManager />
+        </div>
+      )}
+
+      {/* ── MEDICAL RECORDS SECTION ── */}
+      {activeSection === "medical_records" && (
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+            <button onClick={() => setActiveSection("overview")} style={{ fontSize: 13, color: "#2563eb", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>
+              ← {t("nav.dashboard")}
+            </button>
+            <h2 style={{ fontSize: 16, fontWeight: 700, color: "#0f172a", margin: 0 }}>{t("records.medical_records")}</h2>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {records.length === 0 ? (
+              <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e2e8f0" }}>
+                <EmptyState icon={FileText} text={t("common.no_data")} />
+              </div>
+            ) : records.map(r => (
+              <div key={r.id} style={{ background: "#fff", borderRadius: 16, border: "1px solid #e2e8f0", padding: "16px 20px", boxShadow: "0 1px 4px rgba(0,0,0,0.03)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 20, background: "#ede9fe", color: "#7c3aed" }}>{t(`records.type_${r.type}`)}</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: "#0f172a" }}>{r.title}</span>
+                </div>
+                <p style={{ fontSize: 12, color: "#94a3b8", margin: "0 0 6px" }}>Dr. {r.doctorName} · {r.date}</p>
+                <p style={{ fontSize: 13, color: "#64748b", margin: 0, lineHeight: 1.6 }}>{r.description}</p>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
