@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "app.vercel.spitar_cld.twa",
+        "sha256_cert_fingerprints": ["47:CA:01:99:67:2C:9C:22:F4:32:65:10:1A:C0:FC:33:81:99:DC:41:97:45:F9:AE:3B:3C:AC:44:E9:96:AD:1E"]
+      }
+    }]
