@@ -3,6 +3,6 @@
       "target": {
         "namespace": "android_app",
         "package_name": "app.vercel.spitar_cld.twa",
-        "sha256_cert_fingerprints": ["47:CA:01:99:67:2C:9C:22:F4:32:65:10:1A:C0:FC:33:81:99:DC:41:97:45:F9:AE:3B:3C:AC:44:E9:96:AD:1E"]
+        "sha256_cert_fingerprints": ["AA:37:97:68:24:A5:19:9E:3B:EE:D6:2C:C6:22:84:48:45:5E:18:C6:16:99:2F:18:C7:4C:3D:66:FE:3E:9D:D7"]
       }
     }]
