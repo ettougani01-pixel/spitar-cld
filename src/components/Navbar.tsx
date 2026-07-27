@@ -12,7 +12,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LayoutDashboard, User, LogOut, ChevronDown, HeartPulse, QrCode } from "lucide-react";
-import { SpitarLogoMark } from "./SpitarLogoMark";
 
 export function Navbar() {
   const { t } = useTranslation();
@@ -25,7 +24,7 @@ export function Navbar() {
         <div className="flex h-16 items-center justify-between gap-4">
           <Link to="/">
             <div className="flex items-center gap-2 cursor-pointer">
-              <SpitarLogoMark size={34} />
+              <img src="/logo.png" alt="SPITAR" style={{ width: 38, height: 38, objectFit: "contain" }} />
               <span className="text-xl font-extrabold text-[#0057B8] tracking-tight">SPITAR</span>
             </div>
           </Link>

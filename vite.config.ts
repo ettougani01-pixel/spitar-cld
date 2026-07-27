@@ -10,7 +10,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.svg", "logo.png"],
+      includeAssets: ["logo.png", "favicon.png"],
       manifest: {
         name: "SPITAR CLD",
         short_name: "SPITAR",
