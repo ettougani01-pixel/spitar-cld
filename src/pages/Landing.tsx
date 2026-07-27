@@ -87,6 +87,13 @@ export default function Landing() {
   const [stats, setStats] = useState({ p: 10000, d: 500, h: 120, l: 80 });
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [partnerOffset, setPartnerOffset] = useState(0);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   const pC = useCountUp(stats.p, 2000, statsStarted);
   const dC = useCountUp(stats.d, 2000, statsStarted);
@@ -321,7 +328,7 @@ export default function Landing() {
           <p style={{ fontSize: 11, fontWeight: 800, color: "#0057B8", letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 48 }}>
             {t("landing.stat_trust")}
           </p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 32 }}>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: isMobile ? 16 : 32 }}>
             {[
               { n: pC, label: t("landing.stat_patients"), sub: t("landing.stat_patients_sub"), color: "#0057B8", bg: "#eff6ff", Icon: Users },
               { n: dC, label: t("landing.stat_doctors"), sub: t("landing.stat_doctors_sub"), color: "#0891b2", bg: "#ecfeff", Icon: Stethoscope },
@@ -348,7 +355,7 @@ export default function Landing() {
             <p style={{ fontSize: 11, fontWeight: 800, color: "#0057B8", letterSpacing: "0.18em", textTransform: "uppercase", margin: "0 0 12px" }}>{t("landing.section_difference")}</p>
             <h2 style={{ fontSize: 36, fontWeight: 900, color: "#0f172a", margin: 0 }}>{t("landing.comparison_title")}</h2>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 20 }}>
             {/* Without */}
             <div style={{ background: "#fff", border: "2px solid #fecaca", borderRadius: 20, padding: 28 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
@@ -416,7 +423,7 @@ export default function Landing() {
       {/* ─── FOR DOCTORS ────────────────────────────────────────────────── */}
       <div style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)", padding: "80px 16px" }}>
         <div style={{ maxWidth: 1000, margin: "0 auto" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 64, alignItems: "center" }}>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 40 : 64, alignItems: "center" }}>
             <div>
               <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(0,180,200,0.15)", border: "1px solid rgba(0,180,200,0.3)", borderRadius: 999, padding: "6px 16px", marginBottom: 20 }}>
                 <Stethoscope size={13} color="#00B4C8" />
@@ -457,9 +464,9 @@ export default function Landing() {
                 { n: "0",     statKey: "for_doctors_stat3", color: "#6ee7b7" },
                 { n: "24/7",  statKey: "for_doctors_stat4", color: "#fca5a5" },
               ].map(({ n, statKey, color }) => (
-                <div key={statKey} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16, padding: "22px 18px", textAlign: "center" }}>
-                  <div style={{ fontSize: 32, fontWeight: 900, color, marginBottom: 6 }}>{n}</div>
-                  <div style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", fontWeight: 500 }}>{t(`landing.${statKey}`)}</div>
+                <div key={statKey} style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16, padding: isMobile ? "16px 12px" : "22px 18px", textAlign: "center" }}>
+                  <div style={{ fontSize: isMobile ? 28 : 32, fontWeight: 900, color, marginBottom: 6 }}>{n}</div>
+                  <div style={{ fontSize: isMobile ? 12 : 13, color: "rgba(255,255,255,0.6)", fontWeight: 500 }}>{t(`landing.${statKey}`)}</div>
                 </div>
               ))}
             </div>
@@ -603,7 +610,7 @@ export default function Landing() {
       {/* ─── FOOTER ─────────────────────────────────────────────────────── */}
       <footer style={{ background: "#0a1628", padding: "48px 16px 24px" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 40, marginBottom: 40, flexWrap: "wrap" }}>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "2fr 1fr 1fr 1fr", gap: isMobile ? 32 : 40, marginBottom: 40 }}>
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
                 <SpitarLogoMark size={32} />
