@@ -61,10 +61,10 @@ export default function Login() {
         <div style={{ position: "absolute", bottom: -60, left: -60, width: 240, height: 240, borderRadius: "50%", background: "rgba(255,255,255,0.06)" }} />
 
         {/* Logo */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <Link to="/" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none" }}>
           <SpitarLogoMark size={40} />
           <span style={{ fontSize: 22, fontWeight: 800, color: "#fff", letterSpacing: -0.5 }}>SPITAR</span>
-        </div>
+        </Link>
 
         {/* Middle content */}
         <div>
@@ -96,10 +96,10 @@ export default function Login() {
       <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "32px 24px", background: "#f8fafc", overflowY: "auto" }}>
         <div style={{ width: "100%", maxWidth: 420 }}>
           {/* Mobile logo */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 32 }} className="lg:hidden">
+          <Link to="/" style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 32, textDecoration: "none" }} className="lg:hidden">
             <SpitarLogoMark size={36} />
             <span style={{ fontSize: 20, fontWeight: 800, color: "#0f172a" }}>SPITAR</span>
-          </div>
+          </Link>
 
           <h1 style={{ fontSize: 28, fontWeight: 800, color: "#0f172a", margin: "0 0 6px" }}>{t("auth.login")}</h1>
           <p style={{ fontSize: 14, color: "#64748b", margin: "0 0 28px" }}>{t("auth.login_subtitle")}</p>
