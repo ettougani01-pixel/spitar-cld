@@ -94,10 +94,10 @@ export default function Register() {
 
       <div style={{ maxWidth: 560, margin: "0 auto", padding: "32px 20px 60px" }}>
         {/* Logo */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 32 }}>
+        <Link to="/" style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 32, textDecoration: "none" }}>
           <SpitarLogoMark size={36} />
           <span style={{ fontSize: 20, fontWeight: 800, color: "#0f172a" }}>SPITAR</span>
-        </div>
+        </Link>
 
         {/* Header */}
         <h1 style={{ fontSize: 26, fontWeight: 800, color: "#0f172a", margin: "0 0 4px" }}>{t("auth.register")}</h1>
