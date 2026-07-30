@@ -240,6 +240,166 @@ export default function Landing() {
         </div>
       </div>
 
+      {/* ─── WHAT IS SPITAR ─────────────────────────────────────────────── */}
+      <div style={{ background: "#f8fafc", padding: isMobile ? "48px 16px" : "72px 16px" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+
+          {/* Title */}
+          <div style={{ textAlign: "center", marginBottom: isMobile ? 40 : 60 }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 999, padding: "6px 16px", marginBottom: 16 }}>
+              <ShieldCheck size={14} color="#2563eb" />
+              <span style={{ color: "#2563eb", fontSize: 13, fontWeight: 700, letterSpacing: "0.06em" }}>ما هو SPITAR؟</span>
+            </div>
+            <h2 style={{ fontSize: isMobile ? 26 : 38, fontWeight: 900, color: "#0f172a", margin: "0 0 14px", lineHeight: 1.15 }}>
+              منصة صحية رقمية متكاملة<br />
+              <span style={{ color: "#2563eb" }}>للمريض والطبيب والمختبر</span>
+            </h2>
+            <p style={{ fontSize: 16, color: "#64748b", maxWidth: 600, margin: "0 auto", lineHeight: 1.7 }}>
+              SPITAR يُنهي عصر الأوراق الطبية المبعثرة — ملفك الصحي كاملاً في جيبك، آمن ومتاح في أي وقت
+            </p>
+          </div>
+
+          {/* Who uses it */}
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: isMobile ? 12 : 20, marginBottom: isMobile ? 48 : 72 }}>
+            {[
+              { icon: "🧑‍⚕️", title: "المريض", desc: "يحفظ ملفه ويتحكم في من يراه", color: "#2563eb", bg: "#eff6ff" },
+              { icon: "👨‍⚕️", title: "الطبيب", desc: "يصل لملفات مرضاه ويكتب الوصفات", color: "#0891b2", bg: "#ecfeff" },
+              { icon: "🔬", title: "المختبر", desc: "يرفع نتائج التحاليل مباشرة", color: "#7c3aed", bg: "#f5f3ff" },
+              { icon: "🏥", title: "المستشفى", desc: "يدير المرضى على نطاق واسع", color: "#d97706", bg: "#fffbeb" },
+            ].map(item => (
+              <div key={item.title} style={{ background: "#fff", borderRadius: 16, padding: isMobile ? "20px 14px" : "28px 22px", textAlign: "center", border: "1px solid #f1f5f9", boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
+                <div style={{ fontSize: isMobile ? 28 : 36, marginBottom: 12 }}>{item.icon}</div>
+                <p style={{ fontWeight: 800, color: item.color, fontSize: isMobile ? 14 : 16, margin: "0 0 6px" }}>{item.title}</p>
+                <p style={{ fontSize: isMobile ? 11 : 13, color: "#64748b", margin: 0, lineHeight: 1.5 }}>{item.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Main features grid */}
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 16 : 24, marginBottom: isMobile ? 48 : 72 }}>
+
+            {/* Emergency Card */}
+            <div style={{ background: "linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%)", borderRadius: 20, padding: isMobile ? "28px 20px" : "36px 32px", color: "#fff", position: "relative", overflow: "hidden" }}>
+              <div style={{ position: "absolute", top: -40, right: -40, width: 180, height: 180, borderRadius: "50%", background: "rgba(255,255,255,0.06)" }} />
+              <div style={{ fontSize: 32, marginBottom: 16 }}>🆘</div>
+              <h3 style={{ fontSize: isMobile ? 18 : 22, fontWeight: 800, margin: "0 0 10px" }}>بطاقة الطوارئ الذكية</h3>
+              <p style={{ fontSize: 14, color: "rgba(255,255,255,0.8)", lineHeight: 1.7, margin: "0 0 20px" }}>
+                رمز QR دائم يُظهر فوراً فصيلة الدم، الحساسيات، والأمراض المزمنة — حتى بدون اتصال بالإنترنت أو تسجيل دخول. قد ينقذ حياتك في حالة الطوارئ.
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {["فصيلة الدم والحساسيات الخطيرة", "الأدوية الحالية وجهات الطوارئ", "تكامل مع Google Wallet"].map(f => (
+                  <div key={f} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <CheckCircle2 size={14} color="#7ee8f5" />
+                    <span style={{ fontSize: 13, color: "rgba(255,255,255,0.9)" }}>{f}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Health Profile */}
+            <div style={{ background: "#fff", borderRadius: 20, padding: isMobile ? "28px 20px" : "36px 32px", border: "1px solid #f1f5f9", boxShadow: "0 4px 24px rgba(0,0,0,0.06)" }}>
+              <div style={{ fontSize: 32, marginBottom: 16 }}>📋</div>
+              <h3 style={{ fontSize: isMobile ? 18 : 22, fontWeight: 800, color: "#0f172a", margin: "0 0 10px" }}>الملف الصحي الكامل</h3>
+              <p style={{ fontSize: 14, color: "#64748b", lineHeight: 1.7, margin: "0 0 20px" }}>
+                كل معلوماتك الطبية في مكان واحد — من الأمراض المزمنة واللقاحات إلى نتائج التحاليل وسجل الزيارات.
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {["10 أمراض مزمنة مع متابعة مفصلة", "جدول لقاحات المغرب الكامل (10 مجموعات عمرية)", "رسوم بيانية لتطور المؤشرات الصحية", "سجل الحساسيات مع درجة الخطورة"].map(f => (
+                  <div key={f} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <CheckCircle2 size={14} color="#16a34a" />
+                    <span style={{ fontSize: 13, color: "#374151" }}>{f}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Access Control */}
+            <div style={{ background: "#fff", borderRadius: 20, padding: isMobile ? "28px 20px" : "36px 32px", border: "1px solid #f1f5f9", boxShadow: "0 4px 24px rgba(0,0,0,0.06)" }}>
+              <div style={{ fontSize: 32, marginBottom: 16 }}>🔐</div>
+              <h3 style={{ fontSize: isMobile ? 18 : 22, fontWeight: 800, color: "#0f172a", margin: "0 0 10px" }}>تحكم كامل في الخصوصية</h3>
+              <p style={{ fontSize: 14, color: "#64748b", lineHeight: 1.7, margin: "0 0 20px" }}>
+                أنت وحدك من يقرر من يرى ملفك الطبي. امنح الإذن أو اسحبه بنقرة واحدة في أي وقت.
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {["منح الوصول للطبيب بـ SPITAR ID", "سحب الإذن فوراً متى تشاء", "سجل كامل لكل من اطلع على ملفك", "امتثال كامل لمعايير GDPR"].map(f => (
+                  <div key={f} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <CheckCircle2 size={14} color="#2563eb" />
+                    <span style={{ fontSize: 13, color: "#374151" }}>{f}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* AI + Notifications */}
+            <div style={{ background: "linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)", borderRadius: 20, padding: isMobile ? "28px 20px" : "36px 32px", border: "1px solid #e9d5ff" }}>
+              <div style={{ fontSize: 32, marginBottom: 16 }}>🤖</div>
+              <h3 style={{ fontSize: isMobile ? 18 : 22, fontWeight: 800, color: "#4c1d95", margin: "0 0 10px" }}>مساعد صحي ذكي + تنبيهات</h3>
+              <p style={{ fontSize: 14, color: "#6d28d9", lineHeight: 1.7, margin: "0 0 20px" }}>
+                دردشة صحية ذكية تجيب على أسئلتك بالعربية والفرنسية والإنجليزية، مع تنبيهات تلقائية للأدوية والمواعيد.
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {["إجابات طبية للأعراض الشائعة", "تنبيه قبل 24 ساعة من الموعد", "تذكير تلقائي لجرعات الأدوية", "تنبيه عند وصول نتائج التحاليل"].map(f => (
+                  <div key={f} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <CheckCircle2 size={14} color="#7c3aed" />
+                    <span style={{ fontSize: 13, color: "#4c1d95" }}>{f}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Doctor tools */}
+          <div style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)", borderRadius: 20, padding: isMobile ? "32px 20px" : "48px 40px", color: "#fff", marginBottom: isMobile ? 48 : 72 }}>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 24 : 48, alignItems: "center" }}>
+              <div>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(14,165,233,0.15)", border: "1px solid rgba(14,165,233,0.3)", borderRadius: 999, padding: "5px 14px", marginBottom: 16 }}>
+                  <Stethoscope size={13} color="#38bdf8" />
+                  <span style={{ color: "#38bdf8", fontSize: 12, fontWeight: 700 }}>للأطباء والعيادات</span>
+                </div>
+                <h3 style={{ fontSize: isMobile ? 20 : 28, fontWeight: 800, margin: "0 0 14px", lineHeight: 1.2 }}>
+                  عيادتك الرقمية<br />
+                  <span style={{ color: "#7ee8f5" }}>في راحة يدك</span>
+                </h3>
+                <p style={{ fontSize: 14, color: "rgba(255,255,255,0.7)", lineHeight: 1.8, margin: "0 0 24px" }}>
+                  كل ما يحتاجه الطبيب: الوصول لملفات المرضى، كتابة الوصفات، إدارة المواعيد، الإحالات، والتطبيب عن بعد — كل شيء في منصة واحدة.
+                </p>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                {[
+                  { icon: "💊", text: "فحص تفاعل الأدوية تلقائياً" },
+                  { icon: "📅", text: "إدارة المواعيد والتأكيد" },
+                  { icon: "📞", text: "تطبيب عن بعد (Teleconsult)" },
+                  { icon: "📤", text: "إرسال ملخص الزيارة للمريض" },
+                  { icon: "⭐", text: "نظام تقييم المريض للطبيب" },
+                  { icon: "📊", text: "خطة العلاج الأسبوعية" },
+                ].map(item => (
+                  <div key={item.text} style={{ background: "rgba(255,255,255,0.06)", borderRadius: 12, padding: "14px 12px", display: "flex", alignItems: "flex-start", gap: 10 }}>
+                    <span style={{ fontSize: 18 }}>{item.icon}</span>
+                    <span style={{ fontSize: 12, color: "rgba(255,255,255,0.85)", lineHeight: 1.4 }}>{item.text}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* 3 languages + why use */}
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: isMobile ? 12 : 20 }}>
+            {[
+              { icon: "🌍", title: "3 لغات", desc: "العربية (مع RTL كامل)، الفرنسية، والإنجليزية — تبديل فوري بنقرة واحدة", color: "#0891b2", bg: "#ecfeff", border: "#a5f3fc" },
+              { icon: "📱", title: "تطبيق أندرويد", desc: "متاح كتطبيق APK مع إخفاء شريط العنوان — تجربة تطبيق حقيقي لا موقع ويب", color: "#16a34a", bg: "#f0fdf4", border: "#bbf7d0" },
+              { icon: "☁️", title: "سحابي 100%", desc: "بياناتك محفوظة في Firebase — لا تفقد شيئاً حتى عند تغيير هاتفك", color: "#7c3aed", bg: "#f5f3ff", border: "#ddd6fe" },
+            ].map(item => (
+              <div key={item.title} style={{ background: item.bg, borderRadius: 16, padding: isMobile ? "22px 18px" : "28px 24px", border: `1px solid ${item.border}` }}>
+                <div style={{ fontSize: 28, marginBottom: 12 }}>{item.icon}</div>
+                <h4 style={{ fontSize: 16, fontWeight: 800, color: item.color, margin: "0 0 8px" }}>{item.title}</h4>
+                <p style={{ fontSize: 13, color: "#374151", lineHeight: 1.6, margin: 0 }}>{item.desc}</p>
+              </div>
+            ))}
+          </div>
+
+        </div>
+      </div>
+
       {/* ─── SEARCH RESULTS ─────────────────────────────────────────────── */}
       {searched && (
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "40px 16px" }}>
