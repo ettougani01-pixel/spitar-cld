@@ -771,7 +771,7 @@ export default function Landing() {
             </div>
             <div>
               <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 12, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 16px" }}>{t("landing.footer_patients")}</p>
-              {[[t("landing.footer_register"), "/register"], [t("landing.footer_login"), "/login"], [t("landing.footer_health"), "/health"], [t("landing.footer_emergency"), "/qr"]].map(([label, href]) => (
+              {[["ما هو SPITAR؟", "/about"], [t("landing.footer_register"), "/register"], [t("landing.footer_login"), "/login"], [t("landing.footer_health"), "/health"], [t("landing.footer_emergency"), "/qr"]].map(([label, href]) => (
                 <Link key={label} to={href} style={{ display: "block", color: "rgba(255,255,255,0.45)", fontSize: 14, textDecoration: "none", marginBottom: 10, transition: "color 0.15s" }}
                   onMouseEnter={e => (e.currentTarget.style.color = "#fff")}
                   onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.45)")}>

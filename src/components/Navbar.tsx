@@ -29,10 +29,6 @@ export function Navbar() {
             </div>
           </Link>
 
-          <Link to="/about" className="hidden sm:block text-sm font-semibold text-slate-600 hover:text-[#0057B8] transition-colors">
-            {t("nav.about") || "ما هو SPITAR؟"}
-          </Link>
-
           <div className="flex items-center gap-2">
             <LanguageSwitcher />
 
