@@ -240,8 +240,8 @@ export default function Landing() {
         </div>
       </div>
 
-      {/* ─── WHAT IS SPITAR ─────────────────────────────────────────────── */}
-      <div style={{ background: "#f8fafc", padding: isMobile ? "48px 16px" : "72px 16px" }}>
+      {/* ─── WHAT IS SPITAR (moved to /about) ──────────────────────────── */}
+      <div style={{ display: "none" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
 
           {/* Title */}

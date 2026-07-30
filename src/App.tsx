@@ -15,6 +15,7 @@ import MagicLinkLanding from "@/pages/MagicLinkLanding";
 import SetupAdmin from "@/pages/SetupAdmin";
 import EmergencyCard from "@/pages/EmergencyCard";
 import DoctorPublicProfile from "@/pages/DoctorPublicProfile";
+import About from "@/pages/About";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -60,6 +61,7 @@ function Router() {
       <Route path="/setup-admin" element={<SetupAdmin />} />
       <Route path="/emergency/:tokenId" element={<EmergencyCard />} />
       <Route path="/doctor/:spitarId" element={<DoctorPublicProfile />} />
+      <Route path="/about" element={<About />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
