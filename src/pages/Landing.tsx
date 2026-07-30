@@ -382,20 +382,6 @@ export default function Landing() {
             </div>
           </div>
 
-          {/* 3 languages + why use */}
-          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: isMobile ? 12 : 20 }}>
-            {[
-              { icon: "🌍", title: "3 لغات", desc: "العربية (مع RTL كامل)، الفرنسية، والإنجليزية — تبديل فوري بنقرة واحدة", color: "#0891b2", bg: "#ecfeff", border: "#a5f3fc" },
-              { icon: "📱", title: "تطبيق أندرويد", desc: "متاح كتطبيق APK مع إخفاء شريط العنوان — تجربة تطبيق حقيقي لا موقع ويب", color: "#16a34a", bg: "#f0fdf4", border: "#bbf7d0" },
-              { icon: "☁️", title: "سحابي 100%", desc: "بياناتك محفوظة في Firebase — لا تفقد شيئاً حتى عند تغيير هاتفك", color: "#7c3aed", bg: "#f5f3ff", border: "#ddd6fe" },
-            ].map(item => (
-              <div key={item.title} style={{ background: item.bg, borderRadius: 16, padding: isMobile ? "22px 18px" : "28px 24px", border: `1px solid ${item.border}` }}>
-                <div style={{ fontSize: 28, marginBottom: 12 }}>{item.icon}</div>
-                <h4 style={{ fontSize: 16, fontWeight: 800, color: item.color, margin: "0 0 8px" }}>{item.title}</h4>
-                <p style={{ fontSize: 13, color: "#374151", lineHeight: 1.6, margin: 0 }}>{item.desc}</p>
-              </div>
-            ))}
-          </div>
 
         </div>
       </div>
