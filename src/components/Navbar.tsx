@@ -30,7 +30,7 @@ export function Navbar() {
           </Link>
 
           <div className="flex items-center gap-3">
-            <Link to="/about" className="hidden md:block text-sm font-medium text-slate-600 hover:text-[#0057B8] transition-colors whitespace-nowrap border border-slate-200 rounded-lg px-3 py-1.5">
+            <Link to="/about" className="text-sm font-medium text-slate-600 hover:text-[#0057B8] transition-colors whitespace-nowrap border border-slate-200 rounded-lg px-3 py-1.5">
               ما هو SPITAR؟
             </Link>
             <LanguageSwitcher />
