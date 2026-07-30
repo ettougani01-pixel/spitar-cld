@@ -29,7 +29,7 @@ export function Navbar() {
             </div>
           </Link>
 
-          <Link to="/about" className="hidden sm:block text-sm font-semibold text-slate-600 hover:text-[#0057B8] transition-colors">
+          <Link to="/about" className="text-sm font-semibold text-slate-600 hover:text-[#0057B8] transition-colors whitespace-nowrap">
             ما هو SPITAR؟
           </Link>
 
