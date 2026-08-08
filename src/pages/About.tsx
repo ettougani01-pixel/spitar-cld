@@ -3,8 +3,39 @@ import { Link } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { CheckCircle2, ShieldCheck, Stethoscope, ArrowRight } from "lucide-react";
 
+const VIDEOS = [
+  {
+    id: "patient",
+    label: "للمريض",
+    icon: "🧑‍⚕️",
+    color: "#2563eb",
+    bg: "#eff6ff",
+    border: "#bfdbfe",
+    url: "https://claude.ai/code/artifact/74887202-cd9c-4dc6-923f-44957fc4e2e3",
+  },
+  {
+    id: "doctor",
+    label: "للطبيب والمستشفى",
+    icon: "👨‍⚕️",
+    color: "#7c3aed",
+    bg: "#f5f3ff",
+    border: "#ddd6fe",
+    url: "https://claude.ai/code/artifact/f60d5458-1a93-44d5-831d-73e18b617765",
+  },
+  {
+    id: "lab",
+    label: "للمختبر",
+    icon: "🔬",
+    color: "#059669",
+    bg: "#ecfdf5",
+    border: "#a7f3d0",
+    url: "https://claude.ai/code/artifact/a5571541-15fe-4baf-a5d2-16d27d5f62ba",
+  },
+];
+
 export default function About() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [activeVideo, setActiveVideo] = useState("patient");
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", onResize);
@@ -48,6 +79,71 @@ export default function About() {
               <div style={{ fontSize: isMobile ? 30 : 38, marginBottom: 12 }}>{item.icon}</div>
               <p style={{ fontWeight: 800, color: item.color, fontSize: isMobile ? 14 : 16, margin: "0 0 6px" }}>{item.title}</p>
               <p style={{ fontSize: isMobile ? 11 : 13, color: "#64748b", margin: 0, lineHeight: 1.5 }}>{item.desc}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* ── Videos section ── */}
+        <div style={{ marginBottom: isMobile ? 48 : 72 }}>
+          <div style={{ textAlign: "center", marginBottom: isMobile ? 24 : 36 }}>
+            <h2 style={{ fontSize: isMobile ? 22 : 30, fontWeight: 800, color: "#0f172a", margin: "0 0 8px" }}>شاهد SPITAR في العمل</h2>
+            <p style={{ fontSize: 15, color: "#64748b", margin: 0 }}>فيديوهات تفاعلية توضح كيفية الاستخدام لكل طرف</p>
+          </div>
+
+          {/* Tab buttons */}
+          <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap", marginBottom: 24 }}>
+            {VIDEOS.map(v => (
+              <button
+                key={v.id}
+                onClick={() => setActiveVideo(v.id)}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 7,
+                  padding: isMobile ? "9px 18px" : "10px 24px",
+                  borderRadius: 999,
+                  border: `1.5px solid ${activeVideo === v.id ? v.color : "#e2e8f0"}`,
+                  background: activeVideo === v.id ? v.bg : "#fff",
+                  color: activeVideo === v.id ? v.color : "#64748b",
+                  fontSize: isMobile ? 13 : 14,
+                  fontWeight: activeVideo === v.id ? 700 : 500,
+                  cursor: "pointer",
+                  transition: "all .18s",
+                  boxShadow: activeVideo === v.id ? `0 2px 12px ${v.color}22` : "none",
+                }}
+              >
+                <span style={{ fontSize: 16 }}>{v.icon}</span>
+                {v.label}
+              </button>
+            ))}
+          </div>
+
+          {/* iframe player */}
+          {VIDEOS.map(v => (
+            <div
+              key={v.id}
+              style={{
+                display: activeVideo === v.id ? "block" : "none",
+                borderRadius: 20,
+                overflow: "hidden",
+                border: `1.5px solid ${v.border}`,
+                boxShadow: `0 8px 40px ${v.color}18`,
+                background: "#000",
+                position: "relative",
+              }}
+            >
+              {/* 16:9 wrapper */}
+              <div style={{ position: "relative", paddingBottom: "56.25%", height: 0 }}>
+                <iframe
+                  src={v.url}
+                  style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }}
+                  allow="autoplay"
+                  title={`SPITAR ${v.label}`}
+                />
+              </div>
+              <div style={{ background: v.bg, padding: "10px 20px", display: "flex", alignItems: "center", gap: 8, borderTop: `1px solid ${v.border}` }}>
+                <span style={{ fontSize: 16 }}>{v.icon}</span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: v.color }}>SPITAR {v.label}</span>
+                <span style={{ fontSize: 12, color: "#94a3b8", marginRight: "auto" }}>يمكنك الضغط على مسار التقدم للتنقل بين الشرائح</span>
+              </div>
             </div>
           ))}
         </div>
