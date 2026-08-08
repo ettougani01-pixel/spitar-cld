@@ -1,6 +1,6 @@
 {
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/((?!\\.well-known|patient-video\\.html|doctor-video\\.html|lab-video\\.html).*)", "destination": "/index.html" }
+    { "source": "/((?!\\.well-known|patient-video\\.html|doctor-video\\.html|lab-video\\.html|patient-video-en\\.html|doctor-video-en\\.html|lab-video-en\\.html|patient-video-fr\\.html|doctor-video-fr\\.html|lab-video-fr\\.html).*)", "destination": "/index.html" }
   ]
 }

@@ -1,39 +1,32 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Navbar } from "@/components/Navbar";
 import { CheckCircle2, ShieldCheck, Stethoscope, ArrowRight } from "lucide-react";
 
-const VIDEOS = [
-  {
-    id: "patient",
-    label: "للمريض",
-    icon: "🧑‍⚕️",
-    color: "#2563eb",
-    bg: "#eff6ff",
-    border: "#bfdbfe",
-    url: "/patient-video.html",
-  },
-  {
-    id: "doctor",
-    label: "للطبيب والمستشفى",
-    icon: "👨‍⚕️",
-    color: "#7c3aed",
-    bg: "#f5f3ff",
-    border: "#ddd6fe",
-    url: "/doctor-video.html",
-  },
-  {
-    id: "lab",
-    label: "للمختبر",
-    icon: "🔬",
-    color: "#059669",
-    bg: "#ecfdf5",
-    border: "#a7f3d0",
-    url: "/lab-video.html",
-  },
+const VIDEO_META = [
+  { id: "patient", icon: "🧑‍⚕️", color: "#2563eb", bg: "#eff6ff", border: "#bfdbfe", base: "patient-video" },
+  { id: "doctor",  icon: "👨‍⚕️", color: "#7c3aed", bg: "#f5f3ff", border: "#ddd6fe", base: "doctor-video" },
+  { id: "lab",     icon: "🔬",    color: "#059669", bg: "#ecfdf5", border: "#a7f3d0", base: "lab-video" },
 ];
 
+const VIDEO_LABELS: Record<string, Record<string, string>> = {
+  patient: { ar: "للمريض",           en: "For Patients",     fr: "Pour les patients" },
+  doctor:  { ar: "للطبيب والمستشفى", en: "For Doctors",      fr: "Pour les médecins" },
+  lab:     { ar: "للمختبر",          en: "For Laboratories", fr: "Pour les labos" },
+};
+
 export default function About() {
+  const { i18n } = useTranslation();
+  const lang = (i18n.language || "ar").split("-")[0]; // 'ar' | 'en' | 'fr'
+  const suffix = lang === "ar" ? "" : `-${lang}`;
+
+  const VIDEOS = VIDEO_META.map(v => ({
+    ...v,
+    label: VIDEO_LABELS[v.id][lang] ?? VIDEO_LABELS[v.id]["ar"],
+    url: `/${v.base}${suffix}.html`,
+  }));
+
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [activeVideo, setActiveVideo] = useState("patient");
   useEffect(() => {

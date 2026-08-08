@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>SPITAR — Guide Patient</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#04111e;--teal:#0057B8;--sky:#00B4C8;--mint:#7ee8f5;--white:#eaf6ff;--muted:#4a7a9b;--card:#061826;--border:rgba(0,87,184,.22);--border2:rgba(0,180,200,.14);}
+html,body{width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;font-family:system-ui,-apple-system,sans-serif;overflow:hidden}
+#stage{position:relative;width:min(100vw,177.8vh);height:min(56.25vw,100vh);background:var(--bg);overflow:hidden}
+#stage::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(0,87,184,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(0,87,184,.045) 1px,transparent 1px);background-size:5% 5%;pointer-events:none}
+.orb{position:absolute;border-radius:50%;pointer-events:none;filter:blur(55px);opacity:.13}
+.orb1{width:30%;aspect-ratio:1;background:#0057B8;top:-8%;right:10%;animation:dr 9s ease-in-out infinite alternate}
+.orb2{width:22%;aspect-ratio:1;background:#00B4C8;bottom:-4%;left:25%;animation:dr 11s 2s ease-in-out infinite alternate}
+@keyframes dr{0%{transform:translate(0,0)}100%{transform:translate(2%,3%)}}
+#stars{position:absolute;inset:0;pointer-events:none}
+.slide{position:absolute;inset:0;display:flex;align-items:center;padding:5% 6%;opacity:0;pointer-events:none;transition:opacity .6s ease}
+.slide.active{opacity:1;pointer-events:auto}
+.left{flex:1;display:flex;flex-direction:column;gap:1.4%;padding-right:3%}
+.eyebrow{font-size:clamp(8px,1vw,13px);font-weight:700;letter-spacing:.14em;color:var(--sky);text-transform:uppercase;opacity:0;transform:translateY(10px);transition:opacity .5s .1s,transform .5s .1s}
+.slide.active .eyebrow{opacity:1;transform:none}
+.headline{font-size:clamp(17px,3.2vw,42px);font-weight:800;line-height:1.18;color:var(--white);opacity:0;transform:translateY(14px);transition:opacity .5s .22s,transform .5s .22s}
+.slide.active .headline{opacity:1;transform:none}
+.sub{font-size:clamp(9px,1.25vw,16px);color:var(--muted);line-height:1.7;max-width:34vw;opacity:0;transform:translateY(8px);transition:opacity .5s .34s,transform .5s .34s}
+.slide.active .sub{opacity:1;transform:none}
+.steps{display:flex;flex-direction:column;gap:1.6%;margin-top:.5%}
+.step{display:flex;align-items:center;gap:2%;opacity:0;transform:translateX(-10px)}
+.slide.active .step:nth-child(1){animation:si .4s .44s forwards}
+.slide.active .step:nth-child(2){animation:si .4s .58s forwards}
+.slide.active .step:nth-child(3){animation:si .4s .72s forwards}
+.slide.active .step:nth-child(4){animation:si .4s .86s forwards}
+@keyframes si{to{opacity:1;transform:none}}
+.sdot{flex-shrink:0;width:clamp(18px,2vw,26px);height:clamp(18px,2vw,26px);border-radius:50%;background:var(--teal);display:flex;align-items:center;justify-content:center;font-size:clamp(7px,.9vw,11px);font-weight:800;color:#fff}
+.stxt{font-size:clamp(9px,1.15vw,14.5px);color:var(--white);line-height:1.4}
+.badge-row{display:flex;flex-wrap:wrap;gap:1.4%;margin-top:.5%}
+.badge{padding:.38em .85em;border-radius:999px;font-size:clamp(7px,.9vw,11px);font-weight:700;opacity:0;transform:scale(.88)}
+.slide.active .badge:nth-child(1){animation:bi .38s .46s forwards}
+.slide.active .badge:nth-child(2){animation:bi .38s .6s forwards}
+.slide.active .badge:nth-child(3){animation:bi .38s .74s forwards}
+.slide.active .badge:nth-child(4){animation:bi .38s .88s forwards}
+@keyframes bi{to{opacity:1;transform:scale(1)}}
+.bg{background:rgba(0,87,184,.25);border:1px solid rgba(0,87,184,.5);color:var(--mint)}
+.bb{background:rgba(0,180,200,.15);border:1px solid rgba(0,180,200,.4);color:#38bdf8}
+.bo{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.35);color:#fbbf24}
+.bp{background:rgba(139,92,246,.14);border:1px solid rgba(139,92,246,.35);color:#c4b5fd}
+.right{display:flex;align-items:center;justify-content:center;width:32%;flex-shrink:0;position:relative}
+.phone{width:clamp(115px,17vw,210px);background:var(--card);border-radius:clamp(14px,2.4vw,30px);border:1.5px solid rgba(0,87,184,.38);box-shadow:0 0 44px rgba(0,87,184,.4);overflow:hidden;position:relative;aspect-ratio:.47;opacity:0;transform:translateY(28px) scale(.94);transition:opacity .55s .18s,transform .55s .18s}
+.slide.active .phone{opacity:1;transform:none}
+.phone::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:33%;height:4%;background:#000;border-radius:0 0 10px 10px;z-index:10}
+.ps{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg)}
+.pst{height:6%;background:var(--bg);display:flex;align-items:center;justify-content:flex-end;padding:0 6%;gap:3%;flex-shrink:0}
+.pdot{width:5%;aspect-ratio:1;border-radius:50%;background:var(--sky);opacity:.6}
+.pnav{height:9%;background:rgba(0,87,184,.75);display:flex;align-items:center;padding:0 5%;gap:4%;flex-shrink:0}
+.plogo{font-size:.7em;font-weight:800;color:#fff}
+.pc{flex:1;padding:4% 5%;display:flex;flex-direction:column;gap:3%;overflow:hidden}
+.pcard{background:rgba(255,255,255,.04);border:1px solid var(--border2);border-radius:8px;padding:4% 5%}
+.ptitle{font-size:.62em;font-weight:700;color:var(--white);margin-bottom:2%}
+.pval{font-size:.55em;color:var(--white);font-weight:600}
+.plbl{font-size:.5em;color:var(--muted)}
+.pbtn{background:linear-gradient(135deg,var(--teal),var(--sky));border-radius:6px;padding:4%;text-align:center;font-size:.57em;font-weight:700;color:#fff;margin-top:auto}
+.ptag{display:inline-block;padding:.2em .55em;border-radius:4px;font-size:.46em;font-weight:700}
+.ptag.g{background:rgba(52,211,153,.18);color:#34d399}
+.ptag.b{background:rgba(0,180,200,.18);color:var(--sky)}
+.ptag.o{background:rgba(245,158,11,.18);color:#fbbf24}
+.ptag.r{background:rgba(248,113,113,.15);color:#f87171}
+.glow-ring{position:absolute;width:118%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,rgba(0,87,184,.17) 0%,transparent 68%);pointer-events:none;z-index:-1;animation:pr 3.2s ease-in-out infinite}
+@keyframes pr{0%,100%{transform:scale(1);opacity:.7}50%{transform:scale(1.06);opacity:1}}
+.blogo{font-size:clamp(26px,5vw,68px);font-weight:900;color:var(--white);letter-spacing:-.03em;line-height:1;opacity:0;transform:translateY(18px);transition:opacity .7s .08s,transform .7s .08s}
+.slide.active .blogo{opacity:1;transform:none}
+.btag{font-size:clamp(10px,1.4vw,18px);color:var(--sky);font-weight:600;margin-top:.8%;opacity:0;transform:translateY(10px);transition:opacity .6s .28s,transform .6s .28s}
+.slide.active .btag{opacity:1;transform:none}
+.cdesc{font-size:clamp(8px,1.1vw,14px);color:var(--muted);line-height:1.75;max-width:33vw;margin-top:1.4%;opacity:0;transition:opacity .6s .48s}
+.slide.active .cdesc{opacity:1}
+.spitar-id{display:inline-flex;align-items:center;gap:.6em;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:.45em .9em;margin-top:.7%;font-family:monospace;font-size:clamp(9px,1.15vw,14px);color:var(--sky);font-weight:700;letter-spacing:.04em;opacity:0;transform:translateY(8px);transition:opacity .5s .55s,transform .5s .55s}
+.slide.active .spitar-id{opacity:1;transform:none}
+.outro-c{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:1.8%}
+.olog{font-size:clamp(30px,5.5vw,74px);font-weight:900;color:var(--white);letter-spacing:-.03em}
+.osub{font-size:clamp(10px,1.35vw,17px);color:var(--sky)}
+.ourl{font-size:clamp(8px,1vw,13px);color:var(--muted);margin-top:.8%;font-family:monospace}
+.obtn{margin-top:2%;padding:.65em 2em;border-radius:999px;background:linear-gradient(135deg,var(--teal),var(--sky));color:#fff;font-weight:700;font-size:clamp(9px,1.2vw,16px);border:none;cursor:default;animation:og 2s ease-in-out infinite}
+@keyframes og{0%,100%{box-shadow:0 0 28px rgba(0,87,184,.5)}50%{box-shadow:0 0 50px rgba(0,180,200,.65)}}
+#controls{position:absolute;bottom:0;left:0;right:0;background:rgba(4,17,30,.92);backdrop-filter:blur(6px);border-top:1px solid var(--border);display:flex;align-items:center;gap:1.5%;padding:0 2.5%;height:9%}
+#pt{flex:1;height:3px;background:rgba(255,255,255,.1);border-radius:2px;cursor:pointer}
+#pf{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--teal),var(--sky));width:0%;transition:width .1s linear}
+.cb{background:none;border:none;cursor:pointer;color:var(--muted);font-size:clamp(10px,1.3vw,17px);display:flex;align-items:center;justify-content:center;width:clamp(22px,2.6vw,34px);height:clamp(22px,2.6vw,34px);border-radius:50%;transition:color .2s,background .2s;flex-shrink:0}
+.cb:hover{color:var(--white);background:rgba(255,255,255,.07)}
+#sc{font-size:clamp(7px,.9vw,11px);color:var(--muted);font-family:monospace;flex-shrink:0}
+@keyframes twinkle{0%,100%{opacity:0}50%{opacity:.45}}
+</style>
+</head>
+<body>
+<div id="stage">
+  <svg id="stars"></svg>
+  <div class="orb orb1"></div><div class="orb orb2"></div>
+
+  <div class="slide active" id="slide-0">
+    <div class="left">
+      <div class="eyebrow">SPITAR pour les Patients</div>
+      <div class="blogo">SPITAR<br><span style="color:var(--sky);font-size:.45em">Votre Santé</span></div>
+      <div class="btag">Votre dossier · Toujours avec vous · Toujours sécurisé</div>
+      <div class="cdesc">SPITAR est la plateforme de santé numérique intégrée du Maroc — votre dossier médical complet, toujours dans votre poche, accessible à tout médecin que vous choisissez, à tout moment.</div>
+      <div class="badge-row" style="margin-top:2%">
+        <span class="badge bg">Dossier Numérique</span>
+        <span class="badge bb">Carte d'Urgence</span>
+        <span class="badge bo">Contrôle Total</span>
+      </div>
+    </div>
+    <div class="right">
+      <div class="glow-ring"></div>
+      <div class="phone">
+        <div class="ps">
+          <div class="pst"><div class="pdot"></div><div class="pdot" style="opacity:.35"></div></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6%;gap:5%;background:linear-gradient(155deg,#0a2540 0%,#041628 50%,#04111e 100%)">
+            <div style="font-size:1.8em;font-weight:900;color:#fff">SPITAR</div>
+            <div style="width:28%;aspect-ratio:1;border-radius:50%;background:linear-gradient(135deg,#0057B8,#00B4C8);display:flex;align-items:center;justify-content:center;font-size:.9em">❤️</div>
+            <div style="font-size:.55em;color:rgba(255,255,255,.65);text-align:center;line-height:1.55">Votre Plateforme Santé Numérique</div>
+            <div style="width:80%;background:linear-gradient(135deg,#0057B8,#00B4C8);border-radius:7px;padding:4% 6%;text-align:center;font-size:.58em;color:#fff;font-weight:700">Commencer</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" id="slide-1">
+    <div class="left">
+      <div class="eyebrow">Étape 1 — Inscription</div>
+      <div class="headline">Créez votre compte<br>et obtenez votre SPITAR ID</div>
+      <div class="sub">Inscrivez-vous en moins de 2 minutes et recevez instantanément votre SPITAR ID unique — votre identité de santé numérique permanente au Maroc.</div>
+      <div class="steps">
+        <div class="step"><div class="sdot">1</div><div class="stxt">Saisissez nom, e-mail et mot de passe</div></div>
+        <div class="step"><div class="sdot">2</div><div class="stxt">Sélectionnez votre rôle : Patient</div></div>
+        <div class="step"><div class="sdot">3</div><div class="stxt">Ajoutez votre contact d'urgence</div></div>
+        <div class="step"><div class="sdot">4</div><div class="stxt">Recevez votre SPITAR ID instantanément</div></div>
+      </div>
+      <div class="spitar-id">🪪 SPI-2026-MA-7842</div>
+    </div>
+    <div class="right">
+      <div class="glow-ring"></div>
+      <div class="phone">
+        <div class="ps">
+          <div class="pst"><div class="pdot"></div></div>
+          <div style="flex:1;padding:4% 5%;display:flex;flex-direction:column;gap:3%">
+            <div style="font-size:.72em;font-weight:800;color:var(--white)">Créer un compte</div>
+            <div><div style="font-size:.42em;color:var(--muted);margin-bottom:1%">Nom complet</div><div style="background:rgba(255,255,255,.06);border:1px solid var(--border2);border-radius:5px;padding:3% 5%;font-size:.5em;color:var(--white)">Mohammed Al Alaoui</div></div>
+            <div><div style="font-size:.42em;color:var(--muted);margin-bottom:1%">E-mail</div><div style="background:rgba(255,255,255,.06);border:1px solid var(--border2);border-radius:5px;padding:3% 5%;font-size:.5em;color:var(--white)">m.alaoui@email.ma</div></div>
+            <div style="display:flex;gap:3%">
+              <div style="flex:1;background:rgba(0,87,184,.2);border:1px solid rgba(0,87,184,.45);border-radius:5px;padding:3% 5%;font-size:.46em;color:var(--sky);font-weight:700;text-align:center">Patient ✓</div>
+              <div style="flex:1;background:rgba(255,255,255,.04);border:1px solid var(--border2);border-radius:5px;padding:3% 5%;font-size:.46em;color:var(--muted);text-align:center">Médecin</div>
+            </div>
+            <div style="margin-top:auto;background:linear-gradient(135deg,#0057B8,#00B4C8);border-radius:7px;padding:4%;text-align:center;font-size:.58em;font-weight:700;color:#fff">Créer mon compte →</div>
+            <div style="text-align:center;background:rgba(0,180,200,.1);border:1px solid rgba(0,180,200,.3);border-radius:6px;padding:3%;font-size:.48em;color:var(--sky);font-weight:700">Votre ID : SPI-2026-MA-7842</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" id="slide-2">
+    <div class="left">
+      <div class="eyebrow">Votre Dossier Médical</div>
+      <div class="headline">Profil médical complet<br>en un seul endroit</div>
+      <div class="sub">Ajoutez votre groupe sanguin, allergies, maladies chroniques et médicaments actuels — tout ce dont un médecin a besoin pour vous soigner en sécurité.</div>
+      <div class="steps">
+        <div class="step"><div class="sdot">🩸</div><div class="stxt">Groupe sanguin, allergies, maladies chroniques</div></div>
+        <div class="step"><div class="sdot">💊</div><div class="stxt">Médicaments en cours et posologies</div></div>
+        <div class="step"><div class="sdot">💉</div><div class="stxt">Calendrier national vaccinal du Maroc</div></div>
+        <div class="step"><div class="sdot">📈</div><div class="stxt">Indicateurs de santé avec graphiques d'évolution</div></div>
+      </div>
+      <div class="badge-row" style="margin-top:1.2%">
+        <span class="badge bg">Toujours à jour</span>
+        <span class="badge bb">10 Maladies chroniques</span>
+        <span class="badge bo">10 Groupes d'âge vaccinaux</span>
+      </div>
+    </div>
+    <div class="right">
+      <div class="glow-ring"></div>
+      <div class="phone">
+        <div class="ps">
+          <div class="pst"><div class="pdot"></div></div>
+          <div class="pnav"><div class="plogo">SPITAR</div><div style="font-size:.5em;color:rgba(255,255,255,.6)">Profil Santé</div></div>
+          <div class="pc">
+            <div style="font-size:.58em;font-weight:700;color:var(--white)">Mohammed Al Alaoui</div>
+            <div style="display:flex;gap:3%">
+              <div style="flex:1;background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.3);border-radius:6px;padding:3%;text-align:center"><div style="font-size:.6em;color:#f87171;font-weight:800">B+</div><div style="font-size:.38em;color:var(--muted)">Sang</div></div>
+              <div style="flex:1;background:rgba(0,87,184,.15);border:1px solid rgba(0,87,184,.3);border-radius:6px;padding:3%;text-align:center"><div style="font-size:.6em;color:var(--sky);font-weight:800">42</div><div style="font-size:.38em;color:var(--muted)">Âge</div></div>
+              <div style="flex:1;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);border-radius:6px;padding:3%;text-align:center"><div style="font-size:.6em;color:#fbbf24;font-weight:800">76%</div><div style="font-size:.38em;color:var(--muted)">Complet</div></div>
+            </div>
+            <div class="pcard">
+              <div class="ptitle">Maladies Chroniques</div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2%"><span style="font-size:.48em;color:var(--white)">🫀 Hypertension</span><span class="ptag b">Actif</span></div>
+              <div style="height:.5px;background:var(--border2);margin:2% 0"></div>
+              <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:.48em;color:var(--white)">🩸 Diabète type 2</span><span class="ptag g">Contrôlé</span></div>
+            </div>
+            <div class="pcard">
+              <div class="ptitle">Allergies ⚠️</div>
+              <div style="display:flex;gap:3%;flex-wrap:wrap"><span class="ptag r">Pénicilline</span><span class="ptag o">Aspirine</span><span class="ptag o">Fruits de mer</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" id="slide-3">
+    <div class="left">
+      <div class="eyebrow">Carte d'Urgence</div>
+      <div class="headline">Un QR Code —<br>peut vous sauver la vie</div>
+      <div class="sub">Une carte QR permanente affichant votre groupe sanguin, allergies critiques et contacts d'urgence — fonctionne sans internet ni connexion. Toujours prête quand vous en avez besoin.</div>
+      <div class="steps">
+        <div class="step"><div class="sdot">📱</div><div class="stxt">Votre QR permanent est toujours disponible dans SPITAR</div></div>
+        <div class="step"><div class="sdot">🔍</div><div class="stxt">Tout médecin le scanne — infos critiques instantanées</div></div>
+        <div class="step"><div class="sdot">📲</div><div class="stxt">Ajoutez-le à Google Wallet ou Apple Wallet</div></div>
+        <div class="step"><div class="sdot">🖨️</div><div class="stxt">Imprimez-le et gardez-le dans votre portefeuille</div></div>
+      </div>
+      <div class="badge-row" style="margin-top:1.2%">
+        <span class="badge bg">Sans connexion</span>
+        <span class="badge bb">Sans login</span>
+        <span class="badge bo">Google Wallet</span>
+      </div>
+    </div>
+    <div class="right">
+      <div class="glow-ring"></div>
+      <div class="phone">
+        <div class="ps">
+          <div class="pst"><div class="pdot"></div></div>
+          <div class="pnav"><div class="plogo">SPITAR</div><div style="font-size:.5em;color:rgba(255,255,255,.6)">Carte Urgence</div></div>
+          <div class="pc">
+            <div style="background:linear-gradient(135deg,#1e3a8a,#2563eb);border-radius:10px;padding:5%;display:flex;flex-direction:column;gap:3%">
+              <div style="font-size:.56em;font-weight:800;color:#fff">🆘 SPITAR Urgence</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:3%">
+                <div style="background:rgba(255,255,255,.12);border-radius:6px;padding:4%;text-align:center"><div style="font-size:.65em;font-weight:900;color:#f87171">B+</div><div style="font-size:.38em;color:rgba(255,255,255,.7)">Groupe Sang</div></div>
+                <div style="background:rgba(255,255,255,.12);border-radius:6px;padding:4%;text-align:center"><div style="font-size:.6em;font-weight:800;color:#fbbf24">⚠️ 3</div><div style="font-size:.38em;color:rgba(255,255,255,.7)">Allergies</div></div>
+              </div>
+              <div style="background:#fff;border-radius:6px;padding:4%;display:flex;justify-content:center">
+                <svg width="60%" viewBox="0 0 50 50"><rect fill="#fff" width="50" height="50"/><rect fill="#000" x="2" y="2" width="14" height="14" rx="1"/><rect fill="#fff" x="4" y="4" width="10" height="10" rx="1"/><rect fill="#000" x="6" y="6" width="6" height="6"/><rect fill="#000" x="34" y="2" width="14" height="14" rx="1"/><rect fill="#fff" x="36" y="4" width="10" height="10" rx="1"/><rect fill="#000" x="38" y="6" width="6" height="6"/><rect fill="#000" x="2" y="34" width="14" height="14" rx="1"/><rect fill="#fff" x="4" y="36" width="10" height="10" rx="1"/><rect fill="#000" x="6" y="38" width="6" height="6"/><rect fill="#000" x="20" y="2" width="4" height="4"/><rect fill="#000" x="26" y="2" width="4" height="4"/><rect fill="#000" x="20" y="8" width="4" height="4"/><rect fill="#000" x="20" y="20" width="4" height="4"/><rect fill="#000" x="26" y="22" width="4" height="4"/><rect fill="#000" x="34" y="20" width="4" height="4"/><rect fill="#000" x="40" y="28" width="4" height="4"/><rect fill="#0057B8" x="20" y="20" width="10" height="10" rx="2"/></svg>
+              </div>
+              <div style="font-size:.45em;color:rgba(255,255,255,.7);text-align:center">Scannez pour les infos critiques</div>
+            </div>
+            <div style="background:rgba(0,87,184,.2);border:1px solid rgba(0,87,184,.35);border-radius:7px;padding:3%;text-align:center;font-size:.5em;font-weight:700;color:var(--sky)">🔗 Ajouter à Google Wallet</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" id="slide-4">
+    <div class="left">
+      <div class="eyebrow">Contrôle d'accès</div>
+      <div class="headline">C'est vous qui décidez<br>qui voit votre dossier</div>
+      <div class="sub">Partagez votre dossier médical avec n'importe quel médecin grâce à son SPITAR ID — vous restez totalement maître et pouvez révoquer l'accès à tout moment.</div>
+      <div class="steps">
+        <div class="step"><div class="sdot">1</div><div class="stxt">Accédez à la section «Mes Médecins»</div></div>
+        <div class="step"><div class="sdot">2</div><div class="stxt">Saisissez le SPITAR ID du médecin</div></div>
+        <div class="step"><div class="sdot">3</div><div class="stxt">Confirmez l'accès — le médecin voit votre dossier</div></div>
+        <div class="step"><div class="sdot">4</div><div class="stxt">Révoquez la permission à tout moment en un tap</div></div>
+      </div>
+      <div class="badge-row" style="margin-top:1.2%">
+        <span class="badge bg">Contrôle Total</span>
+        <span class="badge bb">Journal d'accès</span>
+        <span class="badge bp">Conforme RGPD</span>
+      </div>
+    </div>
+    <div class="right">
+      <div class="glow-ring"></div>
+      <div class="phone">
+        <div class="ps">
+          <div class="pst"><div class="pdot"></div></div>
+          <div class="pnav"><div class="plogo">SPITAR</div></div>
+          <div class="pc">
+            <div style="font-size:.6em;font-weight:700;color:var(--white)">Mes Médecins</div>
+            <div style="background:rgba(0,87,184,.12);border:1.5px solid rgba(0,87,184,.4);border-radius:8px;padding:3% 5%;display:flex;align-items:center;gap:3%">
+              <span style="font-size:.55em">🔍</span>
+              <div><div style="font-size:.42em;color:var(--muted)">SPITAR ID du médecin</div><div style="font-size:.52em;color:var(--sky);font-weight:700;font-family:monospace">DR-2024-MA-1133</div></div>
+            </div>
+            <div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.25);border-radius:8px;padding:3% 5%">
+              <div style="font-size:.46em;color:#34d399;font-weight:700;margin-bottom:2%">✓ Médecin trouvé</div>
+              <div style="display:flex;align-items:center;gap:3%">
+                <div style="width:16%;aspect-ratio:1;border-radius:50%;background:linear-gradient(135deg,#0057B8,#00B4C8);display:flex;align-items:center;justify-content:center;font-size:.65em;font-weight:800;color:#fff;flex-shrink:0">A</div>
+                <div><div style="font-size:.52em;font-weight:700;color:var(--white)">Dr. Amine Bensalah</div><div style="font-size:.42em;color:var(--muted)">Cardiologue · Rabat</div></div>
+              </div>
+            </div>
+            <div class="pcard">
+              <div class="ptitle">Accès accordés à</div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2%"><div><div style="font-size:.52em;font-weight:700;color:var(--white)">Dr. Amine Bensalah</div><div style="font-size:.42em;color:var(--muted)">Depuis 15 jan 2026</div></div><span class="ptag g">Actif</span></div>
+              <div style="height:.5px;background:var(--border2);margin:2% 0"></div>
+              <div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:.52em;font-weight:700;color:var(--white)">Dr. Sara Filali</div><div style="font-size:.42em;color:var(--muted)">Depuis 03 mar 2026</div></div><span class="ptag g">Actif</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" id="slide-5">
+    <div class="left">
+      <div class="eyebrow">Résultats d'analyses</div>
+      <div class="headline">Résultats livrés<br>directement dans l'appli</div>
+      <div class="sub">Quand un laboratoire SPITAR télécharge vos résultats, vous recevez une notification instantanée — plus d'attente, plus de papiers perdus, tout archivé définitivement.</div>
+      <div class="steps">
+        <div class="step"><div class="sdot">🔬</div><div class="stxt">Le labo charge vos résultats via votre SPITAR ID</div></div>
+        <div class="step"><div class="sdot">🔔</div><div class="stxt">Vous recevez une notification instantanée</div></div>
+        <div class="step"><div class="sdot">📋</div><div class="stxt">Consultez les résultats détaillés dans l'appli</div></div>
+        <div class="step"><div class="sdot">📁</div><div class="stxt">Résultats archivés définitivement dans votre dossier</div></div>
+      </div>
+      <div class="badge-row" style="margin-top:1.2%">
+        <span class="badge bg">Zéro papier</span>
+        <span class="badge bb">Notification instantanée</span>
+        <span class="badge bo">Archive permanente</span>
+      </div>
+    </div>
+    <div class="right">
+      <div class="glow-ring"></div>
+      <div class="phone">
+        <div class="ps">
+          <div class="pst"><div class="pdot"></div></div>
+          <div class="pnav"><div class="plogo">SPITAR</div></div>
+          <div class="pc">
+            <div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.25);border-radius:8px;padding:3% 4%;display:flex;align-items:center;gap:3%">
+              <div style="font-size:.8em">🔔</div>
+              <div><div style="font-size:.5em;font-weight:700;color:#34d399">Nouveaux résultats</div><div style="font-size:.42em;color:var(--muted)">Labo Al Amal · Maintenant</div></div>
+            </div>
+            <div class="pcard">
+              <div class="ptitle">Bilan sanguin NFS</div>
+              <div style="display:flex;flex-direction:column;gap:1.5%">
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:2%;align-items:center"><span style="font-size:.46em;color:var(--white)">Hémoglobine</span><span style="font-size:.5em;color:var(--white);text-align:center;font-weight:600">13.2</span><span class="ptag g" style="text-align:center;display:block">✓</span></div>
+                <div style="height:.5px;background:var(--border2)"></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:2%;align-items:center"><span style="font-size:.46em;color:var(--white)">Glycémie</span><span style="font-size:.5em;color:var(--white);text-align:center;font-weight:600">0.95</span><span class="ptag g" style="text-align:center;display:block">✓</span></div>
+                <div style="height:.5px;background:var(--border2)"></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:2%;align-items:center"><span style="font-size:.46em;color:var(--white)">Cholestérol</span><span style="font-size:.5em;color:#fbbf24;text-align:center;font-weight:600">2.1</span><span class="ptag o" style="text-align:center;display:block">↑</span></div>
+              </div>
+            </div>
+            <div style="background:rgba(0,87,184,.12);border:1px solid var(--border);border-radius:7px;padding:3% 5%;font-size:.48em;color:var(--muted)">📁 PDF joint · Archivé · <span style="color:var(--sky)">Voir les résultats complets</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" id="slide-6">
+    <div class="left">
+      <div class="eyebrow">Rappels Intelligents</div>
+      <div class="headline">Ne ratez plus jamais<br>un médicament ou un RDV</div>
+      <div class="sub">SPITAR envoie des rappels automatiques pour vos médicaments, rendez-vous et vaccins — concentrez-vous sur votre santé, pas votre agenda.</div>
+      <div class="steps">
+        <div class="step"><div class="sdot">💊</div><div class="stxt">Rappels médicaments au bon moment</div></div>
+        <div class="step"><div class="sdot">📅</div><div class="stxt">Rappel de rendez-vous 24h avant</div></div>
+        <div class="step"><div class="sdot">💉</div><div class="stxt">Alertes vaccinations quand c'est dû</div></div>
+        <div class="step"><div class="sdot">🤖</div><div class="stxt">Assistant santé IA en arabe, français et anglais</div></div>
+      </div>
+      <div class="badge-row" style="margin-top:1.2%">
+        <span class="badge bg">Rappels auto</span>
+        <span class="badge bb">Assistant IA</span>
+        <span class="badge bo">3 Langues</span>
+      </div>
+    </div>
+    <div class="right">
+      <div class="glow-ring"></div>
+      <div class="phone">
+        <div class="ps">
+          <div class="pst"><div class="pdot"></div></div>
+          <div class="pnav"><div class="plogo">SPITAR</div></div>
+          <div class="pc">
+            <div style="font-size:.6em;font-weight:700;color:var(--white)">Rappels du jour</div>
+            <div style="display:flex;flex-direction:column;gap:2.5%">
+              <div style="background:rgba(0,87,184,.12);border-right:3px solid var(--teal);border-radius:8px;padding:3% 4%;display:flex;gap:3%;align-items:center"><div style="font-size:.7em">💊</div><div><div style="font-size:.52em;font-weight:700;color:var(--white)">Amlodipine 5mg</div><div style="font-size:.42em;color:var(--muted)">08h00 · Prendre avec de l'eau</div></div><span class="ptag g" style="margin-right:auto">Pris</span></div>
+              <div style="background:rgba(245,158,11,.08);border-right:3px solid #fbbf24;border-radius:8px;padding:3% 4%;display:flex;gap:3%;align-items:center"><div style="font-size:.7em">📅</div><div><div style="font-size:.52em;font-weight:700;color:var(--white)">Dr. Bensalah</div><div style="font-size:.42em;color:var(--muted)">Demain 10h30 · Cardiologie</div></div><span class="ptag o" style="margin-right:auto">Bientôt</span></div>
+              <div style="background:rgba(139,92,246,.08);border-right:3px solid #8b5cf6;border-radius:8px;padding:3% 4%;display:flex;gap:3%;align-items:center"><div style="font-size:.7em">💊</div><div><div style="font-size:.52em;font-weight:700;color:var(--white)">Metformine 500mg</div><div style="font-size:.42em;color:var(--muted)">13h00 · Avec le repas</div></div><span class="ptag b" style="margin-right:auto">En attente</span></div>
+            </div>
+            <div style="background:rgba(0,180,200,.08);border:1px solid rgba(0,180,200,.2);border-radius:8px;padding:3% 4%">
+              <div style="font-size:.48em;font-weight:700;color:var(--sky);margin-bottom:2%">🤖 Assistant Santé IA</div>
+              <div style="font-size:.44em;color:var(--muted);line-height:1.5">«Votre cholestérol est légèrement élevé. Je recommande de réduire les graisses saturées et d'augmenter l'activité physique.»</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide" id="slide-7">
+    <div class="outro-c">
+      <div id="o0" class="olog" style="opacity:0;transform:translateY(16px)">SPITAR</div>
+      <div id="o1" class="osub" style="opacity:0">La Plateforme de Santé Numérique du Maroc</div>
+      <div id="o2" style="opacity:0;font-size:clamp(9px,1.1vw,14px);color:var(--muted);max-width:40%;text-align:center;line-height:1.7;margin-top:.8%">Votre dossier médical complet · Toujours dans votre poche<br>Accessible à tout médecin que vous choisissez · À tout moment</div>
+      <div id="o3" class="ourl" style="opacity:0">spitar-cld.vercel.app</div>
+      <div id="o4" class="obtn" style="opacity:0">Créer mon compte gratuitement</div>
+      <div id="o5" style="opacity:0;font-size:clamp(8px,.95vw,12px);color:var(--muted);margin-top:1%">🇲🇦 العربية · Français · English</div>
+    </div>
+  </div>
+
+  <div id="controls">
+    <button class="cb" id="bprev">&#9664;</button>
+    <button class="cb" id="bplay">&#9646;&#9646;</button>
+    <button class="cb" id="bnext">&#9654;</button>
+    <div id="pt"><div id="pf"></div></div>
+    <div id="sc">1 / 8</div>
+  </div>
+</div>
+<script>
+(()=>{const svg=document.getElementById('stars');svg.setAttribute('viewBox','0 0 1920 1080');svg.setAttribute('preserveAspectRatio','none');svg.style.cssText='position:absolute;inset:0;width:100%;height:100%;pointer-events:none';for(let i=0;i<90;i++){const c=document.createElementNS('http://www.w3.org/2000/svg','circle');c.setAttribute('cx',Math.random()*1920);c.setAttribute('cy',Math.random()*1080);c.setAttribute('r',Math.random()*.8+.25);c.setAttribute('fill','#fff');c.style.cssText=`animation:twinkle ${(Math.random()*5+2).toFixed(1)}s ${(Math.random()*5).toFixed(1)}s infinite`;c.style.opacity='0';svg.appendChild(c);}})();
+const SLIDES=document.querySelectorAll('.slide'),N=SLIDES.length,DUR=6000;
+let cur=0,playing=true,elapsed=0,last=null,raf=null;
+const fill=document.getElementById('pf'),counter=document.getElementById('sc'),bplay=document.getElementById('bplay');
+function showSlide(idx){SLIDES[cur].classList.remove('active');cur=(idx+N)%N;SLIDES[cur].classList.add('active');counter.textContent=`${cur+1} / ${N}`;if(cur===N-1)setTimeout(animateOutro,300);}
+function animateOutro(){['o0','o1','o2','o3','o4','o5'].forEach((id,i)=>{setTimeout(()=>{const el=document.getElementById(id);if(el){el.style.transition='opacity .55s, transform .55s';el.style.opacity='1';el.style.transform='none';}},i*260);});}
+function tick(ts){if(!last)last=ts;elapsed+=ts-last;last=ts;fill.style.width=Math.min(elapsed/DUR*100,100)+'%';if(elapsed>=DUR){elapsed=0;last=null;showSlide(cur+1);}if(playing)raf=requestAnimationFrame(tick);}
+function play(){playing=true;last=null;bplay.innerHTML='&#9646;&#9646;';raf=requestAnimationFrame(tick);}
+function pause(){playing=false;bplay.innerHTML='&#9654;';cancelAnimationFrame(raf);}
+function goTo(idx){elapsed=0;last=null;fill.style.width='0%';showSlide(idx);if(playing){cancelAnimationFrame(raf);raf=requestAnimationFrame(tick);}}
+bplay.addEventListener('click',()=>playing?pause():play());
+document.getElementById('bnext').addEventListener('click',()=>goTo(cur+1));
+document.getElementById('bprev').addEventListener('click',()=>goTo(cur-1));
+document.getElementById('pt').addEventListener('click',e=>{const r=e.currentTarget.getBoundingClientRect();elapsed=(e.clientX-r.left)/r.width*DUR;last=null;fill.style.width=((elapsed/DUR)*100)+'%';});
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowDown')goTo(cur+1);else if(e.key==='ArrowLeft'||e.key==='ArrowUp')goTo(cur-1);else if(e.key===' '){e.preventDefault();playing?pause():play();}});
+showSlide(0);play();
+</script>
+<style>@keyframes twinkle{0%,100%{opacity:0}50%{opacity:.45}}</style>
+</body>
+</html>
