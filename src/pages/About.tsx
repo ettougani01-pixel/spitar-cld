@@ -11,7 +11,7 @@ const VIDEOS = [
     color: "#2563eb",
     bg: "#eff6ff",
     border: "#bfdbfe",
-    url: "https://claude.ai/code/artifact/74887202-cd9c-4dc6-923f-44957fc4e2e3",
+    url: "/patient-video.html",
   },
   {
     id: "doctor",
@@ -20,7 +20,7 @@ const VIDEOS = [
     color: "#7c3aed",
     bg: "#f5f3ff",
     border: "#ddd6fe",
-    url: "https://claude.ai/code/artifact/f60d5458-1a93-44d5-831d-73e18b617765",
+    url: "/doctor-video.html",
   },
   {
     id: "lab",
@@ -29,7 +29,7 @@ const VIDEOS = [
     color: "#059669",
     bg: "#ecfdf5",
     border: "#a7f3d0",
-    url: "https://claude.ai/code/artifact/a5571541-15fe-4baf-a5d2-16d27d5f62ba",
+    url: "/lab-video.html",
   },
 ];
 
